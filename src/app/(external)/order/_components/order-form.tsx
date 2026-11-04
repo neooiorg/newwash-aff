@@ -9,9 +9,7 @@ import {
   Minus,
   Phone,
   Plus,
-  ShieldCheck,
   Shirt,
-  Truck,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { cn } from "cn";
@@ -32,35 +30,46 @@ import type { BookingService, ServiceCategory } from "@/lib/booking-services";
 import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
 import { dateChoices, formatVnd, localDateKey, timeSlots } from "./booking-options";
 import {
-  ExpandableScreen,
-  ExpandableScreenContent,
-  ExpandableScreenTrigger,
-  useExpandableScreen,
-} from "./expandable-screen";
+  FamilyDrawerAnimatedContent,
+  FamilyDrawerAnimatedWrapper,
+  FamilyDrawerClose,
+  FamilyDrawerContent,
+  FamilyDrawerDescription,
+  FamilyDrawerOverlay,
+  FamilyDrawerPortal,
+  FamilyDrawerRoot,
+  FamilyDrawerTitle,
+  FamilyDrawerTrigger,
+} from "./family-drawer";
 
 type OrderFormProps = { affiliateCode: string; embedded: boolean; preview?: boolean; hostOrigin: string };
 
-function FormCloseAction() {
-  const { collapse } = useExpandableScreen();
+function FormCloseAction({ onClose }: { onClose: () => void }) {
   return (
-    <Button type="button" onClick={collapse} className="mt-2">
+    <Button type="button" onClick={onClose} className="mt-2">
       Đóng
     </Button>
   );
 }
 
-function EmbeddedOpenSync({ enabled, hostOrigin }: { enabled: boolean; hostOrigin: string }) {
-  const { expand } = useExpandableScreen();
-
+function EmbeddedOpenSync({
+  enabled,
+  hostOrigin,
+  onOpen,
+}: {
+  enabled: boolean;
+  hostOrigin: string;
+  onOpen: () => void;
+}) {
   useEffect(() => {
     if (!enabled || !hostOrigin) return;
     function receive(event: MessageEvent) {
       if (event.source !== window.parent || event.origin !== hostOrigin) return;
-      if (event.data?.type === "newwash:open") expand();
+      if (event.data?.type === "newwash:open") onOpen();
     }
     window.addEventListener("message", receive);
     return () => window.removeEventListener("message", receive);
-  }, [enabled, expand, hostOrigin]);
+  }, [enabled, hostOrigin, onOpen]);
 
   return null;
 }
@@ -152,11 +161,10 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [submittedId, setSubmittedId] = useState("");
-  const [contentReady, setContentReady] = useState(preview && !embedded);
+  const [drawerOpen, setDrawerOpen] = useState(preview && !embedded);
   const pendingRequest = useRef("");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const contentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     const now = new Date();
@@ -247,7 +255,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       window.removeEventListener("message", receive);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-      if (contentTimerRef.current) clearTimeout(contentTimerRef.current);
     };
   }, [embedded, hostOrigin]);
 
@@ -349,24 +356,15 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     }, 15_000);
   }
 
-  const handleExpandChange = useCallback(
-    (expanded: boolean) => {
-      if (contentTimerRef.current) clearTimeout(contentTimerRef.current);
-      if (expanded) {
-        if (embedded) {
-          setContentReady(true);
-          return;
-        }
-        setContentReady(false);
-        contentTimerRef.current = setTimeout(() => setContentReady(true), 200);
-        return;
-      }
-      if (!embedded) setContentReady(false);
+  const handleDrawerOpenChange = useCallback(
+    (open: boolean) => {
+      setDrawerOpen(open);
+      if (open) return;
       if (!embedded || !hostOrigin) return;
       if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
       closeTimeoutRef.current = setTimeout(() => {
         window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
-      }, 350);
+      }, 300);
     },
     [embedded, hostOrigin],
   );
@@ -721,16 +719,10 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
 
   const activeStepIndex = Math.max(0, stepOrder.indexOf(activeStep));
   return (
-    <ExpandableScreen
-      layoutId="newwash-order-screen"
-      triggerRadius="999px"
-      animationDuration={0.3}
-      defaultExpanded={preview && !embedded}
-      onExpandChange={handleExpandChange}
-    >
-      <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} />
+    <FamilyDrawerRoot open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
+      <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
       <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
-        <ExpandableScreenTrigger>
+        <FamilyDrawerTrigger asChild>
           <Button
             type="button"
             size="lg"
@@ -738,124 +730,104 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           >
             Đặt lịch giặt ủi
           </Button>
-        </ExpandableScreenTrigger>
+        </FamilyDrawerTrigger>
       </div>
-      <ExpandableScreenContent
-        className="border border-border bg-background shadow-xl"
-        closeButtonClassName="bg-transparent text-muted-foreground shadow-none hover:bg-muted hover:text-foreground"
-      >
-        {contentReady ? (
-          <main className="mx-auto grid h-dvh w-full max-w-7xl overflow-hidden bg-background text-foreground lg:grid-cols-[0.62fr_1.38fr]">
-            <aside className="hidden border-border border-r bg-background px-12 py-12 lg:flex lg:h-dvh lg:items-center">
-              <div className="flex w-full max-w-sm flex-col">
-                <h1 className="text-5xl font-semibold leading-[1.08] tracking-tight text-foreground">
-                  Đặt giặt ủi
-                  <span className="block text-yellow-600">trong 2 phút.</span>
-                </h1>
-                <p className="mt-6 max-w-xs text-base leading-7 text-muted-foreground">
-                  Chọn dịch vụ và thời gian nhận đồ. NewWash sẽ xác nhận ngay sau khi bạn gửi đơn.
-                </p>
-
-                <div className="mt-10 divide-y divide-border border-y border-border text-sm text-foreground">
-                  <div className="flex items-center gap-3 py-4">
-                    <Clock3 className="text-yellow-600" aria-hidden="true" />
-                    <span>Đặt lịch nhanh chóng</span>
-                  </div>
-                  <div className="flex items-center gap-3 py-4">
-                    <Truck className="text-yellow-600" aria-hidden="true" />
-                    <span>Nhận và giao tận nơi</span>
-                  </div>
-                  <div className="flex items-center gap-3 py-4">
-                    <ShieldCheck className="text-yellow-600" aria-hidden="true" />
-                    <span>Đồ giặt được xử lý an toàn</span>
-                  </div>
-                </div>
-              </div>
-            </aside>
-
-            <section className="min-h-0 bg-background">
-              <ScrollArea className="h-dvh w-full">
-                <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 px-4 pt-8 pb-28 sm:px-10 sm:pb-8 lg:px-12 lg:pt-10 lg:pb-10">
-                <header className="flex items-center justify-between gap-4 pr-12">
-                  <div>
-                    <p className="text-xl font-semibold text-foreground">Thông tin đặt giặt ủi</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Hoàn tất trong vài bước đơn giản.</p>
-                  </div>
-                  <span className="text-sm tabular-nums text-muted-foreground">
-                    {activeStepIndex + 1}/{stepOrder.length}
-                  </span>
-                </header>
-
-                {submittedId ? (
-                  <Card className="border-border bg-background text-foreground">
-                    <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-                      <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
-                        <CheckCircle2 aria-hidden="true" />
+      <FamilyDrawerPortal>
+        <FamilyDrawerOverlay />
+        <FamilyDrawerContent>
+          <FamilyDrawerClose />
+          <FamilyDrawerAnimatedWrapper>
+            <FamilyDrawerAnimatedContent>
+              <main className="bg-background text-foreground">
+                <ScrollArea className="h-[min(720px,calc(100dvh-1rem))] w-full">
+                  <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-6 pb-8 sm:px-8 sm:pt-8">
+                    <header className="flex items-start justify-between gap-4 border-b border-border pr-12 pb-5">
+                      <div>
+                        <FamilyDrawerTitle>Thông tin đặt giặt ủi</FamilyDrawerTitle>
+                        <FamilyDrawerDescription className="mt-1">
+                          Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
+                        </FamilyDrawerDescription>
+                      </div>
+                      <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+                        {activeStepIndex + 1}/{stepOrder.length}
                       </span>
-                      <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
-                      <p className="max-w-sm text-sm text-muted-foreground">
-                        Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
-                      </p>
-                      <FormCloseAction />
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <form ref={formRef} id="newwash-order-form" noValidate onSubmit={submit} className="flex flex-col gap-4">
-                    {error && (
-                      <Alert variant="destructive" role="alert">
-                        <AlertTitle>Chưa thể đặt đơn</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
+                    </header>
+
+                    {submittedId ? (
+                      <Card className="border-border bg-background text-foreground">
+                        <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+                          <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
+                            <CheckCircle2 aria-hidden="true" />
+                          </span>
+                          <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
+                          <p className="max-w-sm text-sm text-muted-foreground">
+                            Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
+                          </p>
+                          <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
+                        </CardContent>
+                      </Card>
+                    ) : (
+                      <form
+                        ref={formRef}
+                        id="newwash-order-form"
+                        noValidate
+                        onSubmit={submit}
+                        className="flex flex-col gap-4"
+                      >
+                        {error && (
+                          <Alert variant="destructive" role="alert">
+                            <AlertTitle>Chưa thể đặt đơn</AlertTitle>
+                            <AlertDescription>{error}</AlertDescription>
+                          </Alert>
+                        )}
+                        <WizardExpandable
+                          steps={steps}
+                          expanded
+                          animateInitialOpen={false}
+                          activeStep={activeStep}
+                          onActiveStepChange={(value) => {
+                            if (value) {
+                              setActiveStep(value);
+                              setError("");
+                            }
+                          }}
+                          canNavigateToStep={canNavigateToStep}
+                          onNavigateBlocked={onNavigateBlocked}
+                          onComplete={() => {
+                            const contactError = stepError("contact");
+                            if (contactError) {
+                              setError(contactError);
+                              document.getElementById("phone")?.focus();
+                              return;
+                            }
+                            formRef.current?.requestSubmit();
+                          }}
+                          backLabel="Quay lại"
+                          nextLabel="Tiếp tục"
+                          completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
+                          canGoNext={
+                            !saving &&
+                            !servicesLoading &&
+                            !servicesError &&
+                            services.length > 0 &&
+                            (!preview || activeStep !== "contact")
+                          }
+                          className="max-w-none px-0 sm:max-w-none"
+                        />
+                        {preview && (
+                          <p className="text-center text-xs text-muted-foreground">
+                            Đây là bản xem trước; đơn hàng sẽ không được gửi.
+                          </p>
+                        )}
+                      </form>
                     )}
-                    <WizardExpandable
-                      steps={steps}
-                      expanded
-                      animateInitialOpen={false}
-                      activeStep={activeStep}
-                      onActiveStepChange={(value) => {
-                        if (value) {
-                          setActiveStep(value);
-                          setError("");
-                        }
-                      }}
-                      canNavigateToStep={canNavigateToStep}
-                      onNavigateBlocked={onNavigateBlocked}
-                      onComplete={() => {
-                        const contactError = stepError("contact");
-                        if (contactError) {
-                          setError(contactError);
-                          document.getElementById("phone")?.focus();
-                          return;
-                        }
-                        formRef.current?.requestSubmit();
-                      }}
-                      backLabel="Quay lại"
-                      nextLabel="Tiếp tục"
-                      completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
-                      canGoNext={
-                        !saving &&
-                        !servicesLoading &&
-                        !servicesError &&
-                        services.length > 0 &&
-                        (!preview || activeStep !== "contact")
-                      }
-                      className="max-w-none px-0 sm:max-w-none"
-                    />
-                    {preview && (
-                      <p className="text-center text-xs text-muted-foreground">
-                        Đây là bản xem trước; đơn hàng sẽ không được gửi.
-                      </p>
-                    )}
-                  </form>
-                )}
-                </div>
-              </ScrollArea>
-            </section>
-          </main>
-        ) : (
-          <div className="h-full w-full bg-background" />
-        )}
-      </ExpandableScreenContent>
-    </ExpandableScreen>
+                  </div>
+                </ScrollArea>
+              </main>
+            </FamilyDrawerAnimatedContent>
+          </FamilyDrawerAnimatedWrapper>
+        </FamilyDrawerContent>
+      </FamilyDrawerPortal>
+    </FamilyDrawerRoot>
   );
 }
