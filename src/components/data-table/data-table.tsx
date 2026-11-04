@@ -77,7 +77,7 @@ export function DataTable<TData>({
       )
     : data;
 
-  const table = useTable({
+  const table = useTable<DataTableFeatures, TData>({
     features: dataTableFeatures,
     data: filteredData,
     columns,
