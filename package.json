@@ -2,6 +2,9 @@
   "name": "studio-admin",
   "version": "2.2.0",
   "private": true,
+  "engines": {
+    "node": ">=22.9.0"
+  },
   "scripts": {
     "dev": "node --env-file=.env.local scripts/run-with-realtime.mjs dev",
     "build": "next build",
