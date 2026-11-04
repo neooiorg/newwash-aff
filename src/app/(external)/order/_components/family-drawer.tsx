@@ -113,7 +113,7 @@ export function FamilyDrawerTrigger({
   if (asChild) {
     return (
       <Drawer.Trigger asChild>
-        <Slot>{children}</Slot>
+        <Slot.Root>{children}</Slot.Root>
       </Drawer.Trigger>
     );
   }
