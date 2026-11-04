@@ -2,7 +2,8 @@ import { spawn } from "node:child_process";
 
 const mode = process.argv[2] === "start" ? "start" : "dev";
 const port = process.env.PORT || "3001";
-const nextArgs = ["node_modules/next/dist/bin/next", mode, "--hostname", "127.0.0.1", "--port", port];
+const hostname = process.env.NEXT_HOSTNAME || "127.0.0.1";
+const nextArgs = ["node_modules/next/dist/bin/next", mode, "--hostname", hostname, "--port", port];
 const commands = [
   spawn(process.execPath, nextArgs, { stdio: "inherit", env: process.env }),
   spawn(process.execPath, ["scripts/realtime-server.mjs"], { stdio: "inherit", env: process.env }),
