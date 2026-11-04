@@ -1,10 +1,10 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import { useShallow } from "zustand/react/shallow";
 
-import { AppLogo } from "@/components/app-logo";
 import {
   Sidebar,
   SidebarContent,
@@ -21,7 +21,6 @@ import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
-import { SupportCard } from "./support-card";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
@@ -40,10 +39,28 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link prefetch={false} href="/dashboard/default">
-                <AppLogo viewBox="72 96 356 308" />
-                <span className="text-base font-semibold">{APP_CONFIG.name}</span>
+            <SidebarMenuButton asChild size="lg">
+              <Link prefetch={false} href="/dashboard/default" aria-label={`${APP_CONFIG.name} · Tổng quan`}>
+                <span className="rounded-md bg-white px-1 group-data-[collapsible=icon]:hidden">
+                  <Image
+                    src="/newwash-logo.svg"
+                    alt="Newwash"
+                    width={160}
+                    height={60}
+                    className="h-auto w-36"
+                    unoptimized
+                    priority
+                  />
+                </span>
+                <Image
+                  src="/newwash-mark.svg"
+                  alt=""
+                  width={32}
+                  height={32}
+                  className="hidden size-8 group-data-[collapsible=icon]:block"
+                  unoptimized
+                />
+                <span className="sr-only">{APP_CONFIG.name}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -53,7 +70,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={sidebarItems} />
       </SidebarContent>
       <SidebarFooter>
-        <SupportCard />
         <NavUser user={rootUser} />
       </SidebarFooter>
     </Sidebar>

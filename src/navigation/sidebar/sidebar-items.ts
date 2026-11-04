@@ -2,6 +2,7 @@ import {
   Banknote,
   Calendar,
   ChartBar,
+  Code2,
   CheckSquare,
   Fingerprint,
   FolderOpen,
@@ -18,6 +19,7 @@ import {
   MessageSquare,
   Package,
   ReceiptText,
+  Settings2,
   Server,
   ShoppingBag,
   SquareArrowUpRight,
@@ -65,12 +67,23 @@ export interface NavGroup {
 
 export const sidebarItems: NavGroup[] = [
   {
+    id: 5,
+    label: "NewWash Aff",
+    items: [
+      { id: "affiliate-overview", title: "Tổng quan affiliate", url: "/dashboard/affiliates", icon: ChartBar },
+      { id: "affiliate-partners", title: "Cộng tác viên", url: "/dashboard/affiliates/partners", icon: Users },
+      { id: "affiliate-orders", title: "Đơn đặt từ popup", url: "/dashboard/affiliates/orders", icon: ReceiptText },
+      { id: "affiliate-embed", title: "Nhúng đặt đơn", url: "/dashboard/affiliates/embed", icon: Code2 },
+      { id: "affiliate-services", title: "Cài đặt dịch vụ", url: "/dashboard/affiliates/services", icon: Settings2 },
+    ],
+  },
+  {
     id: 1,
     label: "Dashboards",
     items: [
       {
         id: "default",
-        title: "Default",
+        title: "Tổng quan template",
         url: "/dashboard/default",
         icon: LayoutDashboard,
       },

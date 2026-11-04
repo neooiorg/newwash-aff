@@ -1,0 +1,10 @@
+Use case: product-mockup
+Asset type: transparent foreground artwork for the left panel of a premium laundry booking popup
+Primary request: a photorealistic modern front-loading washing machine accompanied by a woven laundry basket and a small stack of neatly folded cream and warm mustard-yellow towels
+Scene/backdrop: none, isolated cutout
+Subject: one white and graphite front-loading washer, three folded towels, one natural wicker basket; no people
+Style/medium: premium commercial product photography, realistic materials, crisp clean edges
+Composition/framing: vertical compact grouping, washing machine anchored on the right, towels and basket lower left, full objects visible, suitable for placement at the bottom of a narrow left panel
+Lighting/mood: soft warm golden rim light from the left, restrained studio lighting, sophisticated dark-luxury mood
+Color palette: graphite, ivory, cream, mustard yellow, natural wicker
+Constraints: genuinely transparent background with alpha; no floor rectangle; no logos; no text; no watermark; no extra appliances; accurate washing machine proportions

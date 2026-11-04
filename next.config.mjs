@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    root: process.cwd(),
+  },
   reactCompiler: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
@@ -8,7 +11,7 @@ const nextConfig = {
     return [
       {
         source: "/dashboard",
-        destination: "/dashboard/default",
+        destination: "/dashboard/affiliates",
         permanent: false,
       },
     ];

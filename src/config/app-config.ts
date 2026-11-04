@@ -3,14 +3,13 @@ import packageJson from "../../package.json";
 const currentYear = new Date().getFullYear();
 
 export const APP_CONFIG = {
-  name: "Studio Admin",
-  url: "https://studio-admin.arhamkhnz.com",
+  name: "NewWash Aff",
+  url: "http://localhost:3000",
   repository: "https://github.com/arhamkhnz/next-shadcn-admin-dashboard",
   version: packageJson.version,
-  copyright: `© ${currentYear}, Studio Admin.`,
+  copyright: `© ${currentYear}, NewWash Aff.`,
   meta: {
-    title: "Studio Admin: Open Source shadcn/ui Admin Dashboard",
-    description:
-      "Free, MIT-licensed shadcn/ui admin dashboard with 25+ screens and editions for Radix UI, Base UI, React Aria, and TanStack Start.",
+    title: "NewWash Aff — Quản lý cộng tác viên giặt ủi",
+    description: "Tạo mã giới thiệu, chia sẻ QR và nhúng biểu mẫu đặt đơn cho cửa hàng giặt ủi.",
   },
 };
