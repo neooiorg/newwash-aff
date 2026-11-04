@@ -5,6 +5,7 @@ import {
   type ColumnFiltersState,
   type ColumnVisibilityState,
   type PaginationState,
+  type RowData,
   type SortingState,
   useTable,
 } from "@tanstack/react-table";
@@ -31,9 +32,9 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { dataTableFeatures, type DataTableFeatures } from "@/lib/data-table-features";
 
-export type DataTableColumn<TData> = ColumnDef<DataTableFeatures, TData>;
+export type DataTableColumn<TData extends RowData> = ColumnDef<DataTableFeatures, TData>;
 
-interface DataTableProps<TData> {
+interface DataTableProps<TData extends RowData> {
   data: TData[];
   columns: DataTableColumn<TData>[];
   getRowId: (row: TData) => string;
@@ -48,7 +49,7 @@ interface DataTableProps<TData> {
 }
 
 /** Shared client-side tablecn-style table for the admin's full-list screens. */
-export function DataTable<TData>({
+export function DataTable<TData extends RowData>({
   data,
   columns,
   getRowId,
@@ -252,7 +253,7 @@ export function DataTable<TData>({
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">Dòng mỗi trang</span>
           <Select
-            value={String(table.state.pagination.pageSize)}
+            value={String(pagination.pageSize)}
             onValueChange={(value) => table.setPageSize(Number(value))}
           >
             <SelectTrigger size="sm" aria-label="Dòng mỗi trang">
@@ -269,7 +270,7 @@ export function DataTable<TData>({
             </SelectContent>
           </Select>
           <span className="min-w-20 text-center">
-            {Math.min(table.state.pagination.pageIndex + 1, pageCount)} / {pageCount}
+            {Math.min(pagination.pageIndex + 1, pageCount)} / {pageCount}
           </span>
           <Button
             variant="outline"
