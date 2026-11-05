@@ -505,7 +505,7 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
         <motion.div variants={itemVariants}>{step.content}</motion.div>
         {showNavigation ? (
           <motion.div
-            className="fixed inset-x-0 bottom-0 z-20 border-border border-t bg-background px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1rem)] shadow-[0_-8px_24px_rgba(0,0,0,0.06)] sm:static sm:border-0 sm:bg-transparent sm:p-0 sm:pt-1 sm:shadow-none"
+            className="border-border border-t bg-background pt-4"
             variants={itemVariants}
           >
             <fieldset aria-label="Wizard navigation" className="flex min-w-0 gap-2 sm:gap-3">

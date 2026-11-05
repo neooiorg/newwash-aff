@@ -29,15 +29,16 @@
   bubble.setAttribute("aria-label", "Mở biểu mẫu đặt lịch giặt ủi");
   shadow.appendChild(bubble);
 
-  var dialog = document.createElement("dialog");
-  dialog.className = "newwash-dialog";
-  dialog.setAttribute("aria-label", "Đặt lịch giặt ủi NewWash");
+  var layer = document.createElement("div");
+  layer.className = "newwash-layer";
+  layer.hidden = true;
+  layer.setAttribute("aria-hidden", "true");
   var iframe = document.createElement("iframe");
   iframe.title = "Biểu mẫu đặt đơn giặt ủi NewWash";
   iframe.className = "newwash-frame";
   iframe.loading = "eager";
-  dialog.appendChild(iframe);
-  shadow.appendChild(dialog);
+  layer.appendChild(iframe);
+  shadow.appendChild(layer);
   (document.body || document.documentElement).appendChild(root);
 
   var frameUrl = origin + "/order?embed=1&aff=" + encodeURIComponent(code)
@@ -53,44 +54,32 @@
   }
 
   function open() {
-    if (dialog.open) return;
+    if (!layer.hidden) {
+      expandFrame();
+      return;
+    }
     bubble.hidden = true;
     ensureFrame();
-    dialog.showModal();
-    requestAnimationFrame(function () { dialog.classList.add("is-open"); });
-    expandFrame();
+    layer.hidden = false;
+    layer.setAttribute("aria-hidden", "false");
+    requestAnimationFrame(expandFrame);
   }
 
   function close() {
-    if (!dialog.open || dialog.classList.contains("is-closing")) return;
-    dialog.classList.add("is-closing");
-    dialog.classList.remove("is-open");
-    window.setTimeout(function () {
-      dialog.close();
-      dialog.classList.remove("is-closing");
-    }, 160);
+    if (layer.hidden) return;
+    layer.hidden = true;
+    layer.setAttribute("aria-hidden", "true");
+    bubble.hidden = false;
   }
 
   iframe.addEventListener("load", function () {
-    if (dialog.open) expandFrame();
-  });
-
-  dialog.addEventListener("close", function () {
-    dialog.classList.remove("is-open", "is-closing");
-    bubble.hidden = false;
-  });
-  dialog.addEventListener("cancel", function (event) {
-    event.preventDefault();
-    close();
+    if (!layer.hidden) expandFrame();
   });
 
   bubble.addEventListener("click", open);
-  dialog.addEventListener("click", function (event) {
-    if (event.target === dialog) close();
-  });
   window.addEventListener("message", function (event) {
     if (event.origin !== origin || event.source !== iframe.contentWindow) return;
-    if (event.data && event.data.type === "newwash:ready" && dialog.open) expandFrame();
+    if (event.data && event.data.type === "newwash:ready" && !layer.hidden) expandFrame();
     if (event.data && event.data.type === "newwash:close") close();
     if (event.data && event.data.type === "newwash:order-submit") {
       var requestId = event.data.requestId;

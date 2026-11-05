@@ -152,6 +152,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const [drawerOpen, setDrawerOpen] = useState(preview && !embedded);
   const pendingRequest = useRef("");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const closeFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!embedded) return;
@@ -253,6 +254,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     return () => {
       window.removeEventListener("message", receive);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (closeFallbackRef.current) clearTimeout(closeFallbackRef.current);
     };
   }, [embedded, hostOrigin]);
 
@@ -354,14 +356,29 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     }, 15_000);
   }
 
-  const handleDrawerOpenChange = useCallback((open: boolean) => setDrawerOpen(open), []);
+  const notifyParentClosed = useCallback(() => {
+    if (!embedded || !hostOrigin) return;
+    window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
+  }, [embedded, hostOrigin]);
+
+  const handleDrawerOpenChange = useCallback(
+    (open: boolean) => {
+      setDrawerOpen(open);
+      if (closeFallbackRef.current) clearTimeout(closeFallbackRef.current);
+      if (!open && embedded && hostOrigin) {
+        closeFallbackRef.current = setTimeout(notifyParentClosed, 650);
+      }
+    },
+    [embedded, hostOrigin, notifyParentClosed],
+  );
 
   const handleDrawerAnimationEnd = useCallback(
     (open: boolean) => {
-      if (open || !embedded || !hostOrigin) return;
-      window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
+      if (open) return;
+      if (closeFallbackRef.current) clearTimeout(closeFallbackRef.current);
+      notifyParentClosed();
     },
-    [embedded, hostOrigin],
+    [notifyParentClosed],
   );
 
   function stepError(stepId: string): string {
@@ -728,7 +745,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           </Button>
         </DrawerTrigger>
       </div>
-      <DrawerContent className="inset-x-2! bottom-2! mx-auto h-[min(720px,calc(100dvh-1rem))] w-[calc(100%-1rem)] max-w-3xl max-h-none! rounded-[28px]! border sm:inset-x-4! sm:bottom-4! sm:h-[min(720px,calc(100dvh-2rem))] sm:w-[calc(100%-2rem)]">
+      <DrawerContent className="sm:mx-auto sm:max-w-3xl">
         <DrawerHeader className="relative border-b px-4 pt-2 pb-5 text-left sm:px-8">
           <div className="flex items-start justify-between gap-4 pr-12">
             <div>
