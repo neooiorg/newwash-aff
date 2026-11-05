@@ -156,7 +156,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
 
   const showOrderError = useCallback((message: string) => {
     setError(message);
-    sileo.error({
+    sileo.warning({
       title: "Chưa thể đặt đơn",
       description: message,
       position: "top-center",
@@ -411,7 +411,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     const invalid = stepOrder.slice(context.fromIndex, context.toIndex).find((stepId) => stepError(stepId));
     if (invalid) {
       showOrderError(stepError(invalid));
-      document.getElementById(`${invalid}-section`)?.scrollIntoView({ block: "center", behavior: "smooth" });
     }
   }
 
