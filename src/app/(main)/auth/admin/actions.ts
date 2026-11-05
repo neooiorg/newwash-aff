@@ -10,7 +10,7 @@ export async function loginAdmin(_previous: string, formData: FormData): Promise
   const password = String(formData.get("password") ?? "");
   if (!verifyAdminPassword(email, password)) return "Email hoặc mật khẩu không đúng.";
   (await cookies()).set(ADMIN_COOKIE, makeAdminSession(), adminCookieOptions);
-  redirect("/dashboard/default");
+  redirect("/dashboard/affiliates");
 }
 
 export async function logoutAdmin(): Promise<void> {

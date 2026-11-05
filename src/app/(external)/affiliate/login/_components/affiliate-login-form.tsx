@@ -8,7 +8,13 @@ import { Input } from "@/components/ui/input";
 
 import { loginAffiliate } from "../actions";
 
-export function AffiliateLoginForm() {
+export function AffiliateLoginForm({
+  defaultCode = "",
+  defaultAccessKey = "",
+}: {
+  defaultCode?: string;
+  defaultAccessKey?: string;
+}) {
   const [error, action, pending] = useActionState(loginAffiliate, "");
 
   return (
@@ -22,6 +28,7 @@ export function AffiliateLoginForm() {
             autoComplete="username"
             required
             maxLength={20}
+            defaultValue={defaultCode}
             placeholder="Ví dụ: NGUYENVANA"
           />
         </Field>
@@ -35,6 +42,7 @@ export function AffiliateLoginForm() {
             required
             minLength={8}
             maxLength={32}
+            defaultValue={defaultAccessKey}
             placeholder="Mã do NewWash cấp"
           />
         </Field>
