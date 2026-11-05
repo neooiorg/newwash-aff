@@ -593,7 +593,12 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
 
   return (
     <WizardExpandableContext.Provider value={wizardContextValue}>
-      <div className={cn("mx-auto flex w-full max-w-sm flex-col gap-2 px-2 sm:max-w-lg sm:px-0", className)}>
+      <div
+        className={cn(
+          "mx-auto flex w-full min-w-0 max-w-sm flex-col gap-2 overflow-hidden px-2 sm:max-w-lg sm:px-0",
+          className,
+        )}
+      >
         {badgeText && (
           <Badge className="border-border bg-muted text-muted-foreground" variant="outline">
             {badgeText}

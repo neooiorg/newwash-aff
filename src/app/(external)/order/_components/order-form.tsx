@@ -773,8 +773,8 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             </DrawerClose>
           </DrawerHeader>
           <ScrollArea className="min-h-0 flex-1 overflow-hidden">
-            <main className="bg-background text-foreground">
-              <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
+            <main className="w-full min-w-0 max-w-full overflow-x-hidden bg-background text-foreground">
+              <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
                 {submittedId ? (
                   <Card className="border-border bg-background text-foreground">
                     <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
@@ -794,7 +794,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                     id="newwash-order-form"
                     noValidate
                     onSubmit={submit}
-                    className="flex flex-col gap-4"
+                    className="flex min-w-0 max-w-full flex-col gap-4"
                   >
                     <p className="sr-only" aria-live="assertive">
                       {error}
