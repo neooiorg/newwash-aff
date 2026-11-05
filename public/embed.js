@@ -31,7 +31,6 @@
 
   var layer = document.createElement("div");
   layer.className = "newwash-layer";
-  layer.hidden = true;
   layer.setAttribute("aria-hidden", "true");
   var iframe = document.createElement("iframe");
   iframe.title = "Biểu mẫu đặt đơn giặt ủi NewWash";
@@ -41,6 +40,7 @@
   shadow.appendChild(layer);
   (document.body || document.documentElement).appendChild(root);
   var closeTimer = 0;
+  var layerOpen = false;
 
   var frameUrl = origin + "/order?embed=1&aff=" + encodeURIComponent(code)
     + "&host=" + encodeURIComponent(location.origin)
@@ -60,23 +60,26 @@
       closeTimer = 0;
     }
     layer.classList.remove("is-closing");
-    if (!layer.hidden) {
+    if (layerOpen) {
       expandFrame();
       return;
     }
     bubble.hidden = true;
     ensureFrame();
-    layer.hidden = false;
+    layerOpen = true;
+    layer.classList.add("is-open");
     layer.setAttribute("aria-hidden", "false");
-    requestAnimationFrame(expandFrame);
+    requestAnimationFrame(function () {
+      requestAnimationFrame(expandFrame);
+    });
   }
 
   function close() {
-    if (layer.hidden || closeTimer) return;
+    if (!layerOpen || closeTimer) return;
+    layerOpen = false;
     layer.classList.add("is-closing");
     closeTimer = window.setTimeout(function () {
-      layer.hidden = true;
-      layer.classList.remove("is-closing");
+      layer.classList.remove("is-open", "is-closing");
       layer.setAttribute("aria-hidden", "true");
       bubble.hidden = false;
       closeTimer = 0;
@@ -84,13 +87,13 @@
   }
 
   iframe.addEventListener("load", function () {
-    if (!layer.hidden) expandFrame();
+    if (layerOpen) expandFrame();
   });
 
   bubble.addEventListener("click", open);
   window.addEventListener("message", function (event) {
     if (event.origin !== origin || event.source !== iframe.contentWindow) return;
-    if (event.data && event.data.type === "newwash:ready" && !layer.hidden) expandFrame();
+    if (event.data && event.data.type === "newwash:ready" && layerOpen) expandFrame();
     if (event.data && event.data.type === "newwash:close") close();
     if (event.data && event.data.type === "newwash:order-submit") {
       var requestId = event.data.requestId;
