@@ -740,7 +740,13 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             </Button>
           </DrawerTrigger>
         </div>
-        <DrawerContent className="overflow-hidden data-[vaul-drawer-direction=bottom]:h-dvh data-[vaul-drawer-direction=bottom]:max-h-dvh data-[vaul-drawer-direction=bottom]:rounded-none data-[vaul-drawer-direction=bottom]:border-0 sm:mx-auto sm:max-w-3xl sm:data-[vaul-drawer-direction=bottom]:h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:max-h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:rounded-t-xl sm:data-[vaul-drawer-direction=bottom]:border-t">
+        <DrawerContent
+          className="overflow-hidden data-[vaul-drawer-direction=bottom]:h-dvh data-[vaul-drawer-direction=bottom]:max-h-dvh data-[vaul-drawer-direction=bottom]:rounded-none data-[vaul-drawer-direction=bottom]:border-0 sm:mx-auto sm:max-w-3xl sm:data-[vaul-drawer-direction=bottom]:h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:max-h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:rounded-t-xl sm:data-[vaul-drawer-direction=bottom]:border-t"
+          onInteractOutside={(event) => {
+            const target = event.detail.originalEvent.target;
+            if (target instanceof Element && target.closest("[data-sileo-viewport]")) event.preventDefault();
+          }}
+        >
           <DrawerHeader className="relative shrink-0 border-b px-4 pt-2 pb-4 text-left sm:px-8 sm:pb-5">
             <div className="flex items-start justify-between gap-4 pr-12">
               <div>
