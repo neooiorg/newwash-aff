@@ -847,7 +847,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       </Drawer>
       <SileoToaster
         position="top-center"
-        theme="light"
+        theme="dark"
         offset={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
         options={{ duration: 4200 }}
       />
