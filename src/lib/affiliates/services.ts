@@ -15,6 +15,7 @@ type ServiceRow = {
   price_per_kg: number | null;
   min_kg: number;
   note: string;
+  icon_key: string;
   active: boolean;
   sort_order: number;
 };
@@ -31,6 +32,7 @@ export function toBookingService(row: ServiceRow): BookingService {
     pricePerKg: row.price_per_kg,
     minKg: row.min_kg,
     note: row.note,
+    iconKey: row.icon_key,
     active: row.active,
     sortOrder: row.sort_order,
   };
@@ -39,7 +41,7 @@ export function toBookingService(row: ServiceRow): BookingService {
 export async function listBookingServices(activeOnly = false): Promise<BookingService[]> {
   const result = await getPool().query<ServiceRow>(
     `SELECT id, code, category, label, english, duration_label, duration_hours,
-            price_per_kg, min_kg, note, active, sort_order
+            price_per_kg, min_kg, note, icon_key, active, sort_order
      FROM newwash_services ${activeOnly ? "WHERE active = true" : ""}
      ORDER BY sort_order, created_at, id`,
   );

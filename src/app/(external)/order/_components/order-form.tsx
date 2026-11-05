@@ -2,8 +2,10 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import Image from "next/image";
+
 import { cn } from "cn";
-import { Check, CheckCircle2, ChevronDown, Clock3, MapPin, Minus, Phone, Plus, Shirt, X } from "lucide-react";
+import { CheckCircle2, ChevronDown, ChevronRight, Clock3, MapPin, Minus, Phone, Plus, Shirt, X } from "lucide-react";
 import { Toaster as SileoToaster, sileo } from "sileo";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -27,6 +29,7 @@ import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectVa
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { BookingService, ServiceCategory } from "@/lib/booking-services";
+import { getLaundryServiceIcon } from "@/lib/laundry-service-icons";
 
 import { dateChoices, formatVnd, localDateKey, timeSlots } from "./booking-options";
 import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
@@ -197,6 +200,14 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
         if (active) {
           setServices(data.services);
           setWhiteWashFee(data.whiteWashFee);
+          setServiceCode((current) => {
+            if (current && data.services.some((item: BookingService) => item.code === current)) return current;
+            const firstService = data.services.find((item: BookingService) => item.category === "laundry");
+            if (!firstService) return "";
+            setCategory(firstService.category);
+            setQuantityKg(firstService.pricePerKg === null ? 0 : firstService.minKg);
+            return firstService.code;
+          });
           setServicesError("");
         }
       } catch (cause) {
@@ -439,20 +450,36 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
               setQuantityKg(0);
             }}
             variant="outline"
-            className="grid w-full grid-cols-2 rounded-lg bg-muted p-1"
+            className="grid w-full grid-cols-2 gap-2 rounded-2xl bg-muted/60 p-1"
           >
             <ToggleGroupItem
               value="laundry"
               disabled={!services.some((item) => item.category === "laundry")}
-              className="h-9 w-full border-transparent data-[state=on]:border-yellow-400 data-[state=on]:bg-yellow-400 data-[state=on]:text-zinc-950"
+              className="h-12 w-full gap-2 rounded-xl border-transparent font-semibold data-[state=on]:border-yellow-400 data-[state=on]:bg-yellow-400 data-[state=on]:text-zinc-950"
             >
+              <Image
+                alt=""
+                aria-hidden="true"
+                className="size-8 object-contain"
+                height={40}
+                src="/laundry-icons/washer-lightning.png"
+                width={40}
+              />
               Giặt theo kg
             </ToggleGroupItem>
             <ToggleGroupItem
               value="other"
               disabled={!services.some((item) => item.category === "other")}
-              className="h-9 w-full border-transparent data-[state=on]:border-yellow-400 data-[state=on]:bg-yellow-400 data-[state=on]:text-zinc-950"
+              className="h-12 w-full gap-2 rounded-xl border-transparent font-semibold data-[state=on]:border-yellow-400 data-[state=on]:bg-yellow-400 data-[state=on]:text-zinc-950"
             >
+              <Image
+                alt=""
+                aria-hidden="true"
+                className="size-8 object-contain"
+                height={40}
+                src="/laundry-icons/hangers.png"
+                width={40}
+              />
               Chuyên biệt
             </ToggleGroupItem>
           </ToggleGroup>
@@ -463,7 +490,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
               if (value) chooseService(value);
             }}
             variant="outline"
-            className="grid w-full grid-cols-1 gap-2"
+            className="grid w-full grid-cols-1 gap-3"
           >
             {services
               .filter((item) => item.category === category)
@@ -471,29 +498,45 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                 <ToggleGroupItem
                   key={item.code}
                   value={item.code}
-                  className="h-auto min-h-20 w-full items-center justify-between gap-4 whitespace-normal bg-background px-4 py-3 text-left transition-colors data-[state=on]:border-yellow-400 data-[state=on]:bg-yellow-400/10"
+                  className="h-auto min-h-28 w-full items-center justify-between gap-3 overflow-hidden rounded-2xl border-zinc-200 bg-white px-3 py-3 text-left text-zinc-950 shadow-sm transition-colors data-[state=on]:border-yellow-300 data-[state=on]:bg-yellow-50 sm:min-h-24"
                 >
-                  <span className="flex min-w-0 flex-col items-start gap-1">
-                    <span className="font-medium leading-tight">{item.label}</span>
-                    <span className="text-xs font-normal text-muted-foreground">
-                      {item.duration}
-                      {item.note ? ` · ${item.note}` : ""}
+                  <span className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden">
+                    <Image
+                      alt=""
+                      aria-hidden="true"
+                      className="size-16 shrink-0 object-contain sm:size-18"
+                      height={80}
+                      src={getLaundryServiceIcon(item.iconKey, item.code).src}
+                      width={80}
+                    />
+                    <span className="flex min-w-0 flex-1 flex-col items-start gap-1 overflow-hidden">
+                      <span className="font-semibold leading-tight sm:text-base">{item.label}</span>
+                      <span className="line-clamp-2 max-w-full text-xs font-normal leading-4 text-zinc-500 sm:text-sm">
+                        {item.code === "special"
+                          ? "Ghi chú thêm về cách giặt, loại đồ, v.v."
+                          : `Trả đồ sau ${item.duration}`}
+                        {item.note ? ` · ${item.note}` : ""}
+                      </span>
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-3">
-                    <span className="font-semibold tabular-nums">
+                    <span className="max-w-20 text-right font-bold text-xs tabular-nums sm:max-w-none sm:text-lg">
                       {item.pricePerKg !== null ? `${formatVnd(item.pricePerKg)}/kg` : "Báo giá"}
                     </span>
-                    <span
-                      className={cn(
-                        "flex size-5 items-center justify-center rounded-full border",
-                        serviceCode === item.code
-                          ? "border-yellow-400 bg-yellow-400 text-zinc-950"
-                          : "border-border text-transparent",
-                      )}
-                    >
-                      <Check aria-hidden="true" />
-                    </span>
+                    {item.code === "special" ? (
+                      <ChevronRight aria-hidden="true" className="size-6 text-foreground" />
+                    ) : (
+                      <span
+                        className={cn(
+                          "flex size-6 items-center justify-center rounded-full border-2",
+                          serviceCode === item.code ? "border-yellow-400 bg-yellow-400" : "border-zinc-200 bg-white",
+                        )}
+                      >
+                        {serviceCode === item.code ? (
+                          <span aria-hidden="true" className="size-3 rounded-full bg-zinc-950" />
+                        ) : null}
+                      </span>
+                    )}
                   </span>
                 </ToggleGroupItem>
               ))}
@@ -742,21 +785,34 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           </DrawerTrigger>
         </div>
         <DrawerContent
-          className="h-[80dvh] max-h-[80dvh] overflow-hidden sm:mx-auto sm:max-w-3xl"
+          className="light h-[88dvh] max-h-[88dvh] overflow-hidden rounded-t-3xl bg-white text-zinc-950 sm:mx-auto sm:max-w-3xl"
           onInteractOutside={(event) => {
             const target = event.detail.originalEvent.target;
             if (target instanceof Element && target.closest("[data-sileo-viewport]")) event.preventDefault();
           }}
         >
-          <DrawerHeader className="relative shrink-0 border-b px-4 pt-2 pb-4 text-left sm:px-8 sm:pb-5">
-            <div className="flex items-start justify-between gap-4 pr-12">
-              <div>
-                <DrawerTitle>Thông tin đặt giặt ủi</DrawerTitle>
-                <DrawerDescription className="mt-0.5 line-clamp-1 sm:mt-1">
-                  Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
-                </DrawerDescription>
+          <DrawerHeader className="relative shrink-0 px-5 pt-3 pb-4 text-left sm:px-8 sm:pb-5">
+            <div className="flex items-center justify-between gap-2 pr-10">
+              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                <Image
+                  alt=""
+                  aria-hidden="true"
+                  className="size-12 shrink-0 object-contain sm:size-16"
+                  height={72}
+                  priority
+                  src="/laundry-icons/booking-header.png"
+                  width={72}
+                />
+                <div className="min-w-0">
+                  <DrawerTitle className="whitespace-nowrap text-lg font-bold tracking-tight sm:text-2xl">
+                    Thông tin đặt giặt ủi
+                  </DrawerTitle>
+                  <DrawerDescription className="mt-0.5 text-sm leading-tight text-zinc-500 sm:mt-1 sm:text-base">
+                    Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
+                  </DrawerDescription>
+                </div>
               </div>
-              <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+              <span className="shrink-0 rounded-full bg-yellow-100 px-2.5 py-1 font-bold text-sm text-amber-600 tabular-nums sm:px-3 sm:py-1.5 sm:text-base">
                 {activeStepIndex + 1}/{stepOrder.length}
               </span>
             </div>
@@ -773,7 +829,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             </DrawerClose>
           </DrawerHeader>
           <ScrollArea className="min-h-0 flex-1 overflow-hidden">
-            <main className="w-dvw min-w-0 max-w-dvw overflow-x-hidden bg-background text-foreground sm:w-full sm:max-w-full">
+            <main className="w-dvw min-w-0 max-w-dvw overflow-x-hidden bg-white text-zinc-950 sm:w-full sm:max-w-full">
               <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
                 {submittedId ? (
                   <Card className="border-border bg-background text-foreground">

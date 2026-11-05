@@ -202,8 +202,6 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
     onChange: onExpandedChange,
   });
 
-  const [hoveredTabIndex, setHoveredTabIndex] = useState<number | null>(null);
-
   const [previousIndex, setPreviousIndex] = useState<number | null>(null);
   const [contentRef, contentBounds] = useMeasure();
   const menuContainerRef = useRef<HTMLElement | null>(null);
@@ -633,34 +631,16 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
                       {navigationButtons.map((button, index) => {
                         const tabFocusIndex = active === null ? index === 0 : button.isActive;
 
-                        const isImmediatelyRightOfActive =
-                          index > 0 && active !== null && steps[index - 1]?.id === active;
-
-                        const isImmediatelyLeftOfActive =
-                          index < steps.length - 1 && active !== null && steps[index + 1]?.id === active;
-
-                        const activeTabFlushLeftWithHoveredNeighbor =
-                          button.isActive && index > 0 && hoveredTabIndex === index - 1;
-
-                        const activeTabFlushRightWithHoveredNeighbor =
-                          button.isActive && index < steps.length - 1 && hoveredTabIndex === index + 1;
-
                         return (
                           <button
                             aria-controls={panelId}
                             aria-selected={button.isActive}
                             className={cn(
-                              "flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-3 text-muted-foreground text-sm outline-none transition-[color,background-color,transform] duration-150 ease-out sm:min-h-0 sm:px-4 sm:py-4",
+                              "relative flex min-h-12 flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full px-2 py-2 text-muted-foreground text-sm outline-none transition-[color,background-color,transform] duration-150 ease-out sm:min-h-0 sm:gap-2 sm:px-5 sm:py-3",
                               "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                               "active:scale-[0.98]",
-                              button.isFirst && "rounded-tl-none rounded-bl-none",
-                              button.isLast && "rounded-tr-none rounded-br-none",
-                              isImmediatelyRightOfActive && "rounded-l-none",
-                              isImmediatelyLeftOfActive && "rounded-r-none",
-                              activeTabFlushLeftWithHoveredNeighbor && "rounded-l-none",
-                              activeTabFlushRightWithHoveredNeighbor && "rounded-r-none",
                               button.isActive
-                                ? "rounded-b-none bg-muted font-medium text-foreground"
+                                ? "bg-yellow-50 font-semibold text-foreground"
                                 : "hover:bg-muted/60 active:bg-muted/70",
                             )}
                             data-step-index={index}
@@ -668,8 +648,6 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
                             key={button.id}
                             onClick={button.onClick}
                             onKeyDown={(e) => handleTabKeyDown(e, index)}
-                            onMouseEnter={() => setHoveredTabIndex(index)}
-                            onMouseLeave={() => setHoveredTabIndex(null)}
                             ref={(el) => {
                               tabRefs.current[index] = el;
                             }}
@@ -688,6 +666,12 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
                               {button.step}
                             </div>
                             <span className="font-medium text-foreground text-xs sm:text-sm">{button.label}</span>
+                            {button.isActive ? (
+                              <span
+                                aria-hidden="true"
+                                className="absolute -bottom-2 left-2 right-2 h-1 rounded-full bg-yellow-300"
+                              />
+                            ) : null}
                           </button>
                         );
                       })}

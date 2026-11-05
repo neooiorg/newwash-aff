@@ -1,7 +1,10 @@
 "use client";
 
+import { type FormEvent, useCallback, useEffect, useState } from "react";
+
+import Image from "next/image";
+
 import { Plus } from "lucide-react";
-import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
@@ -23,8 +26,10 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { BookingService } from "@/lib/booking-services";
+import { getLaundryServiceIcon, laundryServiceIcons } from "@/lib/laundry-service-icons";
 
 import { AffiliatePageHeader } from "../../_components/affiliate-page-header";
 
@@ -39,6 +44,7 @@ const blankService: BookingService = {
   pricePerKg: null,
   minKg: 0,
   note: "",
+  iconKey: "washer-lightning",
   active: true,
   sortOrder: 100,
 };
@@ -171,9 +177,19 @@ export function ServicesWorkspace() {
       accessorKey: "label",
       header: "Dịch vụ",
       cell: ({ row }) => (
-        <div className="flex flex-col gap-0.5">
-          <span className="font-medium">{row.original.label}</span>
-          <span className="text-xs text-muted-foreground">{row.original.english || row.original.code}</span>
+        <div className="flex items-center gap-3">
+          <Image
+            alt=""
+            aria-hidden="true"
+            className="size-10 shrink-0 object-contain"
+            height={48}
+            src={getLaundryServiceIcon(row.original.iconKey, row.original.code).src}
+            width={48}
+          />
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium">{row.original.label}</span>
+            <span className="text-xs text-muted-foreground">{row.original.english || row.original.code}</span>
+          </div>
         </div>
       ),
     },
@@ -404,6 +420,32 @@ export function ServicesWorkspace() {
                     />
                   </Field>
                 </div>
+                <Field>
+                  <FieldLabel>Biểu tượng dịch vụ</FieldLabel>
+                  <FieldDescription>Biểu tượng này xuất hiện cạnh dịch vụ trong popup đặt đơn.</FieldDescription>
+                  <ToggleGroup
+                    aria-label="Chọn biểu tượng dịch vụ"
+                    className="grid grid-cols-3 gap-2 sm:grid-cols-5"
+                    onValueChange={(value) => {
+                      if (value) setDraft({ ...draft, iconKey: value });
+                    }}
+                    type="single"
+                    value={draft.iconKey}
+                    variant="outline"
+                  >
+                    {laundryServiceIcons.map((icon) => (
+                      <ToggleGroupItem
+                        aria-label={icon.label}
+                        className="h-auto min-h-20 w-full flex-col gap-1.5 px-2 py-2 data-[state=on]:border-yellow-400 data-[state=on]:bg-yellow-50 data-[state=on]:text-zinc-950"
+                        key={icon.key}
+                        value={icon.key}
+                      >
+                        <Image alt="" aria-hidden="true" height={48} src={icon.src} width={48} />
+                        <span className="line-clamp-1 text-[10px] text-muted-foreground">{icon.label}</span>
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </Field>
                 <Field>
                   <FieldLabel htmlFor="service-note">Ghi chú trên form</FieldLabel>
                   <Textarea

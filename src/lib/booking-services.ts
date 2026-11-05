@@ -11,6 +11,7 @@ export type BookingService = {
   pricePerKg: number | null;
   minKg: number;
   note: string;
+  iconKey: string;
   active: boolean;
   sortOrder: number;
 };
