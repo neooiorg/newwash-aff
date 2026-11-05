@@ -726,7 +726,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           </Button>
         </DrawerTrigger>
       </div>
-      <DrawerContent className="sm:mx-auto sm:max-w-3xl">
+      <DrawerContent className="h-[80dvh] max-h-[80dvh] overflow-hidden sm:mx-auto sm:max-w-3xl">
         <DrawerHeader className="relative border-b px-4 pt-2 pb-5 text-left sm:px-8">
           <div className="flex items-start justify-between gap-4 pr-12">
             <div>
