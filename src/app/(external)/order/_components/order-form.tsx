@@ -727,122 +727,124 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
 
   const activeStepIndex = Math.max(0, stepOrder.indexOf(activeStep));
   return (
-    <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
-      <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
-      <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
-        <DrawerTrigger asChild>
-          <Button
-            type="button"
-            size="lg"
-            className="rounded-full bg-yellow-400 px-6 font-semibold text-zinc-950 shadow-xl hover:bg-yellow-300"
-          >
-            Đặt lịch giặt ủi
-          </Button>
-        </DrawerTrigger>
-      </div>
-      <DrawerContent className="overflow-hidden data-[vaul-drawer-direction=bottom]:h-dvh data-[vaul-drawer-direction=bottom]:max-h-dvh data-[vaul-drawer-direction=bottom]:rounded-none data-[vaul-drawer-direction=bottom]:border-0 sm:mx-auto sm:max-w-3xl sm:data-[vaul-drawer-direction=bottom]:h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:max-h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:rounded-t-xl sm:data-[vaul-drawer-direction=bottom]:border-t">
-        <DrawerHeader className="relative shrink-0 border-b px-4 pt-2 pb-4 text-left sm:px-8 sm:pb-5">
-          <div className="flex items-start justify-between gap-4 pr-12">
-            <div>
-              <DrawerTitle>Thông tin đặt giặt ủi</DrawerTitle>
-              <DrawerDescription className="mt-0.5 line-clamp-1 sm:mt-1">
-                Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
-              </DrawerDescription>
-            </div>
-            <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
-              {activeStepIndex + 1}/{stepOrder.length}
-            </span>
-          </div>
-          <DrawerClose asChild>
+    <>
+      <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
+        <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
+        <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
+          <DrawerTrigger asChild>
             <Button
               type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute top-0 right-3 size-11 rounded-full sm:right-8 sm:size-9"
-              aria-label="Đóng biểu mẫu"
+              size="lg"
+              className="rounded-full bg-yellow-400 px-6 font-semibold text-zinc-950 shadow-xl hover:bg-yellow-300"
             >
-              <X />
+              Đặt lịch giặt ủi
             </Button>
-          </DrawerClose>
-        </DrawerHeader>
-        <ScrollArea className="min-h-0 flex-1 overflow-hidden">
-          <main className="bg-background text-foreground">
-            <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
-              {submittedId ? (
-                <Card className="border-border bg-background text-foreground">
-                  <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-                    <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
-                      <CheckCircle2 aria-hidden="true" />
-                    </span>
-                    <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
-                    <p className="max-w-sm text-sm text-muted-foreground">
-                      Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
-                    </p>
-                    <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
-                  </CardContent>
-                </Card>
-              ) : (
-                <form
-                  ref={formRef}
-                  id="newwash-order-form"
-                  noValidate
-                  onSubmit={submit}
-                  className="flex flex-col gap-4"
-                >
-                  <p className="sr-only" aria-live="assertive">
-                    {error}
-                  </p>
-                  <WizardExpandable
-                    steps={steps}
-                    expanded
-                    animateInitialOpen={false}
-                    activeStep={activeStep}
-                    onActiveStepChange={(value) => {
-                      if (value) {
-                        setActiveStep(value);
-                        setError("");
-                      }
-                    }}
-                    canNavigateToStep={canNavigateToStep}
-                    onNavigateBlocked={onNavigateBlocked}
-                    onComplete={() => {
-                      const contactError = stepError("contact");
-                      if (contactError) {
-                        showOrderError(contactError);
-                        document.getElementById("phone")?.focus();
-                        return;
-                      }
-                      formRef.current?.requestSubmit();
-                    }}
-                    backLabel="Quay lại"
-                    nextLabel="Tiếp tục"
-                    completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
-                    canGoNext={
-                      !saving &&
-                      !servicesLoading &&
-                      !servicesError &&
-                      services.length > 0 &&
-                      (!preview || activeStep !== "contact")
-                    }
-                    className="max-w-none px-0 sm:max-w-none"
-                  />
-                  {preview && (
-                    <p className="text-center text-xs text-muted-foreground">
-                      Đây là bản xem trước; đơn hàng sẽ không được gửi.
-                    </p>
-                  )}
-                </form>
-              )}
+          </DrawerTrigger>
+        </div>
+        <DrawerContent className="overflow-hidden data-[vaul-drawer-direction=bottom]:h-dvh data-[vaul-drawer-direction=bottom]:max-h-dvh data-[vaul-drawer-direction=bottom]:rounded-none data-[vaul-drawer-direction=bottom]:border-0 sm:mx-auto sm:max-w-3xl sm:data-[vaul-drawer-direction=bottom]:h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:max-h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:rounded-t-xl sm:data-[vaul-drawer-direction=bottom]:border-t">
+          <DrawerHeader className="relative shrink-0 border-b px-4 pt-2 pb-4 text-left sm:px-8 sm:pb-5">
+            <div className="flex items-start justify-between gap-4 pr-12">
+              <div>
+                <DrawerTitle>Thông tin đặt giặt ủi</DrawerTitle>
+                <DrawerDescription className="mt-0.5 line-clamp-1 sm:mt-1">
+                  Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
+                </DrawerDescription>
+              </div>
+              <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+                {activeStepIndex + 1}/{stepOrder.length}
+              </span>
             </div>
-          </main>
-        </ScrollArea>
-      </DrawerContent>
+            <DrawerClose asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-0 right-3 size-11 rounded-full sm:right-8 sm:size-9"
+                aria-label="Đóng biểu mẫu"
+              >
+                <X />
+              </Button>
+            </DrawerClose>
+          </DrawerHeader>
+          <ScrollArea className="min-h-0 flex-1 overflow-hidden">
+            <main className="bg-background text-foreground">
+              <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
+                {submittedId ? (
+                  <Card className="border-border bg-background text-foreground">
+                    <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+                      <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
+                        <CheckCircle2 aria-hidden="true" />
+                      </span>
+                      <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
+                      <p className="max-w-sm text-sm text-muted-foreground">
+                        Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
+                      </p>
+                      <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <form
+                    ref={formRef}
+                    id="newwash-order-form"
+                    noValidate
+                    onSubmit={submit}
+                    className="flex flex-col gap-4"
+                  >
+                    <p className="sr-only" aria-live="assertive">
+                      {error}
+                    </p>
+                    <WizardExpandable
+                      steps={steps}
+                      expanded
+                      animateInitialOpen={false}
+                      activeStep={activeStep}
+                      onActiveStepChange={(value) => {
+                        if (value) {
+                          setActiveStep(value);
+                          setError("");
+                        }
+                      }}
+                      canNavigateToStep={canNavigateToStep}
+                      onNavigateBlocked={onNavigateBlocked}
+                      onComplete={() => {
+                        const contactError = stepError("contact");
+                        if (contactError) {
+                          showOrderError(contactError);
+                          document.getElementById("phone")?.focus();
+                          return;
+                        }
+                        formRef.current?.requestSubmit();
+                      }}
+                      backLabel="Quay lại"
+                      nextLabel="Tiếp tục"
+                      completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
+                      canGoNext={
+                        !saving &&
+                        !servicesLoading &&
+                        !servicesError &&
+                        services.length > 0 &&
+                        (!preview || activeStep !== "contact")
+                      }
+                      className="max-w-none px-0 sm:max-w-none"
+                    />
+                    {preview && (
+                      <p className="text-center text-xs text-muted-foreground">
+                        Đây là bản xem trước; đơn hàng sẽ không được gửi.
+                      </p>
+                    )}
+                  </form>
+                )}
+              </div>
+            </main>
+          </ScrollArea>
+        </DrawerContent>
+      </Drawer>
       <SileoToaster
         position="top-center"
         theme="light"
         offset={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
         options={{ duration: 4200 }}
       />
-    </Drawer>
+    </>
   );
 }
