@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 
 import { cn } from "cn";
 
+import { ThemeSwitcher } from "@/app/(main)/dashboard/_components/header/theme-switcher";
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { Separator } from "@/components/ui/separator";
@@ -68,6 +69,7 @@ export default async function AffiliatePortalLayout({ children }: Readonly<{ chi
             </div>
             <div className="flex items-center gap-2">
               <NotificationCenter scope="affiliate" />
+              <ThemeSwitcher />
             </div>
           </div>
         </header>
