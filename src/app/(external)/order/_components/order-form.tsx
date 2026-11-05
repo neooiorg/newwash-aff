@@ -749,7 +749,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             </Button>
           </DrawerClose>
         </DrawerHeader>
-        <ScrollArea className="min-h-0 flex-1">
+        <ScrollArea className="min-h-0 flex-1 overflow-hidden">
           <main className="bg-background text-foreground">
             <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-5 pb-8 sm:px-8">
               {submittedId ? (
