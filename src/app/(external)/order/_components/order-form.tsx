@@ -3,8 +3,9 @@
 import { Check, CheckCircle2, ChevronDown, Clock3, MapPin, Minus, Phone, Plus, Shirt, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { cn } from "cn";
+import { sileo, Toaster as SileoToaster } from "sileo";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -153,6 +154,16 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const pendingRequest = useRef("");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const showOrderError = useCallback((message: string) => {
+    setError(message);
+    sileo.error({
+      title: "Chưa thể đặt đơn",
+      description: message,
+      position: "top-center",
+      duration: 4200,
+    });
+  }, []);
+
   useEffect(() => {
     if (!embedded) return;
     const previousHtmlBackground = document.documentElement.style.background;
@@ -246,7 +257,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
       pendingRequest.current = "";
       setSaving(false);
-      if (event.data.error) setError(String(event.data.error));
+      if (event.data.error) showOrderError(String(event.data.error));
       else setSubmittedId(String(event.data.orderId));
     }
     window.addEventListener("message", receive);
@@ -254,7 +265,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       window.removeEventListener("message", receive);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [embedded, hostOrigin]);
+  }, [embedded, hostOrigin, showOrderError]);
 
   const service = services.find((item) => item.code === serviceCode);
   const total =
@@ -279,17 +290,17 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     setError("");
     if (preview) return;
     if (!service) {
-      setError("Vui lòng chọn dịch vụ giặt ủi.");
+      showOrderError("Vui lòng chọn dịch vụ giặt ủi.");
       setActiveStep("service");
       return;
     }
     if (service.pricePerKg !== null && quantityKg < service.minKg) {
-      setError(`Dịch vụ này yêu cầu tối thiểu ${service.minKg} kg.`);
+      showOrderError(`Dịch vụ này yêu cầu tối thiểu ${service.minKg} kg.`);
       setActiveStep("service");
       return;
     }
     if (!pickupAddress.trim() || (!sameDeliveryAddress && !deliveryAddress.trim())) {
-      setError("Vui lòng nhập địa chỉ nhận và giao đồ.");
+      showOrderError("Vui lòng nhập địa chỉ nhận và giao đồ.");
       setActiveStep("address");
       return;
     }
@@ -303,17 +314,17 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       Number.isNaN(deliveryAt.getTime()) ||
       deliveryAt.getTime() - pickupAt.getTime() < minimumHours * 3_600_000
     ) {
-      setError(`Thời gian giao đồ cần cách giờ nhận ít nhất ${minimumHours} giờ.`);
+      showOrderError(`Thời gian giao đồ cần cách giờ nhận ít nhất ${minimumHours} giờ.`);
       setActiveStep("schedule");
       return;
     }
     if (!/^0\d{9}$/.test(phone.replace(/[\s.-]/g, ""))) {
-      setError("Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số.");
+      showOrderError("Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số.");
       setActiveStep("contact");
       return;
     }
     if (!embedded || !hostOrigin) {
-      setError("Vui lòng đặt đơn qua popup trên website cửa hàng.");
+      showOrderError("Vui lòng đặt đơn qua popup trên website cửa hàng.");
       return;
     }
     const requestId = crypto.randomUUID();
@@ -349,7 +360,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       if (pendingRequest.current === requestId) {
         pendingRequest.current = "";
         setSaving(false);
-        setError("Website chưa phản hồi. Vui lòng thử lại.");
+        showOrderError("Website chưa phản hồi. Vui lòng thử lại.");
       }
     }, 15_000);
   }
@@ -357,7 +368,10 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const handleDrawerOpenChange = useCallback(
     (open: boolean) => {
       setDrawerOpen(open);
-      if (!open && embedded && hostOrigin) window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
+      if (!open) {
+        sileo.clear("top-center");
+        if (embedded && hostOrigin) window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
+      }
     },
     [embedded, hostOrigin],
   );
@@ -396,7 +410,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   function onNavigateBlocked(context: WizardNavigateContext) {
     const invalid = stepOrder.slice(context.fromIndex, context.toIndex).find((stepId) => stepError(stepId));
     if (invalid) {
-      setError(stepError(invalid));
+      showOrderError(stepError(invalid));
       document.getElementById(`${invalid}-section`)?.scrollIntoView({ block: "center", behavior: "smooth" });
     }
   }
@@ -726,12 +740,14 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           </Button>
         </DrawerTrigger>
       </div>
-      <DrawerContent className="h-[80dvh] max-h-[80dvh] overflow-hidden sm:mx-auto sm:max-w-3xl">
-        <DrawerHeader className="relative border-b px-4 pt-2 pb-5 text-left sm:px-8">
+      <DrawerContent className="overflow-hidden data-[vaul-drawer-direction=bottom]:h-dvh data-[vaul-drawer-direction=bottom]:max-h-dvh data-[vaul-drawer-direction=bottom]:rounded-none data-[vaul-drawer-direction=bottom]:border-0 sm:mx-auto sm:max-w-3xl sm:data-[vaul-drawer-direction=bottom]:h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:max-h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:rounded-t-xl sm:data-[vaul-drawer-direction=bottom]:border-t">
+        <DrawerHeader className="relative shrink-0 border-b px-4 pt-2 pb-4 text-left sm:px-8 sm:pb-5">
           <div className="flex items-start justify-between gap-4 pr-12">
             <div>
               <DrawerTitle>Thông tin đặt giặt ủi</DrawerTitle>
-              <DrawerDescription className="mt-1">Chọn dịch vụ, địa chỉ và thời gian nhận đồ.</DrawerDescription>
+              <DrawerDescription className="mt-0.5 line-clamp-1 sm:mt-1">
+                Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
+              </DrawerDescription>
             </div>
             <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
               {activeStepIndex + 1}/{stepOrder.length}
@@ -742,7 +758,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute top-0 right-4 rounded-full sm:right-8"
+              className="absolute top-0 right-3 size-11 rounded-full sm:right-8 sm:size-9"
               aria-label="Đóng biểu mẫu"
             >
               <X />
@@ -751,7 +767,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
         </DrawerHeader>
         <ScrollArea className="min-h-0 flex-1 overflow-hidden">
           <main className="bg-background text-foreground">
-            <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-5 pb-8 sm:px-8">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
               {submittedId ? (
                 <Card className="border-border bg-background text-foreground">
                   <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
@@ -773,12 +789,9 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                   onSubmit={submit}
                   className="flex flex-col gap-4"
                 >
-                  {error && (
-                    <Alert variant="destructive" role="alert">
-                      <AlertTitle>Chưa thể đặt đơn</AlertTitle>
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
+                  <p className="sr-only" aria-live="assertive">
+                    {error}
+                  </p>
                   <WizardExpandable
                     steps={steps}
                     expanded
@@ -795,7 +808,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                     onComplete={() => {
                       const contactError = stepError("contact");
                       if (contactError) {
-                        setError(contactError);
+                        showOrderError(contactError);
                         document.getElementById("phone")?.focus();
                         return;
                       }
@@ -824,6 +837,12 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           </main>
         </ScrollArea>
       </DrawerContent>
+      <SileoToaster
+        position="top-center"
+        theme="light"
+        offset={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
+        options={{ duration: 4200 }}
+      />
     </Drawer>
   );
 }

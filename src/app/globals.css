@@ -192,6 +192,16 @@ html:has([data-landing-page]) {
   view-transition-name: none;
 }
 
+[data-sileo-viewport] {
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+@media (max-width: 639px) {
+  [data-sileo-toast] {
+    --sileo-width: calc(100vw - 1.5rem);
+  }
+}
+
 [data-landing-dashboard-preview] {
   view-transition-name: landing-dashboard-preview;
 }

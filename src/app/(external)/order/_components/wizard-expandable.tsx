@@ -484,7 +484,7 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
       <motion.div
         animate="animate"
         aria-labelledby={`${baseId}-tab-${step.id}`}
-        className="space-y-4 pb-2"
+        className="flex flex-col gap-4 pb-20 sm:pb-2"
         exit="exit"
         id={panelId}
         initial="initial"
@@ -492,7 +492,7 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
         role="tabpanel"
         variants={listVariants}
       >
-        <div className="space-y-2">
+        <div className="flex flex-col gap-2">
           <motion.h3 className="text-balance font-medium text-foreground text-lg" id={titleId} variants={itemVariants}>
             {step.title}
           </motion.h3>
@@ -505,7 +505,7 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
         <motion.div variants={itemVariants}>{step.content}</motion.div>
         {showNavigation ? (
           <motion.div
-            className="border-border border-t bg-background pt-4"
+            className="sticky bottom-0 z-10 -mx-3 border-border border-t bg-background px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:static sm:mx-0 sm:px-0 sm:pt-4 sm:pb-0"
             variants={itemVariants}
           >
             <fieldset aria-label="Wizard navigation" className="flex min-w-0 gap-2 sm:gap-3">
@@ -602,7 +602,7 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
 
   return (
     <WizardExpandableContext.Provider value={wizardContextValue}>
-      <div className={cn("mx-auto w-full max-w-sm space-y-2 px-2 sm:max-w-lg sm:px-0", className)}>
+      <div className={cn("mx-auto flex w-full max-w-sm flex-col gap-2 px-2 sm:max-w-lg sm:px-0", className)}>
         {badgeText && (
           <Badge className="border-border bg-muted text-muted-foreground" variant="outline">
             {badgeText}
