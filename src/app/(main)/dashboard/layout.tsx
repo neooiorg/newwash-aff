@@ -15,7 +15,6 @@ import { getPreference } from "@/server/server-actions";
 
 import { AccountSwitcher } from "./_components/header/account-switcher";
 import { SearchDialog } from "./_components/header/search-dialog";
-import { ThemeSwitcher } from "./_components/header/theme-switcher";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
   if (!(await hasAdminSession())) redirect("/auth/admin");
@@ -64,7 +63,6 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
             </div>
             <div className="flex items-center gap-2">
               <NotificationCenter scope="admin" />
-              <ThemeSwitcher />
               <AccountSwitcher users={users} />
             </div>
           </div>
