@@ -77,8 +77,6 @@ const currency = new Intl.NumberFormat("vi-VN");
 
 export function ServicesWorkspace() {
   const [services, setServices] = useState<BookingService[]>([]);
-  const [whiteWashFee, setWhiteWashFee] = useState(0);
-  const [feeDraft, setFeeDraft] = useState("0");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -90,8 +88,6 @@ export function ServicesWorkspace() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Không tải được dịch vụ.");
       setServices(data.services);
-      setWhiteWashFee(data.whiteWashFee);
-      setFeeDraft(String(data.whiteWashFee));
       setError("");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không tải được dịch vụ.");
@@ -103,7 +99,7 @@ export function ServicesWorkspace() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
-  useAffiliateRealtime(["newwash_services", "newwash_settings"], refresh);
+  useAffiliateRealtime(["newwash_services"], refresh);
 
   async function saveService(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -142,32 +138,6 @@ export function ServicesWorkspace() {
     } catch (cause) {
       setServices((current) => current.map((service) => (service.id === item.id ? item : service)));
       setError(cause instanceof Error ? cause.message : "Không đổi được trạng thái.");
-    }
-  }
-
-  async function saveFee(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const amount = Number(feeDraft);
-    if (!Number.isInteger(amount) || amount < 0) {
-      setError("Phụ phí cần là số nguyên không âm.");
-      return;
-    }
-    setSaving(true);
-    try {
-      const response = await fetch("/api/services", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ whiteWashFee: amount }),
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Không lưu được phụ phí.");
-      setWhiteWashFee(amount);
-      setError("");
-      toast.success("Đã cập nhật phụ phí giặt riêng đồ trắng");
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không lưu được phụ phí.");
-    } finally {
-      setSaving(false);
     }
   }
 
@@ -263,22 +233,6 @@ export function ServicesWorkspace() {
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      <form onSubmit={saveFee} className="flex flex-wrap items-end gap-3 border-b pb-5">
-        <Field className="max-w-xs">
-          <FieldLabel htmlFor="white-wash-fee">Phụ phí giặt riêng đồ trắng (đ)</FieldLabel>
-          <Input
-            id="white-wash-fee"
-            type="number"
-            min="0"
-            step="1"
-            value={feeDraft}
-            onChange={(event) => setFeeDraft(event.target.value)}
-          />
-        </Field>
-        <Button type="submit" variant="outline" disabled={saving || Number(feeDraft) === whiteWashFee}>
-          Lưu phụ phí
-        </Button>
-      </form>
       {loading ? (
         <Skeleton className="h-80 w-full" />
       ) : (

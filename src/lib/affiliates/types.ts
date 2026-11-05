@@ -29,7 +29,6 @@ export interface ReferralOrder {
     serviceCode?: string;
     category?: "laundry" | "other";
     quantityKg?: number;
-    washWhitesSeparately?: boolean;
     pickupDate?: string;
     pickupTime?: string;
     deliveryDate?: string;

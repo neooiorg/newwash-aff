@@ -132,14 +132,12 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const [activeStep, setActiveStep] = useState("service");
   const formRef = useRef<HTMLFormElement>(null);
   const [services, setServices] = useState<BookingService[]>([]);
-  const [whiteWashFee, setWhiteWashFee] = useState(0);
   const [servicesLoading, setServicesLoading] = useState(true);
   const [servicesError, setServicesError] = useState("");
   const [today, setToday] = useState<Date | null>(null);
   const [category, setCategory] = useState<ServiceCategory>("laundry");
   const [serviceCode, setServiceCode] = useState("");
   const [quantityKg, setQuantityKg] = useState(0);
-  const [washWhitesSeparately, setWashWhitesSeparately] = useState(false);
   const [pickupAddress, setPickupAddress] = useState("");
   const [sameDeliveryAddress, setSameDeliveryAddress] = useState(true);
   const [deliveryAddress, setDeliveryAddress] = useState("");
@@ -198,7 +196,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
         if (!response.ok) throw new Error(data.error || "Không tải được danh sách dịch vụ.");
         if (active) {
           setServices(data.services);
-          setWhiteWashFee(data.whiteWashFee);
           setServiceCode((current) => {
             if (current && data.services.some((item: BookingService) => item.code === current)) return current;
             const firstService = data.services.find((item: BookingService) => item.category === "laundry");
@@ -230,10 +227,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       socket.addEventListener("message", (event) => {
         try {
           const message = JSON.parse(event.data);
-          if (
-            message.type === "ready" ||
-            (message.type === "invalidate" && ["newwash_services", "newwash_settings"].includes(message.table))
-          ) {
+          if (message.type === "ready" || (message.type === "invalidate" && message.table === "newwash_services")) {
             void loadServices();
           }
         } catch {
@@ -262,10 +256,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   }, []);
 
   const service = services.find((item) => item.code === serviceCode);
-  const total =
-    service?.pricePerKg !== null && service && quantityKg > 0
-      ? service.pricePerKg * quantityKg + (washWhitesSeparately ? whiteWashFee : 0)
-      : 0;
+  const total = service?.pricePerKg !== null && service && quantityKg > 0 ? service.pricePerKg * quantityKg : 0;
   const days = useMemo(() => (today ? dateChoices(today, 14) : []), [today]);
 
   function chooseService(code: string) {
@@ -333,7 +324,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           serviceCode: service.code,
           category,
           quantityKg,
-          washWhitesSeparately,
           pickupAddress: pickupAddress.trim(),
           deliveryAddress: sameDeliveryAddress ? pickupAddress.trim() : deliveryAddress.trim(),
           pickupDate,
@@ -520,48 +510,35 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                 </ToggleGroupItem>
               ))}
           </ToggleGroup>
-          {service && (
+          {service?.pricePerKg !== null && service && (
             <FieldGroup className="gap-3 border-t pt-4">
-              {service.pricePerKg !== null && (
-                <Field orientation="horizontal" className="justify-between">
-                  <FieldContent>
-                    <FieldLabel>Khối lượng ước tính</FieldLabel>
-                    <FieldDescription>Tối thiểu {service.minKg} kg</FieldDescription>
-                  </FieldContent>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label="Giảm khối lượng"
-                      disabled={quantityKg <= service.minKg}
-                      onClick={() => setQuantityKg(Math.max(service.minKg, quantityKg - 1))}
-                    >
-                      <Minus />
-                    </Button>
-                    <span className="min-w-8 text-center font-medium tabular-nums">{quantityKg} kg</span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      aria-label="Tăng khối lượng"
-                      onClick={() => setQuantityKg(quantityKg + 1)}
-                    >
-                      <Plus />
-                    </Button>
-                  </div>
-                </Field>
-              )}
-              <Field orientation="horizontal">
-                <Checkbox
-                  id="wash-whites"
-                  checked={washWhitesSeparately}
-                  onCheckedChange={(checked) => setWashWhitesSeparately(checked === true)}
-                />
+              <Field orientation="horizontal" className="justify-between">
                 <FieldContent>
-                  <FieldLabel htmlFor="wash-whites">Giặt riêng đồ trắng</FieldLabel>
-                  <FieldDescription>Phụ phí {formatVnd(whiteWashFee)}</FieldDescription>
+                  <FieldLabel>Khối lượng ước tính</FieldLabel>
+                  <FieldDescription>Tối thiểu {service.minKg} kg</FieldDescription>
                 </FieldContent>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Giảm khối lượng"
+                    disabled={quantityKg <= service.minKg}
+                    onClick={() => setQuantityKg(Math.max(service.minKg, quantityKg - 1))}
+                  >
+                    <Minus />
+                  </Button>
+                  <span className="min-w-8 text-center font-medium tabular-nums">{quantityKg} kg</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    aria-label="Tăng khối lượng"
+                    onClick={() => setQuantityKg(quantityKg + 1)}
+                  >
+                    <Plus />
+                  </Button>
+                </div>
               </Field>
             </FieldGroup>
           )}

@@ -30,11 +30,7 @@ const serviceInput = z
 export async function GET(request: Request) {
   if (!(await isAdminRequest(request))) return adminUnavailable();
   try {
-    const [services, settings] = await Promise.all([
-      listBookingServices(),
-      getPool().query<{ white_wash_fee: number }>("SELECT white_wash_fee FROM newwash_settings WHERE id = 1"),
-    ]);
-    return Response.json({ services, whiteWashFee: settings.rows[0]?.white_wash_fee ?? 0 });
+    return Response.json({ services: await listBookingServices() });
   } catch {
     return Response.json({ error: "Không tải được cấu hình dịch vụ." }, { status: 503 });
   }
@@ -108,21 +104,5 @@ export async function PATCH(request: Request) {
     return Response.json({ ok: true });
   } catch {
     return Response.json({ error: "Không lưu được dịch vụ." }, { status: 503 });
-  }
-}
-
-export async function PUT(request: Request) {
-  if (!(await isAdminRequest(request))) return adminUnavailable();
-  const parsed = z
-    .object({ whiteWashFee: z.number().int().min(0).max(100_000_000) })
-    .safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return Response.json({ error: "Phụ phí không hợp lệ." }, { status: 400 });
-  try {
-    await getPool().query("UPDATE newwash_settings SET white_wash_fee = $1, updated_at = now() WHERE id = 1", [
-      parsed.data.whiteWashFee,
-    ]);
-    return Response.json({ whiteWashFee: parsed.data.whiteWashFee });
-  } catch {
-    return Response.json({ error: "Không lưu được phụ phí." }, { status: 503 });
   }
 }
