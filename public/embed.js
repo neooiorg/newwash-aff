@@ -1,4 +1,4 @@
-(function () {
+(() => {
   var script = document.currentScript;
   if (!script || !script.src || document.getElementById("newwash-popup-root")) return;
 
@@ -9,11 +9,15 @@
   try {
     if (incomingCode) sessionStorage.setItem("newwash-aff-code", incomingCode);
     storedCode = sessionStorage.getItem("newwash-aff-code") || "";
-  } catch (_) { /* Private browsing may block storage. The QR parameter still works. */ }
+  } catch (_) {
+    /* Private browsing may block storage. The QR parameter still works. */
+  }
   var code = (incomingCode || storedCode)
-    .toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 20);
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 20);
   var orderEndpoint = new URL(script.getAttribute("data-order-endpoint") || "/api/newwash/orders", location.href);
-  window.NewWashAff = { getAffiliateCode: function () { return code; } };
+  window.NewWashAff = { getAffiliateCode: () => code };
   var root = document.createElement("div");
   root.id = "newwash-popup-root";
   var shadow = root.attachShadow({ mode: "open" });
@@ -25,7 +29,25 @@
   var bubble = document.createElement("button");
   bubble.type = "button";
   bubble.className = "newwash-bubble";
-  bubble.textContent = "Đặt lịch giặt ủi";
+  bubble.hidden = true;
+  var bubbleIcon = document.createElement("span");
+  bubbleIcon.className = "newwash-bubble-icon";
+  var bubbleImage = document.createElement("img");
+  bubbleImage.src = origin + "/laundry-icons/washer-lightning.png";
+  bubbleImage.alt = "";
+  bubbleImage.setAttribute("aria-hidden", "true");
+  bubbleIcon.appendChild(bubbleImage);
+  var bubbleLabel = document.createElement("span");
+  bubbleLabel.className = "newwash-bubble-label";
+  bubbleLabel.textContent = "Đặt lịch giặt ủi";
+  var bubbleArrow = document.createElement("span");
+  bubbleArrow.className = "newwash-bubble-arrow";
+  bubbleArrow.setAttribute("aria-hidden", "true");
+  bubbleArrow.innerHTML =
+    '<svg viewBox="0 0 20 20" fill="none"><path d="M4 10h11m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  bubble.appendChild(bubbleIcon);
+  bubble.appendChild(bubbleLabel);
+  bubble.appendChild(bubbleArrow);
   bubble.setAttribute("aria-label", "Mở biểu mẫu đặt lịch giặt ủi");
   shadow.appendChild(bubble);
 
@@ -41,10 +63,45 @@
   (document.body || document.documentElement).appendChild(root);
   var closeTimer = 0;
   var layerOpen = false;
+  var buttonOffsetX = 24;
+  var buttonOffsetY = 24;
 
-  var frameUrl = origin + "/order?embed=1&aff=" + encodeURIComponent(code)
-    + "&host=" + encodeURIComponent(location.origin)
-    + (params.get("preview") === "1" ? "&preview=1" : "");
+  function applyButtonPosition() {
+    var maxX = Math.max(8, window.innerWidth - 208);
+    var maxY = Math.max(8, window.innerHeight - 72);
+    bubble.style.setProperty("--nw-offset-x", Math.min(buttonOffsetX, maxX) + "px");
+    bubble.style.setProperty("--nw-offset-y", Math.min(buttonOffsetY, maxY) + "px");
+  }
+
+  function revealButton() {
+    applyButtonPosition();
+    bubble.hidden = false;
+    window.requestAnimationFrame(() => {
+      bubble.classList.add("is-ready");
+    });
+  }
+
+  fetch(origin + "/api/embed-config", { mode: "cors", cache: "no-store" })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((config) => {
+      if (!config) return;
+      if (Number.isInteger(config.buttonOffsetX)) buttonOffsetX = Math.max(0, Math.min(400, config.buttonOffsetX));
+      if (Number.isInteger(config.buttonOffsetY)) buttonOffsetY = Math.max(0, Math.min(400, config.buttonOffsetY));
+    })
+    .catch(() => {
+      /* The default 24px inset remains usable when config is unavailable. */
+    })
+    .finally(revealButton);
+
+  window.addEventListener("resize", applyButtonPosition, { passive: true });
+
+  var frameUrl =
+    origin +
+    "/order?embed=1&aff=" +
+    encodeURIComponent(code) +
+    "&host=" +
+    encodeURIComponent(location.origin) +
+    (params.get("preview") === "1" ? "&preview=1" : "");
 
   function ensureFrame() {
     if (!iframe.getAttribute("src")) iframe.src = frameUrl;
@@ -76,7 +133,7 @@
     if (!layerOpen || closeTimer) return;
     layerOpen = false;
     layer.classList.add("is-closing");
-    closeTimer = window.setTimeout(function () {
+    closeTimer = window.setTimeout(() => {
       layer.classList.remove("is-open", "is-closing");
       layer.setAttribute("aria-hidden", "true");
       bubble.hidden = false;
@@ -84,36 +141,45 @@
     }, 500);
   }
 
-  iframe.addEventListener("load", function () {
+  iframe.addEventListener("load", () => {
     if (layerOpen) expandFrame();
   });
 
   bubble.addEventListener("click", open);
-  window.addEventListener("message", function (event) {
+  window.addEventListener("message", (event) => {
     if (event.origin !== origin || event.source !== iframe.contentWindow) return;
     if (event.data && event.data.type === "newwash:ready" && layerOpen) expandFrame();
     if (event.data && event.data.type === "newwash:close") close();
     if (event.data && event.data.type === "newwash:order-submit") {
-      var requestId = event.data.requestId;
-      var order = event.data.order;
+      const requestId = event.data.requestId;
+      const order = event.data.order;
       if (typeof requestId !== "string" || !order || typeof order !== "object") return;
-      (async function () {
+      (async () => {
         try {
           if (orderEndpoint.origin !== location.origin) throw new Error("API đặt đơn phải thuộc website cửa hàng.");
-          var response = await fetch(orderEndpoint.href, {
+          const response = await fetch(orderEndpoint.href, {
             method: "POST",
             headers: { "content-type": "application/json" },
             credentials: "same-origin",
             body: JSON.stringify(order),
           });
-          var result = await response.json().catch(function () { return {}; });
+          const result = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(result.error || "Website chưa tạo được đơn.");
-          var orderId = result.orderId || result.id;
+          const orderId = result.orderId || result.id;
           if (!orderId) throw new Error("Website chưa trả về mã đơn.");
-          iframe.contentWindow.postMessage({ type: "newwash:order-result", requestId: requestId, orderId: orderId }, origin);
+          iframe.contentWindow.postMessage(
+            { type: "newwash:order-result", requestId: requestId, orderId: orderId },
+            origin,
+          );
         } catch (error) {
-          iframe.contentWindow.postMessage({ type: "newwash:order-result", requestId: requestId,
-            error: error instanceof Error ? error.message : "Không tạo được đơn trên website." }, origin);
+          iframe.contentWindow.postMessage(
+            {
+              type: "newwash:order-result",
+              requestId: requestId,
+              error: error instanceof Error ? error.message : "Không tạo được đơn trên website.",
+            },
+            origin,
+          );
         }
       })();
     }

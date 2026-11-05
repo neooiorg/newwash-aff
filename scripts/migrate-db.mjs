@@ -13,6 +13,7 @@ const migrations = [
   "006_booking_services.sql",
   "007_order_amount.sql",
   "008_service_icons.sql",
+  "009_embed_button_position.sql",
 ];
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 10000 });
 

@@ -1,20 +1,126 @@
+@font-face {
+  font-family: "NewWash Manrope";
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url("/fonts/manrope-vietnamese.woff2") format("woff2");
+  unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0,
+    U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;
+}
+
+@font-face {
+  font-family: "NewWash Manrope";
+  font-style: normal;
+  font-weight: 600 800;
+  font-display: swap;
+  src: url("/fonts/manrope-latin.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308,
+    U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 .newwash-bubble {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+  right: var(--nw-offset-x, 24px);
+  bottom: calc(var(--nw-offset-y, 24px) + env(safe-area-inset-bottom, 0px));
   z-index: 2147483640;
-  border: 0;
+  display: inline-flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  border: 1px solid #e4ae00;
   border-radius: 999px;
   background: #ffca05;
   color: #171717;
-  box-shadow: 0 10px 30px #0003;
-  padding: 14px 20px;
-  font: 700 14px/1.2 Manrope, system-ui, sans-serif;
+  box-shadow: 0 12px 30px #1717172b, inset 0 1px 0 #fff8b3;
+  padding: 6px 10px 6px 7px;
+  font: 750 15px/1 "NewWash Manrope", Manrope, system-ui, sans-serif;
+  letter-spacing: -0.015em;
   cursor: pointer;
+  opacity: 0;
+  transform: translateY(12px) scale(0.96);
+  transform-origin: center bottom;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), background-color 160ms ease,
+    box-shadow 180ms ease;
+  isolation: isolate;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-.newwash-bubble:hover { background: #f4bd00; }
+.newwash-bubble::after {
+  position: absolute;
+  inset: -40% auto -40% -35%;
+  z-index: -1;
+  width: 42%;
+  background: linear-gradient(90deg, transparent, #fff7b8b8, transparent);
+  content: "";
+  transform: skewX(-18deg) translateX(-220%);
+  pointer-events: none;
+}
+
+.newwash-bubble.is-ready {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  animation: newwash-bubble-arrive 520ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.newwash-bubble.is-ready::after { animation: newwash-bubble-shine 720ms 420ms ease-out 1 both; }
+
+.newwash-bubble-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 999px;
+  background: #fff8cf;
+  box-shadow: inset 0 0 0 1px #ffffff, 0 3px 8px #8a670029;
+}
+
+.newwash-bubble-icon img {
+  display: block;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  transition: transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.newwash-bubble-label { white-space: nowrap; }
+
+.newwash-bubble-arrow {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border-radius: 999px;
+  background: #171717;
+  color: #ffca05;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.newwash-bubble-arrow svg { width: 17px; height: 17px; }
+
+.newwash-bubble:hover {
+  background: #ffd52f;
+  box-shadow: 0 15px 36px #17171738, inset 0 1px 0 #fff8b3;
+  transform: translateY(-2px) scale(1.012);
+}
+
+.newwash-bubble:hover .newwash-bubble-icon img { transform: rotate(-4deg) scale(1.08); }
+.newwash-bubble:hover .newwash-bubble-arrow { transform: translateX(2px); }
+.newwash-bubble:active { transform: translateY(0) scale(0.985); }
 .newwash-bubble:focus-visible { outline: 3px solid #171717; outline-offset: 3px; }
+
+@keyframes newwash-bubble-arrive {
+  0% { opacity: 0; transform: translateY(14px) scale(0.94); filter: blur(3px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+
+@keyframes newwash-bubble-shine {
+  0% { transform: skewX(-18deg) translateX(-220%); }
+  100% { transform: skewX(-18deg) translateX(580%); }
+}
 
 .newwash-layer {
   position: fixed;
@@ -34,6 +140,22 @@
 .newwash-frame { display: block; width: 100%; height: 100dvh; border: 0; background: transparent; }
 
 @media (max-width: 640px) {
-  .newwash-bubble { right: 16px; bottom: 16px; }
+  .newwash-bubble { min-height: 52px; gap: 8px; padding: 5px 8px 5px 6px; font-size: 14px; }
+  .newwash-bubble-icon { width: 40px; height: 40px; flex-basis: 40px; }
+  .newwash-bubble-icon img { width: 34px; height: 34px; }
+  .newwash-bubble-arrow { width: 26px; height: 26px; flex-basis: 26px; }
   .newwash-frame { height: 100dvh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .newwash-bubble,
+  .newwash-bubble.is-ready,
+  .newwash-bubble.is-ready::after,
+  .newwash-bubble-icon img,
+  .newwash-bubble-arrow {
+    animation: none;
+    transition-duration: 0.01ms;
+  }
+
+  .newwash-bubble.is-ready { opacity: 1; transform: none; }
 }
