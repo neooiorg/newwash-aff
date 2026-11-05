@@ -155,8 +155,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const [error, setError] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(preview && !embedded);
-  const pendingRequest = useRef("");
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const submissionRequestId = useRef("");
 
   const showOrderError = useCallback((message: string) => {
     setError(message);
@@ -262,23 +261,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     };
   }, []);
 
-  useEffect(() => {
-    function receive(event: MessageEvent) {
-      if (!embedded || !hostOrigin || event.source !== window.parent || event.origin !== hostOrigin) return;
-      if (event.data?.type !== "newwash:order-result" || event.data.requestId !== pendingRequest.current) return;
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      pendingRequest.current = "";
-      setSaving(false);
-      if (event.data.error) showOrderError(String(event.data.error));
-      else setSubmittedId(String(event.data.orderId));
-    }
-    window.addEventListener("message", receive);
-    return () => {
-      window.removeEventListener("message", receive);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, [embedded, hostOrigin, showOrderError]);
-
   const service = services.find((item) => item.code === serviceCode);
   const total =
     service?.pricePerKg !== null && service && quantityKg > 0
@@ -297,7 +279,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     setError("");
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     if (preview) return;
@@ -335,46 +317,43 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       setActiveStep("contact");
       return;
     }
-    if (!embedded || !hostOrigin) {
-      showOrderError("Vui lòng đặt đơn qua popup trên website cửa hàng.");
-      return;
-    }
-    const requestId = crypto.randomUUID();
-    pendingRequest.current = requestId;
+    const requestId = submissionRequestId.current || crypto.randomUUID();
+    submissionRequestId.current = requestId;
     setSaving(true);
-    window.parent.postMessage(
-      {
-        type: "newwash:order-submit",
-        requestId,
-        order: {
+    try {
+      const response = await fetch("/api/orders/direct", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          requestId,
+          affiliateCode,
           customer: customer.trim(),
-          phone: phone.trim(),
-          address: pickupAddress.trim(),
+          phone: phone.replace(/[\s.-]/g, ""),
           service: service.label,
-          partnerCode: affiliateCode,
           serviceCode: service.code,
           category,
           quantityKg,
           washWhitesSeparately,
+          pickupAddress: pickupAddress.trim(),
+          deliveryAddress: sameDeliveryAddress ? pickupAddress.trim() : deliveryAddress.trim(),
           pickupDate,
           pickupTime,
           deliveryDate,
           deliveryTime,
-          deliveryAddress: sameDeliveryAddress ? pickupAddress.trim() : deliveryAddress.trim(),
           notes: notes.trim(),
           coupon: coupon.trim(),
           estimatedTotal: service.pricePerKg !== null ? total : null,
-        },
-      },
-      hostOrigin,
-    );
-    timeoutRef.current = setTimeout(() => {
-      if (pendingRequest.current === requestId) {
-        pendingRequest.current = "";
-        setSaving(false);
-        showOrderError("Website chưa phản hồi. Vui lòng thử lại.");
-      }
-    }, 15_000);
+          hostOrigin,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Không gửi được đơn.");
+      setSubmittedId(String(result.orderId));
+    } catch (cause) {
+      showOrderError(cause instanceof Error ? cause.message : "Không gửi được đơn. Vui lòng thử lại.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   const handleDrawerOpenChange = useCallback(
@@ -841,7 +820,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                       </span>
                       <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
                       <p className="max-w-sm text-sm text-muted-foreground">
-                        Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
+                        Hệ thống đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
                       </p>
                       <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
                     </CardContent>

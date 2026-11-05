@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+
 import Link from "next/link";
 
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
@@ -9,8 +10,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { ReferralOrder } from "@/lib/affiliates/types";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
+import type { ReferralOrder } from "@/lib/affiliates/types";
 
 import { AffiliatePageHeader } from "../../_components/affiliate-page-header";
 import { KiotVietOrderDialog } from "./kiotviet-order-dialog";
@@ -100,7 +101,28 @@ export function OrdersWorkspace() {
           </div>
         ),
       },
-      { id: "service", accessorKey: "service", header: "Dịch vụ" },
+      {
+        id: "service",
+        accessorKey: "service",
+        header: "Dịch vụ",
+        cell: ({ row }) => (
+          <div className="flex flex-col gap-0.5">
+            <span>{row.original.service}</span>
+            {row.original.bookingDetails.quantityKg ? (
+              <span className="text-muted-foreground text-xs">{row.original.bookingDetails.quantityKg} kg</span>
+            ) : null}
+          </div>
+        ),
+      },
+      {
+        id: "pickupSchedule",
+        accessorFn: (row) => `${row.bookingDetails.pickupDate ?? ""} ${row.bookingDetails.pickupTime ?? ""}`,
+        header: "Lịch nhận",
+        cell: ({ row }) => {
+          const { pickupDate, pickupTime } = row.original.bookingDetails;
+          return pickupDate ? `${pickupDate}${pickupTime ? ` · ${pickupTime}` : ""}` : "—";
+        },
+      },
       {
         id: "source",
         accessorKey: "source",
@@ -166,7 +188,7 @@ export function OrdersWorkspace() {
         enableHiding: false,
         cell: ({ row }) => (
           <Button variant="ghost" size="sm" onClick={() => setSelectedOrderId(row.original.databaseId)}>
-            Đối chiếu
+            Chi tiết
           </Button>
         ),
       },
@@ -178,7 +200,7 @@ export function OrdersWorkspace() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <AffiliatePageHeader
         title="Đơn đặt từ popup"
-        description="Đơn và trạng thái hoàn thành do website cửa hàng gửi về; KiotViet chỉ để đối chiếu."
+        description="Đơn từ biểu mẫu được lưu trực tiếp và cập nhật realtime; KiotViet dùng để đối chiếu xử lý thực tế."
         actions={
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/affiliates/partners">Xem cộng tác viên</Link>

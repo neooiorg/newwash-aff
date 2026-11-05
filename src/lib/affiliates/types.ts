@@ -24,6 +24,21 @@ export interface ReferralOrder {
   completedAt: string | null;
   externalOrderId: string | null;
   source: "legacy" | "website";
+  orderAmount: number | null;
+  bookingDetails: {
+    serviceCode?: string;
+    category?: "laundry" | "other";
+    quantityKg?: number;
+    washWhitesSeparately?: boolean;
+    pickupDate?: string;
+    pickupTime?: string;
+    deliveryDate?: string;
+    deliveryTime?: string;
+    deliveryAddress?: string;
+    notes?: string;
+    coupon?: string;
+    hostOrigin?: string;
+  };
 }
 
 export interface AffiliateOverviewPeriod {

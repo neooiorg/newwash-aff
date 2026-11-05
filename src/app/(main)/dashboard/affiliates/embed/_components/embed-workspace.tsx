@@ -67,7 +67,7 @@ export function EmbedWorkspace() {
   }, [refresh]);
   useAffiliateRealtime(["newwash_affiliates", "newwash_settings"], refresh);
 
-  const script = `<script async src="${origin}/embed.js" data-order-endpoint="/api/newwash/orders"></script>`;
+  const script = `<script async src="${origin}/embed.js"></script>`;
   const previewUrl = origin ? `${referralUrl("", origin, code)}&preview=1` : "";
 
   async function saveUrl() {
@@ -293,8 +293,8 @@ export function EmbedWorkspace() {
               </CodeBlock>
             ) : null}
             <p className="text-muted-foreground text-sm">
-              Website cần nhận POST tại đường dẫn trong data-order-endpoint và trả về orderId. Backend website gửi sự
-              kiện tạo đơn, hoàn thành về hệ thống aff; mã aff lấy từ QR được gửi cùng sự kiện tạo đơn.
+              Đơn từ popup được lưu trực tiếp vào NewWash Aff và xuất hiện realtime trong trang Đơn hàng. Website chỉ
+              cần gửi sự kiện hoàn thành hoặc đồng bộ KiotViet khi có kết quả xử lý thực tế.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button onClick={copyScript} disabled={!origin}>
