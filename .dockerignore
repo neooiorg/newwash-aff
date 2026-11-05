@@ -1,0 +1,15 @@
+.git
+.github
+.husky
+.next
+.impeccable
+.playwright-cli
+node_modules
+output
+npm-debug.log*
+.env
+.env.*
+!.env.example
+Dockerfile*
+README.md
+

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { Bell, BellRing, CheckCheck, HandCoins, ShoppingBag, Volume2, VolumeX } from "lucide-react";
+import { createPortal } from "react-dom";
 import { Toaster as SileoToaster, sileo } from "sileo";
 
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +56,7 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [toasterMounted, setToasterMounted] = useState(false);
   const initialized = useRef(false);
   const knownIds = useRef(new Set<string>());
   const audioContext = useRef<AudioContext | null>(null);
@@ -116,6 +118,10 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
   }, [playChime, router, scope]);
 
   useEffect(() => {
+    setToasterMounted(true);
+  }, []);
+
+  useEffect(() => {
     const stored = localStorage.getItem("newwash-notification-sound");
     if (stored === "off") setSoundEnabled(false);
 
@@ -170,6 +176,26 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
   }
 
   const unread = notifications.filter((item) => !item.readAt).length;
+  const toaster = !toasterMounted
+    ? null
+    : createPortal(
+        <SileoToaster
+          position="top-right"
+          theme="light"
+          offset={{ top: "1rem", right: "1rem" }}
+          options={{
+            duration: 6000,
+            fill: "white",
+            styles: {
+              title: "text-zinc-950!",
+              description: "text-zinc-600!",
+              badge: "bg-yellow-400! text-zinc-950!",
+              button: "text-zinc-950!",
+            },
+          }}
+        />,
+        document.body,
+      );
 
   return (
     <>
@@ -254,21 +280,7 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
           </ScrollArea>
         </PopoverContent>
       </Popover>
-      <SileoToaster
-        position="top-right"
-        theme="light"
-        offset={{ top: "1rem", right: "1rem" }}
-        options={{
-          duration: 6000,
-          fill: "white",
-          styles: {
-            title: "text-zinc-950!",
-            description: "text-zinc-600!",
-            badge: "bg-yellow-400! text-zinc-950!",
-            button: "text-zinc-950!",
-          },
-        }}
-      />
+      {toaster}
     </>
   );
 }
