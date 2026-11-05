@@ -15,10 +15,6 @@ import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import type { BookingService, ServiceCategory } from "@/lib/booking-services";
-
-import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
-import { dateChoices, formatVnd, localDateKey, timeSlots } from "./booking-options";
 import {
   Drawer,
   DrawerClose,
@@ -27,7 +23,11 @@ import {
   DrawerHeader,
   DrawerTitle,
   DrawerTrigger,
-} from "./base-drawer";
+} from "@/components/ui/drawer";
+import type { BookingService, ServiceCategory } from "@/lib/booking-services";
+
+import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
+import { dateChoices, formatVnd, localDateKey, timeSlots } from "./booking-options";
 
 type OrderFormProps = { affiliateCode: string; embedded: boolean; preview?: boolean; hostOrigin: string };
 
@@ -152,7 +152,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const [drawerOpen, setDrawerOpen] = useState(preview && !embedded);
   const pendingRequest = useRef("");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!embedded) return;
@@ -254,7 +253,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     return () => {
       window.removeEventListener("message", receive);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
     };
   }, [embedded, hostOrigin]);
 
@@ -356,15 +354,12 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     }, 15_000);
   }
 
-  const handleDrawerOpenChange = useCallback(
+  const handleDrawerOpenChange = useCallback((open: boolean) => setDrawerOpen(open), []);
+
+  const handleDrawerAnimationEnd = useCallback(
     (open: boolean) => {
-      setDrawerOpen(open);
-      if (open) return;
-      if (!embedded || !hostOrigin) return;
-      if (closeTimeoutRef.current) clearTimeout(closeTimeoutRef.current);
-      closeTimeoutRef.current = setTimeout(() => {
-        window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
-      }, 300);
+      if (open || !embedded || !hostOrigin) return;
+      window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
     },
     [embedded, hostOrigin],
   );
@@ -720,22 +715,20 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
 
   const activeStepIndex = Math.max(0, stepOrder.indexOf(activeStep));
   return (
-    <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange} showSwipeHandle swipeDirection="down">
+    <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange} onAnimationEnd={handleDrawerAnimationEnd}>
       <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
       <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
-        <DrawerTrigger
-          render={
-            <Button
-              type="button"
-              size="lg"
-              className="rounded-full bg-yellow-400 px-6 font-semibold text-zinc-950 shadow-xl hover:bg-yellow-300"
-            />
-          }
-        >
-          Đặt lịch giặt ủi
+        <DrawerTrigger asChild>
+          <Button
+            type="button"
+            size="lg"
+            className="rounded-full bg-yellow-400 px-6 font-semibold text-zinc-950 shadow-xl hover:bg-yellow-300"
+          >
+            Đặt lịch giặt ủi
+          </Button>
         </DrawerTrigger>
       </div>
-      <DrawerContent className="h-[min(720px,calc(100dvh-1rem))] after:hidden sm:h-[min(720px,calc(100dvh-2rem))]">
+      <DrawerContent className="inset-x-2! bottom-2! mx-auto h-[min(720px,calc(100dvh-1rem))] w-[calc(100%-1rem)] max-w-3xl max-h-none! rounded-[28px]! border sm:inset-x-4! sm:bottom-4! sm:h-[min(720px,calc(100dvh-2rem))] sm:w-[calc(100%-2rem)]">
         <DrawerHeader className="relative border-b px-4 pt-2 pb-5 text-left sm:px-8">
           <div className="flex items-start justify-between gap-4 pr-12">
             <div>
@@ -746,18 +739,16 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
               {activeStepIndex + 1}/{stepOrder.length}
             </span>
           </div>
-          <DrawerClose
-            render={
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute top-0 right-4 rounded-full sm:right-8"
-                aria-label="Đóng biểu mẫu"
-              />
-            }
-          >
-            <X />
+          <DrawerClose asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute top-0 right-4 rounded-full sm:right-8"
+              aria-label="Đóng biểu mẫu"
+            >
+              <X />
+            </Button>
           </DrawerClose>
         </DrawerHeader>
         <ScrollArea className="min-h-0 flex-1">
