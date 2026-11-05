@@ -69,9 +69,7 @@
     layerOpen = true;
     layer.classList.add("is-open");
     layer.setAttribute("aria-hidden", "false");
-    requestAnimationFrame(function () {
-      requestAnimationFrame(expandFrame);
-    });
+    expandFrame();
   }
 
   function close() {
