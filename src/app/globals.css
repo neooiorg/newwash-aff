@@ -193,12 +193,12 @@ html:has([data-landing-page]) {
 }
 
 [data-sileo-viewport] {
-  z-index: 60;
+  z-index: 60 !important;
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
 [data-sileo-title] {
-  text-transform: none;
+  text-transform: none !important;
 }
 
 @media (max-width: 639px) {
