@@ -7,7 +7,8 @@ type Table =
   | "newwash_orders"
   | "newwash_settings"
   | "newwash_services"
-  | "newwash_affiliate_clicks";
+  | "newwash_affiliate_clicks"
+  | "newwash_withdrawals";
 
 export function useAffiliateRealtime(
   tables: readonly Table[],

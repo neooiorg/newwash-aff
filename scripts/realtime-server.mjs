@@ -180,6 +180,7 @@ async function connectDatabase() {
           "newwash_settings",
           "newwash_services",
           "newwash_affiliate_clicks",
+          "newwash_withdrawals",
         ].includes(change.table)
       )
         return;

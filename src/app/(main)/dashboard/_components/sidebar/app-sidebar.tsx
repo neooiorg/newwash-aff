@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { ChartBar, Link2, WalletCards } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
 import {
@@ -22,7 +23,26 @@ import { usePreferencesStore } from "@/stores/preferences/preferences-provider";
 import { NavMain } from "./nav-main";
 import { NavUser } from "./nav-user";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+const affiliateSidebarItems = [
+  {
+    id: 1,
+    label: "NewWash Aff",
+    items: [
+      { id: "affiliate-portal", title: "Tổng quan của tôi", url: "/affiliate/portal", icon: ChartBar },
+      { id: "affiliate-link", title: "Link & QR", url: "/affiliate/portal/link", icon: Link2 },
+      { id: "affiliate-withdrawals", title: "Rút tiền", url: "/affiliate/portal/withdrawals", icon: WalletCards },
+    ],
+  },
+];
+
+export function AppSidebar({
+  mode = "admin",
+  user = rootUser,
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  mode?: "admin" | "affiliate";
+  user?: { name: string; email: string };
+}) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({
       sidebarVariant: s.values.sidebar_variant,
@@ -33,6 +53,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const variant = isSynced ? sidebarVariant : props.variant;
   const collapsible = isSynced ? sidebarCollapsible : props.collapsible;
+  const homeHref = mode === "affiliate" ? "/affiliate/portal" : "/dashboard/affiliates";
 
   return (
     <Sidebar {...props} variant={variant} collapsible={collapsible}>
@@ -40,7 +61,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
-              <Link prefetch={false} href="/dashboard/default" aria-label={`${APP_CONFIG.name} · Tổng quan`}>
+              <Link prefetch={false} href={homeHref} aria-label={`${APP_CONFIG.name} · Tổng quan`}>
                 <span className="rounded-md bg-white px-1 group-data-[collapsible=icon]:hidden">
                   <Image
                     src="/newwash-logo.svg"
@@ -67,10 +88,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={sidebarItems} />
+        <NavMain items={mode === "affiliate" ? affiliateSidebarItems : sidebarItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={rootUser} />
+        <NavUser user={user} mode={mode} />
       </SidebarFooter>
     </Sidebar>
   );
