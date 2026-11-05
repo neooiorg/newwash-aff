@@ -691,10 +691,10 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
                       key="expanded-content"
                       transition={motionTransition}
                     >
-                      <div className="px-(--toolbar-gutter) pt-0 pb-2" ref={contentRef}>
+                      <div className="px-0 pt-0 pb-2 sm:px-(--toolbar-gutter)" ref={contentRef}>
                         <div
                           className={cn(
-                            "rounded-t-none rounded-b-(--radius) bg-transparent px-3 pt-4 pb-1",
+                            "rounded-t-none rounded-b-(--radius) bg-transparent px-1 pt-4 pb-1 sm:px-3",
                             toolbarInnerWellClass,
                           )}
                         >
