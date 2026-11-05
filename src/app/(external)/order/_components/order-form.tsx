@@ -727,7 +727,8 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const activeStepIndex = Math.max(0, stepOrder.indexOf(activeStep));
   return (
     <>
-      <Drawer fixed repositionInputs open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
+      {/* The embed host already tracks visualViewport; disable Vaul's second keyboard resize inside that iframe. */}
+      <Drawer fixed={!embedded} repositionInputs={!embedded} open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
         <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
         {!embedded ? (
           <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
