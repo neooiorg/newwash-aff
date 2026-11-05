@@ -2,15 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { Banknote, CheckCircle2, HandCoins, MousePointerClick, ShoppingBag, Users } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,6 +29,15 @@ const chartConfig = {
   clicks: { label: "Lượt nhấp", color: "var(--chart-2)" },
 } satisfies ChartConfig;
 
+const metricIcons = {
+  clicks: MousePointerClick,
+  orders: ShoppingBag,
+  completed: CheckCircle2,
+  revenue: Banknote,
+  commission: HandCoins,
+  buyers: Users,
+};
+
 function formatVnd(value: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -42,6 +53,34 @@ function compact(value: number) {
 function shortDate(value: string) {
   return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit" }).format(
     new Date(`${value}T00:00:00+07:00`),
+  );
+}
+
+function percent(value: number, total: number) {
+  return total > 0 ? Math.min(100, (value / total) * 100) : 0;
+}
+
+function realtimeLabel(status: "connecting" | "live" | "offline", refreshing: boolean) {
+  if (refreshing) return "Đang cập nhật";
+  if (status === "live") return "Realtime";
+  if (status === "connecting") return "Đang kết nối";
+  return "Đang thử kết nối lại";
+}
+
+function AnalyticsSkeleton() {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {Array.from({ length: 6 }, (_, index) => (
+          <Skeleton key={index} className="h-28 rounded-xl" />
+        ))}
+      </div>
+      <div className="grid gap-4 xl:grid-cols-12">
+        <Skeleton className="h-88 rounded-xl xl:col-span-8" />
+        <Skeleton className="h-88 rounded-xl xl:col-span-4" />
+      </div>
+      <Skeleton className="h-72 rounded-xl" />
+    </div>
   );
 }
 
@@ -97,6 +136,7 @@ export function AffiliateAnalyticsDashboard({
   useEffect(() => {
     if (preset !== "custom" || (customFrom && customTo)) refresh();
   }, [customFrom, customTo, preset, refresh]);
+
   const realtimeStatus = useAffiliateRealtime(
     ["newwash_affiliate_clicks", "newwash_orders", "newwash_affiliates"],
     refresh,
@@ -106,22 +146,23 @@ export function AffiliateAnalyticsDashboard({
   const metrics = useMemo(() => {
     if (!data) return [];
     return [
-      { label: "Lượt nhấp", value: data.metrics.clicks.toLocaleString("vi-VN") },
-      { label: "Đơn hàng", value: data.metrics.orders.toLocaleString("vi-VN") },
-      { label: "Đơn hoàn tất", value: data.metrics.completed.toLocaleString("vi-VN") },
-      { label: "Doanh thu", value: formatVnd(data.metrics.revenue) },
-      { label: "Hoa hồng ước tính", value: formatVnd(data.metrics.commission) },
-      { label: "Khách đặt", value: data.metrics.buyers.toLocaleString("vi-VN") },
-    ];
+      { key: "clicks", label: "Lượt nhấp", value: data.metrics.clicks.toLocaleString("vi-VN") },
+      { key: "orders", label: "Đơn hàng", value: data.metrics.orders.toLocaleString("vi-VN") },
+      { key: "completed", label: "Đơn hoàn tất", value: data.metrics.completed.toLocaleString("vi-VN") },
+      { key: "revenue", label: "Doanh thu", value: formatVnd(data.metrics.revenue) },
+      { key: "commission", label: "Hoa hồng ước tính", value: formatVnd(data.metrics.commission) },
+      { key: "buyers", label: "Khách đặt", value: data.metrics.buyers.toLocaleString("vi-VN") },
+    ] as const;
   }, [data]);
 
   return (
     <div className="flex flex-col gap-4 md:gap-6">
-      <div className="bg-card flex flex-col gap-3 rounded-xl border p-3 md:flex-row md:items-end md:justify-between md:p-4">
-        <div className="min-w-0 overflow-x-auto pb-1">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
           <ToggleGroup
             type="single"
             variant="outline"
+            size="sm"
             value={preset}
             onValueChange={(value) => value && setPreset(value as Preset)}
             aria-label="Khoảng thời gian thống kê"
@@ -132,27 +173,43 @@ export function AffiliateAnalyticsDashboard({
             <ToggleGroupItem value="custom">Tùy chỉnh</ToggleGroupItem>
           </ToggleGroup>
         </div>
-        {mode === "admin" && (
-          <Select value={affiliateId || "all"} onValueChange={(value) => setAffiliateId(value === "all" ? "" : value)}>
-            <SelectTrigger className="w-full md:w-64" aria-label="Chọn cộng tác viên">
-              <SelectValue placeholder="Tất cả cộng tác viên" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem value="all">Tất cả cộng tác viên</SelectItem>
-                {data?.affiliates.map((affiliate) => (
-                  <SelectItem key={affiliate.id} value={affiliate.id}>
-                    {affiliate.name} · {affiliate.code}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        )}
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+          <div className="flex items-center gap-2">
+            <Badge variant={realtimeStatus === "live" ? "secondary" : "outline"}>
+              {realtimeLabel(realtimeStatus, refreshing)}
+            </Badge>
+            {data && (
+              <span className="text-muted-foreground text-xs tabular-nums">
+                {data.range.from} — {data.range.to}
+              </span>
+            )}
+          </div>
+          {mode === "admin" && (
+            <Select
+              value={affiliateId || "all"}
+              onValueChange={(value) => setAffiliateId(value === "all" ? "" : value)}
+            >
+              <SelectTrigger size="sm" className="w-full sm:w-64" aria-label="Chọn cộng tác viên">
+                <SelectValue placeholder="Tất cả cộng tác viên" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="all">Tất cả cộng tác viên</SelectItem>
+                  {data?.affiliates.map((affiliate) => (
+                    <SelectItem key={affiliate.id} value={affiliate.id}>
+                      {affiliate.name} · {affiliate.code}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </div>
 
       {preset === "custom" && (
-        <FieldGroup className="grid gap-3 sm:grid-cols-2">
+        <FieldGroup className="grid max-w-xl gap-3 sm:grid-cols-2">
           <Field>
             <FieldLabel htmlFor={`${mode}-analytics-from`}>Từ ngày</FieldLabel>
             <Input
@@ -182,150 +239,179 @@ export function AffiliateAnalyticsDashboard({
         </Alert>
       )}
 
-      {loading && !data ? (
-        <div className="flex flex-col gap-4">
-          <Skeleton className="h-56 rounded-xl" />
-          <Skeleton className="h-80 rounded-xl" />
-        </div>
-      ) : data ? (
+      {loading && !data ? <AnalyticsSkeleton /> : null}
+
+      {data ? (
         <>
-          <Card>
-            <CardHeader className="border-b">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex flex-col gap-1">
-                  <CardTitle>Các chỉ số chính</CardTitle>
-                  <CardDescription>
-                    {data.selectedAffiliate
-                      ? `${data.selectedAffiliate.name} · ${data.selectedAffiliate.code}`
-                      : "Toàn hệ thống"}
-                  </CardDescription>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={realtimeStatus === "offline" ? "outline" : "secondary"}>
-                    {refreshing
-                      ? "Đang cập nhật"
-                      : realtimeStatus === "live"
-                        ? "Realtime"
-                        : realtimeStatus === "connecting"
-                          ? "Đang kết nối"
-                          : "Mất kết nối · đang thử lại"}
+          <section aria-label="Các chỉ số chính" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {metrics.map((metric) => {
+              const Icon = metricIcons[metric.key];
+              return (
+                <Card key={metric.key} size="sm">
+                  <CardHeader>
+                    <CardDescription>{metric.label}</CardDescription>
+                    <CardAction>
+                      <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
+                    </CardAction>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl leading-none font-medium tracking-tight tabular-nums">{metric.value}</div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </section>
+
+          <div className="grid items-stretch gap-4 xl:grid-cols-12">
+            <Card className="xl:col-span-8">
+              <CardHeader>
+                <CardTitle>Xu hướng hiệu suất</CardTitle>
+                <CardDescription>
+                  {data.selectedAffiliate
+                    ? `${data.selectedAffiliate.name} · ${data.selectedAffiliate.code}`
+                    : "Toàn hệ thống affiliate"}
+                </CardDescription>
+                <CardAction className="col-span-2 col-start-1 row-start-3 justify-self-start sm:col-start-2 sm:row-span-2 sm:row-start-1 sm:justify-self-end">
+                  <ToggleGroup
+                    type="single"
+                    variant="outline"
+                    size="sm"
+                    value={trendMetric}
+                    onValueChange={(value) => value && setTrendMetric(value as TrendMetric)}
+                    aria-label="Chỉ số trên biểu đồ"
+                  >
+                    <ToggleGroupItem value="revenue">Doanh thu</ToggleGroupItem>
+                    <ToggleGroupItem value="orders">Đơn</ToggleGroupItem>
+                    <ToggleGroupItem value="clicks">Nhấp</ToggleGroupItem>
+                  </ToggleGroup>
+                </CardAction>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig} className="h-72 w-full">
+                  <AreaChart accessibilityLayer data={data.series} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="date"
+                      tickFormatter={shortDate}
+                      axisLine={false}
+                      tickLine={false}
+                      tickMargin={10}
+                      minTickGap={24}
+                      padding={{ left: 8, right: 8 }}
+                    />
+                    <YAxis
+                      width={52}
+                      axisLine={false}
+                      tickLine={false}
+                      tickMargin={8}
+                      allowDecimals={false}
+                      tickFormatter={trendMetric === "revenue" ? compact : undefined}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent labelFormatter={(value) => shortDate(String(value))} />}
+                    />
+                    <Area
+                      type="linear"
+                      dataKey={trendMetric}
+                      stroke={`var(--color-${trendMetric})`}
+                      fill={`var(--color-${trendMetric})`}
+                      fillOpacity={0.12}
+                      strokeWidth={2.5}
+                      dot={false}
+                      activeDot={{ r: 4 }}
+                      isAnimationActive={false}
+                    />
+                  </AreaChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="xl:col-span-4">
+              <CardHeader>
+                <CardTitle>Phễu chuyển đổi</CardTitle>
+                <CardDescription>Từ lượt nhấp đến đơn hoàn tất</CardDescription>
+                <CardAction>
+                  <Badge variant="outline">
+                    {data.metrics.conversionRate.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%
                   </Badge>
-                  <span className="text-muted-foreground text-xs tabular-nums">
-                    {data.range.from} — {data.range.to}
-                  </span>
+                </CardAction>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-5">
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="text-muted-foreground">Lượt nhấp</span>
+                    <span className="font-medium tabular-nums">{data.metrics.clicks.toLocaleString("vi-VN")}</span>
+                  </div>
+                  <Progress value={data.metrics.clicks > 0 ? 100 : 0} />
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="bg-border grid grid-cols-2 gap-px p-0 xl:grid-cols-3">
-              {metrics.map((metric) => (
-                <div key={metric.label} className="bg-card flex min-h-24 flex-col justify-center gap-1 px-5 py-4">
-                  <span className="text-muted-foreground text-sm">{metric.label}</span>
-                  <strong className="text-2xl font-semibold tracking-tight tabular-nums">{metric.value}</strong>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="text-muted-foreground">Đơn phát sinh</span>
+                    <span className="font-medium tabular-nums">
+                      {data.metrics.orders.toLocaleString("vi-VN")} ·{" "}
+                      {percent(data.metrics.orders, data.metrics.clicks).toFixed(1)}%
+                    </span>
+                  </div>
+                  <Progress value={percent(data.metrics.orders, data.metrics.clicks)} />
                 </div>
-              ))}
-            </CardContent>
-          </Card>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-4 text-sm">
+                    <span className="text-muted-foreground">Đơn hoàn tất</span>
+                    <span className="font-medium tabular-nums">
+                      {data.metrics.completed.toLocaleString("vi-VN")} ·{" "}
+                      {percent(data.metrics.completed, data.metrics.clicks).toFixed(1)}%
+                    </span>
+                  </div>
+                  <Progress value={percent(data.metrics.completed, data.metrics.clicks)} />
+                </div>
+                <div className="border-border/60 flex items-end justify-between gap-4 border-t pt-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-muted-foreground text-xs">Giá trị mỗi đơn hoàn tất</span>
+                    <span className="text-xl font-medium tracking-tight tabular-nums">
+                      {formatVnd(data.metrics.completed > 0 ? data.metrics.revenue / data.metrics.completed : 0)}
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                <div className="flex flex-col gap-1">
-                  <CardTitle>Xu hướng hiệu suất</CardTitle>
-                  <CardDescription>
-                    Tỷ lệ chuyển đổi {data.metrics.conversionRate.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}
-                    %
-                  </CardDescription>
-                </div>
-                <ToggleGroup
-                  type="single"
-                  variant="outline"
-                  value={trendMetric}
-                  onValueChange={(value) => value && setTrendMetric(value as TrendMetric)}
-                  aria-label="Chỉ số trên biểu đồ"
-                >
-                  <ToggleGroupItem value="revenue">Doanh thu</ToggleGroupItem>
-                  <ToggleGroupItem value="orders">Đơn</ToggleGroupItem>
-                  <ToggleGroupItem value="clicks">Nhấp</ToggleGroupItem>
-                </ToggleGroup>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-72 w-full">
-                <AreaChart accessibilityLayer data={data.series} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="date"
-                    tickFormatter={shortDate}
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={10}
-                    minTickGap={24}
-                    padding={{ left: 8, right: 8 }}
-                  />
-                  <YAxis
-                    width={52}
-                    axisLine={false}
-                    tickLine={false}
-                    tickMargin={8}
-                    allowDecimals={false}
-                    tickFormatter={trendMetric === "revenue" ? compact : undefined}
-                  />
-                  <ChartTooltip
-                    content={<ChartTooltipContent labelFormatter={(value) => shortDate(String(value))} />}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey={trendMetric}
-                    stroke={`var(--color-${trendMetric})`}
-                    fill={`var(--color-${trendMetric})`}
-                    fillOpacity={0.12}
-                    strokeWidth={2.5}
-                    dot={false}
-                    activeDot={{ r: 5 }}
-                    isAnimationActive={false}
-                  />
-                </AreaChart>
-              </ChartContainer>
-            </CardContent>
-          </Card>
-
-          <Card>
+          <Card className="gap-2">
             <CardHeader>
               <CardTitle>Hiệu suất dịch vụ</CardTitle>
               <CardDescription>Đơn, doanh thu và hoa hồng ước tính theo từng dịch vụ</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="px-0">
               {data.services.length ? (
-                <div className="overflow-x-auto rounded-lg border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Dịch vụ</TableHead>
-                        <TableHead className="text-right">Đơn</TableHead>
-                        <TableHead className="text-right">Hoàn tất</TableHead>
-                        <TableHead className="text-right">Doanh thu</TableHead>
-                        <TableHead className="text-right">Hoa hồng</TableHead>
+                <Table className="[&_td:first-child]:pl-4 [&_td:last-child]:pr-4 [&_th:first-child]:pl-4 [&_th:last-child]:pr-4">
+                  <TableHeader className="[&_tr]:border-border/50">
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead>Dịch vụ</TableHead>
+                      <TableHead className="text-right font-normal">Đơn</TableHead>
+                      <TableHead className="text-right font-normal">Hoàn tất</TableHead>
+                      <TableHead className="text-right font-normal">Doanh thu</TableHead>
+                      <TableHead className="text-right font-normal">Hoa hồng</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="[&_tr]:border-border/50">
+                    {data.services.map((service) => (
+                      <TableRow key={service.service}>
+                        <TableCell className="font-medium">{service.service}</TableCell>
+                        <TableCell className="text-right tabular-nums">{service.orders}</TableCell>
+                        <TableCell className="text-right tabular-nums">{service.completed}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatVnd(service.revenue)}</TableCell>
+                        <TableCell className="text-right tabular-nums">{formatVnd(service.commission)}</TableCell>
                       </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {data.services.map((service) => (
-                        <TableRow key={service.service}>
-                          <TableCell className="font-medium">{service.service}</TableCell>
-                          <TableCell className="text-right tabular-nums">{service.orders}</TableCell>
-                          <TableCell className="text-right tabular-nums">{service.completed}</TableCell>
-                          <TableCell className="text-right tabular-nums">{formatVnd(service.revenue)}</TableCell>
-                          <TableCell className="text-right tabular-nums">{formatVnd(service.commission)}</TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    ))}
+                  </TableBody>
+                </Table>
               ) : (
-                <Empty className="min-h-40">
+                <Empty className="min-h-52">
                   <EmptyHeader>
                     <EmptyTitle>Chưa có đơn trong giai đoạn này</EmptyTitle>
                     <EmptyDescription>
-                      Lượt nhấp sẽ vẫn xuất hiện trên biểu đồ ngay khi khách mở link affiliate.
+                      Lượt nhấp sẽ xuất hiện ngay khi khách mở liên kết có mã affiliate.
                     </EmptyDescription>
                   </EmptyHeader>
                 </Empty>
