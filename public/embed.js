@@ -90,6 +90,7 @@
   });
   window.addEventListener("message", function (event) {
     if (event.origin !== origin || event.source !== iframe.contentWindow) return;
+    if (event.data && event.data.type === "newwash:ready" && dialog.open) expandFrame();
     if (event.data && event.data.type === "newwash:close") close();
     if (event.data && event.data.type === "newwash:order-submit") {
       var requestId = event.data.requestId;

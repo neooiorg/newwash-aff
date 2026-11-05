@@ -55,6 +55,7 @@ function EmbeddedOpenSync({
       if (event.data?.type === "newwash:open") onOpen();
     }
     window.addEventListener("message", receive);
+    window.parent.postMessage({ type: "newwash:ready" }, hostOrigin);
     return () => window.removeEventListener("message", receive);
   }, [enabled, hostOrigin, onOpen]);
 
