@@ -31,7 +31,7 @@ type Withdrawal = {
 
 const labels = { pending: "Chờ duyệt", approved: "Đã duyệt", paid: "Đã thanh toán", rejected: "Từ chối" };
 const filters: DataTableFilterDefinition<Withdrawal>[] = [
-  { column: "affiliate", label: "Cộng tác viên", variant: "text" },
+  { column: "affiliateName", label: "Cộng tác viên", variant: "text" },
   {
     column: "status",
     label: "Trạng thái",
@@ -99,7 +99,7 @@ export function PayoutsWorkspace() {
 
   const columns: DataTableColumn<Withdrawal>[] = [
     {
-      id: "affiliate",
+      id: "affiliateName",
       accessorFn: (row) => `${row.affiliateName} ${row.affiliateCode}`,
       header: "Cộng tác viên",
       cell: ({ row }) => (
@@ -223,7 +223,7 @@ export function PayoutsWorkspace() {
           data={items}
           columns={columns}
           getRowId={(item) => item.id}
-          searchColumn="affiliate"
+          searchColumn="affiliateName"
           searchPlaceholder="Tìm cộng tác viên"
           emptyMessage="Chưa có yêu cầu rút tiền."
           filter={{
