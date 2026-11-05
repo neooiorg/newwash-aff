@@ -154,6 +154,18 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const closeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
+    if (!embedded) return;
+    const previousHtmlBackground = document.documentElement.style.background;
+    const previousBodyBackground = document.body.style.background;
+    document.documentElement.style.background = "transparent";
+    document.body.style.background = "transparent";
+    return () => {
+      document.documentElement.style.background = previousHtmlBackground;
+      document.body.style.background = previousBodyBackground;
+    };
+  }, [embedded]);
+
+  useEffect(() => {
     const now = new Date();
     setToday(now);
     setPickupDate(localDateKey(now));

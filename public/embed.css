@@ -29,16 +29,10 @@
 }
 
 .newwash-dialog::backdrop {
-  background: #0000;
-  transition: background 160ms ease;
+  background: transparent;
 }
 
-.newwash-dialog.is-open::backdrop { background: #0009; }
 .newwash-frame { display: block; width: 100%; height: 100dvh; border: 0; background: transparent; }
-
-@media (prefers-reduced-motion: reduce) {
-  .newwash-dialog::backdrop { transition-duration: 1ms; }
-}
 
 @media (max-width: 640px) {
   .newwash-bubble { right: 16px; bottom: 16px; }
