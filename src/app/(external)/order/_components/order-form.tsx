@@ -773,17 +773,19 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     <>
       <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
         <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
-        <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
-          <DrawerTrigger asChild>
-            <Button
-              type="button"
-              size="lg"
-              className="rounded-full bg-yellow-400 px-6 font-semibold text-zinc-950 shadow-xl hover:bg-yellow-300"
-            >
-              Đặt lịch giặt ủi
-            </Button>
-          </DrawerTrigger>
-        </div>
+        {!embedded ? (
+          <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
+            <DrawerTrigger asChild>
+              <Button
+                type="button"
+                size="lg"
+                className="rounded-full bg-yellow-400 px-6 font-semibold text-zinc-950 shadow-xl hover:bg-yellow-300"
+              >
+                Đặt lịch giặt ủi
+              </Button>
+            </DrawerTrigger>
+          </div>
+        ) : null}
         <DrawerContent
           className="light h-[88dvh] max-h-[88dvh] overflow-hidden rounded-t-3xl bg-white text-zinc-950 sm:mx-auto sm:max-w-3xl"
           onInteractOutside={(event) => {
