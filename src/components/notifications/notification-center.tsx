@@ -62,20 +62,25 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
   const playChime = useCallback(() => {
     if (!soundEnabled || !audioContext.current) return;
     const context = audioContext.current;
-    void context.resume().then(() => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(660, context.currentTime);
-      oscillator.frequency.setValueAtTime(880, context.currentTime + 0.1);
-      gain.gain.setValueAtTime(0.0001, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.32);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.34);
-    });
+    void context
+      .resume()
+      .then(() => {
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(660, context.currentTime);
+        oscillator.frequency.setValueAtTime(880, context.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.0001, context.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.32);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.start();
+        oscillator.stop(context.currentTime + 0.34);
+      })
+      .catch(() => {
+        // Browsers may keep audio suspended until the first user interaction.
+      });
   }, [soundEnabled]);
 
   const refresh = useCallback(async () => {
@@ -103,6 +108,8 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
       }
       knownIds.current = new Set(next.map((item) => item.id));
       setNotifications(next);
+    } catch {
+      // Realtime reconnect and visibility refresh will retry automatically.
     } finally {
       setLoading(false);
     }
