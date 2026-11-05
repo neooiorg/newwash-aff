@@ -8,7 +8,8 @@ type Table =
   | "newwash_settings"
   | "newwash_services"
   | "newwash_affiliate_clicks"
-  | "newwash_withdrawals";
+  | "newwash_withdrawals"
+  | "newwash_notifications";
 
 export function useAffiliateRealtime(
   tables: readonly Table[],

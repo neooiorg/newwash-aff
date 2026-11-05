@@ -181,6 +181,7 @@ async function connectDatabase() {
           "newwash_services",
           "newwash_affiliate_clicks",
           "newwash_withdrawals",
+          "newwash_notifications",
         ].includes(change.table)
       )
         return;

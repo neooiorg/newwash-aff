@@ -20,6 +20,7 @@ const migrations = [
   "012_affiliate_access.sql",
   "013_remove_white_wash_fee.sql",
   "014_affiliate_withdrawals.sql",
+  "015_notifications.sql",
 ];
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 10000 });
 

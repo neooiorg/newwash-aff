@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { cn } from "cn";
 
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
+import { NotificationCenter } from "@/components/notifications/notification-center";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { users } from "@/data/users";
@@ -63,6 +64,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
               <SearchDialog />
             </div>
             <div className="flex items-center gap-2">
+              <NotificationCenter scope="admin" />
               <LayoutControls />
               <ThemeSwitcher />
               <AccountSwitcher users={users} />
