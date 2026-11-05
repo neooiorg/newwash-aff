@@ -1,21 +1,16 @@
 "use client";
 
-import { Check, CheckCircle2, ChevronDown, Clock3, MapPin, Minus, Phone, Plus, Shirt, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+
 import { cn } from "cn";
-import { sileo, Toaster as SileoToaster } from "sileo";
+import { Check, CheckCircle2, ChevronDown, Clock3, MapPin, Minus, Phone, Plus, Shirt, X } from "lucide-react";
+import { Toaster as SileoToaster, sileo } from "sileo";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Drawer,
   DrawerClose,
@@ -25,10 +20,16 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import type { BookingService, ServiceCategory } from "@/lib/booking-services";
 
-import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
 import { dateChoices, formatVnd, localDateKey, timeSlots } from "./booking-options";
+import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
 
 type OrderFormProps = { affiliateCode: string; embedded: boolean; preview?: boolean; hostOrigin: string };
 
@@ -741,7 +742,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           </DrawerTrigger>
         </div>
         <DrawerContent
-          className="overflow-hidden data-[vaul-drawer-direction=bottom]:h-dvh data-[vaul-drawer-direction=bottom]:max-h-dvh data-[vaul-drawer-direction=bottom]:rounded-none data-[vaul-drawer-direction=bottom]:border-0 sm:mx-auto sm:max-w-3xl sm:data-[vaul-drawer-direction=bottom]:h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:max-h-[80dvh] sm:data-[vaul-drawer-direction=bottom]:rounded-t-xl sm:data-[vaul-drawer-direction=bottom]:border-t"
+          className="h-[80dvh] max-h-[80dvh] overflow-hidden sm:mx-auto sm:max-w-3xl"
           onInteractOutside={(event) => {
             const target = event.detail.originalEvent.target;
             if (target instanceof Element && target.closest("[data-sileo-viewport]")) event.preventDefault();

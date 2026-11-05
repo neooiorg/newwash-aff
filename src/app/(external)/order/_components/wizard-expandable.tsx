@@ -2,6 +2,7 @@
 
 import React, {
   createContext,
+  type RefObject,
   useCallback,
   useContext,
   useEffect,
@@ -9,15 +10,15 @@ import React, {
   useMemo,
   useRef,
   useState,
-  type RefObject,
 } from "react";
-import { ScrollArea as ScrollAreaPrimitive } from "@base-ui/react/scroll-area";
-import { useControllableState } from "@radix-ui/react-use-controllable-state";
-import { AnimatePresence, motion, MotionConfig, useReducedMotion } from "motion/react";
 
+import { useControllableState } from "@radix-ui/react-use-controllable-state";
 import { cn } from "cn";
+import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 
 /** SKILL-DESIGN: standard 3-layer surface + transition-shadow */
 const toolbarShellClass = cn("bg-transparent");
@@ -205,13 +206,10 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
 
   const [previousIndex, setPreviousIndex] = useState<number | null>(null);
   const [contentRef, contentBounds] = useMeasure();
-  const [menuRef, menuBounds] = useMeasure();
   const menuContainerRef = useRef<HTMLElement | null>(null);
   const ref = useRef<HTMLDivElement>(null);
-  const [maxWidth, setMaxWidth] = useState(0);
 
   const heightContent = contentBounds.height;
-  const widthContainer = menuBounds.width;
 
   const scrollBehavior: ScrollBehavior = reduceMotion ? "auto" : "smooth";
 
@@ -223,13 +221,6 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
   }, [setIsOpen, setActive]);
 
   useClickOutside(ref, handleClickOutside);
-
-  useEffect(() => {
-    if (!widthContainer || maxWidth > 0) {
-      return;
-    }
-    setMaxWidth(widthContainer);
-  }, [widthContainer, maxWidth]);
 
   const scrollButtonIntoView = useCallback(
     (currentIndex: number, priorIndex: number | null, behavior: ScrollBehavior) => {
@@ -620,85 +611,85 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
           >
             <div className="min-w-0">
               <div className={cn("relative z-10", isOpen ? "border-border/60 border-b" : "")}>
-                <ScrollArea
-                  className="w-full"
-                  maskHeight={16}
+                <div
+                  className="min-w-0 max-w-full overflow-hidden"
                   ref={(element) => {
                     if (element) {
                       menuContainerRef.current = element;
-                      menuRef(element);
                     }
                   }}
-                  viewportClassName="scrollbar-hide"
                 >
-                  <div
-                    aria-label="Wizard steps"
-                    className="flex w-max min-w-full touch-pan-x items-center p-px"
-                    role="tablist"
-                  >
-                    {navigationButtons.map((button, index) => {
-                      const tabFocusIndex = active === null ? index === 0 : button.isActive;
+                  <ScrollArea className="w-full pb-2">
+                    <div
+                      aria-label="Wizard steps"
+                      className="flex w-max min-w-full touch-pan-x items-center p-px"
+                      role="tablist"
+                    >
+                      {navigationButtons.map((button, index) => {
+                        const tabFocusIndex = active === null ? index === 0 : button.isActive;
 
-                      const isImmediatelyRightOfActive =
-                        index > 0 && active !== null && steps[index - 1]?.id === active;
+                        const isImmediatelyRightOfActive =
+                          index > 0 && active !== null && steps[index - 1]?.id === active;
 
-                      const isImmediatelyLeftOfActive =
-                        index < steps.length - 1 && active !== null && steps[index + 1]?.id === active;
+                        const isImmediatelyLeftOfActive =
+                          index < steps.length - 1 && active !== null && steps[index + 1]?.id === active;
 
-                      const activeTabFlushLeftWithHoveredNeighbor =
-                        button.isActive && index > 0 && hoveredTabIndex === index - 1;
+                        const activeTabFlushLeftWithHoveredNeighbor =
+                          button.isActive && index > 0 && hoveredTabIndex === index - 1;
 
-                      const activeTabFlushRightWithHoveredNeighbor =
-                        button.isActive && index < steps.length - 1 && hoveredTabIndex === index + 1;
+                        const activeTabFlushRightWithHoveredNeighbor =
+                          button.isActive && index < steps.length - 1 && hoveredTabIndex === index + 1;
 
-                      return (
-                        <button
-                          aria-controls={panelId}
-                          aria-selected={button.isActive}
-                          className={cn(
-                            "flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-3 text-muted-foreground text-sm outline-none transition-[color,background-color,transform] duration-150 ease-out sm:min-h-0 sm:px-4 sm:py-4",
-                            "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-                            "active:scale-[0.98]",
-                            button.isFirst && "rounded-tl-none rounded-bl-none",
-                            button.isLast && "rounded-tr-none rounded-br-none",
-                            isImmediatelyRightOfActive && "rounded-l-none",
-                            isImmediatelyLeftOfActive && "rounded-r-none",
-                            activeTabFlushLeftWithHoveredNeighbor && "rounded-l-none",
-                            activeTabFlushRightWithHoveredNeighbor && "rounded-r-none",
-                            button.isActive
-                              ? "rounded-b-none bg-muted font-medium text-foreground"
-                              : "hover:bg-muted/60 active:bg-muted/70",
-                          )}
-                          data-step-index={index}
-                          id={`${baseId}-tab-${button.id}`}
-                          key={button.id}
-                          onClick={button.onClick}
-                          onKeyDown={(e) => handleTabKeyDown(e, index)}
-                          onMouseEnter={() => setHoveredTabIndex(index)}
-                          onMouseLeave={() => setHoveredTabIndex(null)}
-                          ref={(el) => {
-                            tabRefs.current[index] = el;
-                          }}
-                          role="tab"
-                          tabIndex={tabFocusIndex ? 0 : -1}
-                          type="button"
-                        >
-                          <div
+                        return (
+                          <button
+                            aria-controls={panelId}
+                            aria-selected={button.isActive}
                             className={cn(
-                              "flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-[10px] tabular-nums leading-none shadow-[0px_1px_1px_0px_hsla(0,0%,0%,0.02)_inset,0px_1px_1px_0px_hsla(0,0%,0%,0.02)_inset,0px_0px_0px_1px_rgba(255,255,255,0.25)] transition-colors duration-200 ease-out sm:size-5 dark:shadow-[0px_1px_1px_0px_hsla(0,0%,100%,0.02)_inset,0px_1px_1px_0px_rgba(255,255,255,0.05)_inset,0px_0px_0px_1px_hsla(0,0%,100%,0.05)_inset,0px_0px_1px_0px_rgba(0,0,0,0.25)]",
+                              "flex min-h-[44px] shrink-0 items-center gap-2 whitespace-nowrap rounded-md px-3 py-3 text-muted-foreground text-sm outline-none transition-[color,background-color,transform] duration-150 ease-out sm:min-h-0 sm:px-4 sm:py-4",
+                              "focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                              "active:scale-[0.98]",
+                              button.isFirst && "rounded-tl-none rounded-bl-none",
+                              button.isLast && "rounded-tr-none rounded-br-none",
+                              isImmediatelyRightOfActive && "rounded-l-none",
+                              isImmediatelyLeftOfActive && "rounded-r-none",
+                              activeTabFlushLeftWithHoveredNeighbor && "rounded-l-none",
+                              activeTabFlushRightWithHoveredNeighbor && "rounded-r-none",
                               button.isActive
-                                ? "bg-yellow-400 text-zinc-950 ring-1 ring-yellow-400/30"
-                                : "bg-muted/50 text-muted-foreground",
+                                ? "rounded-b-none bg-muted font-medium text-foreground"
+                                : "hover:bg-muted/60 active:bg-muted/70",
                             )}
+                            data-step-index={index}
+                            id={`${baseId}-tab-${button.id}`}
+                            key={button.id}
+                            onClick={button.onClick}
+                            onKeyDown={(e) => handleTabKeyDown(e, index)}
+                            onMouseEnter={() => setHoveredTabIndex(index)}
+                            onMouseLeave={() => setHoveredTabIndex(null)}
+                            ref={(el) => {
+                              tabRefs.current[index] = el;
+                            }}
+                            role="tab"
+                            tabIndex={tabFocusIndex ? 0 : -1}
+                            type="button"
                           >
-                            {button.step}
-                          </div>
-                          <span className="font-medium text-foreground text-xs sm:text-sm">{button.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
+                            <div
+                              className={cn(
+                                "flex size-5 shrink-0 items-center justify-center rounded-full font-bold text-[10px] tabular-nums leading-none shadow-[0px_1px_1px_0px_hsla(0,0%,0%,0.02)_inset,0px_1px_1px_0px_hsla(0,0%,0%,0.02)_inset,0px_0px_0px_1px_rgba(255,255,255,0.25)] transition-colors duration-200 ease-out sm:size-5 dark:shadow-[0px_1px_1px_0px_hsla(0,0%,100%,0.02)_inset,0px_1px_1px_0px_rgba(255,255,255,0.05)_inset,0px_0px_0px_1px_hsla(0,0%,100%,0.05)_inset,0px_0px_1px_0px_rgba(0,0,0,0.25)]",
+                                button.isActive
+                                  ? "bg-yellow-400 text-zinc-950 ring-1 ring-yellow-400/30"
+                                  : "bg-muted/50 text-muted-foreground",
+                              )}
+                            >
+                              {button.step}
+                            </div>
+                            <span className="font-medium text-foreground text-xs sm:text-sm">{button.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <ScrollBar orientation="horizontal" />
+                  </ScrollArea>
+                </div>
               </div>
 
               <div className="overflow-hidden">
@@ -847,253 +838,6 @@ function scrollElementToCenterInViewport(
   const nextLeft = Math.max(0, Math.min(maxScroll, viewport.scrollLeft + delta));
   viewport.scrollTo({ left: nextLeft, behavior });
 }
-
-function useTouchPrimary() {
-  const [isTouchPrimary, setIsTouchPrimary] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const controller = new AbortController();
-    const { signal } = controller;
-
-    const handleTouch = () => {
-      const hasTouch = "ontouchstart" in window || navigator.maxTouchPoints > 0;
-      const prefersTouch = window.matchMedia("(pointer: coarse)").matches;
-      setIsTouchPrimary(hasTouch && prefersTouch);
-    };
-
-    const mq = window.matchMedia("(pointer: coarse)");
-    mq.addEventListener("change", handleTouch, { signal });
-    window.addEventListener("pointerdown", handleTouch, { signal });
-
-    handleTouch();
-
-    return () => controller.abort();
-  }, []);
-
-  return isTouchPrimary;
-}
-
-// ________________________ MODIFIED SCROLL AREA ________________________
-// https://lina.sameer.sh/
-
-const ScrollAreaContext = React.createContext<boolean>(false);
-
-interface ScrollFadeMask {
-  top: boolean;
-  bottom: boolean;
-  left: boolean;
-  right: boolean;
-}
-
-const ScrollArea = React.forwardRef<
-  React.ComponentRef<typeof ScrollAreaPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Root> & {
-    viewportClassName?: string;
-    /**
-     * `maskHeight` is the height of the mask in pixels.
-     * pass `0` to disable the mask
-     * @default 30
-     */
-    maskHeight?: number;
-    maskClassName?: string;
-  }
->(({ className, children, viewportClassName, maskClassName, maskHeight = 30, ...props }, ref) => {
-  const [showMask, setShowMask] = React.useState<ScrollFadeMask>({
-    top: false,
-    bottom: false,
-    left: false,
-    right: false,
-  });
-  const viewportRef = React.useRef<HTMLDivElement>(null);
-  const isTouch = useTouchPrimary();
-
-  const checkScrollability = React.useCallback(() => {
-    const element = viewportRef.current;
-    if (!element) {
-      return;
-    }
-
-    const { scrollTop, scrollLeft, scrollWidth, clientWidth, scrollHeight, clientHeight } = element;
-    setShowMask((prev) => ({
-      ...prev,
-      top: scrollTop > 0,
-      bottom: scrollTop + clientHeight < scrollHeight - 1,
-      left: scrollLeft > 0,
-      right: scrollLeft + clientWidth < scrollWidth - 1,
-    }));
-  }, []);
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    const element = viewportRef.current;
-    if (!element) {
-      return;
-    }
-
-    const controller = new AbortController();
-    const { signal } = controller;
-
-    const resizeObserver = new ResizeObserver(checkScrollability);
-    resizeObserver.observe(element);
-
-    element.addEventListener("scroll", checkScrollability, { signal });
-    window.addEventListener("resize", checkScrollability, { signal });
-
-    checkScrollability();
-
-    return () => {
-      controller.abort();
-      resizeObserver.disconnect();
-    };
-  }, [checkScrollability]);
-
-  return (
-    <ScrollAreaContext.Provider value={isTouch}>
-      {isTouch ? (
-        <section
-          aria-label="Scrollable area"
-          aria-roledescription="scroll area"
-          className={cn("relative overflow-hidden", className)}
-          data-slot="scroll-area"
-          ref={ref}
-          {...(props as React.HTMLAttributes<HTMLElement>)}
-        >
-          <div
-            className={cn("size-full overflow-auto overscroll-x-contain rounded-[inherit]", viewportClassName)}
-            data-slot="scroll-area-viewport"
-            ref={viewportRef}
-          >
-            {children}
-          </div>
-
-          {maskHeight > 0 && <ScrollMask className={maskClassName} maskHeight={maskHeight} showMask={showMask} />}
-        </section>
-      ) : (
-        <ScrollAreaPrimitive.Root
-          className={cn("relative overflow-hidden", className)}
-          data-slot="scroll-area"
-          ref={ref}
-          {...props}
-        >
-          <ScrollAreaPrimitive.Viewport
-            className={cn("size-full overscroll-x-contain rounded-[inherit]", viewportClassName)}
-            data-slot="scroll-area-viewport"
-            ref={viewportRef}
-          >
-            {children}
-          </ScrollAreaPrimitive.Viewport>
-
-          {maskHeight > 0 && <ScrollMask className={maskClassName} maskHeight={maskHeight} showMask={showMask} />}
-          <ScrollBar />
-          <ScrollAreaPrimitive.Corner />
-        </ScrollAreaPrimitive.Root>
-      )}
-    </ScrollAreaContext.Provider>
-  );
-});
-
-ScrollArea.displayName = ScrollAreaPrimitive.Root.displayName;
-
-const ScrollBar = React.forwardRef<
-  React.ComponentRef<typeof ScrollAreaPrimitive.Scrollbar>,
-  React.ComponentPropsWithoutRef<typeof ScrollAreaPrimitive.Scrollbar>
->(({ className, orientation = "vertical", ...props }, ref) => {
-  const isTouch = React.useContext(ScrollAreaContext);
-
-  if (isTouch) {
-    return null;
-  }
-
-  return (
-    <ScrollAreaPrimitive.Scrollbar
-      className={cn(
-        "data-[state=visible]:fade-in-0 data-[state=hidden]:fade-out-0 flex touch-none select-none p-px transition-[colors] duration-150 hover:bg-muted data-[state=hidden]:animate-out data-[state=visible]:animate-in dark:hover:bg-muted/50",
-        orientation === "vertical" && "h-full w-2.5 border-l border-l-transparent",
-        orientation === "horizontal" && "h-2.5 flex-col border-t border-t-transparent px-1 pr-1.25",
-        className,
-      )}
-      data-slot="scroll-area-scrollbar"
-      orientation={orientation}
-      ref={ref}
-      {...props}
-    >
-      <ScrollAreaPrimitive.Thumb
-        className={cn(
-          "relative flex-1 origin-center rounded-full bg-border transition-[scale]",
-          orientation === "vertical" && "my-1 active:scale-y-95",
-          orientation === "horizontal" && "active:scale-x-98",
-        )}
-        data-slot="scroll-area-thumb"
-      />
-    </ScrollAreaPrimitive.Scrollbar>
-  );
-});
-
-ScrollBar.displayName = ScrollAreaPrimitive.Scrollbar.displayName;
-
-const ScrollMask = ({
-  showMask,
-  maskHeight,
-  className,
-  ...props
-}: React.ComponentProps<"div"> & {
-  showMask: ScrollFadeMask;
-  maskHeight: number;
-}) => {
-  return (
-    <>
-      <div
-        {...props}
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute inset-0 z-10",
-          "before:absolute before:inset-x-0 before:top-0 before:transition-[height,opacity] before:duration-300 before:content-['']",
-          "after:absolute after:inset-x-0 after:bottom-0 after:transition-[height,opacity] after:duration-300 after:content-['']",
-          "before:h-(--top-fade-height) after:h-(--bottom-fade-height)",
-          showMask.top ? "before:opacity-100" : "before:opacity-0",
-          showMask.bottom ? "after:opacity-100" : "after:opacity-0",
-          "before:bg-linear-to-b before:from-background before:to-transparent",
-          "after:bg-linear-to-t after:from-background after:to-transparent",
-          className,
-        )}
-        style={
-          {
-            "--top-fade-height": showMask.top ? `${maskHeight}px` : "0px",
-            "--bottom-fade-height": showMask.bottom ? `${maskHeight}px` : "0px",
-          } as React.CSSProperties
-        }
-      />
-      <div
-        {...props}
-        aria-hidden="true"
-        className={cn(
-          "pointer-events-none absolute inset-0 z-10",
-          "before:absolute before:inset-y-0 before:left-0 before:transition-[width,opacity] before:duration-300 before:content-['']",
-          "after:absolute after:inset-y-0 after:right-0 after:transition-[width,opacity] after:duration-300 after:content-['']",
-          "before:w-(--left-fade-width) after:w-(--right-fade-width)",
-          showMask.left ? "before:opacity-100" : "before:opacity-0",
-          showMask.right ? "after:opacity-100" : "after:opacity-0",
-          "before:bg-linear-to-r before:from-background before:to-transparent",
-          "after:bg-linear-to-l after:from-background after:to-transparent",
-          className,
-        )}
-        style={
-          {
-            "--left-fade-width": showMask.left ? `${maskHeight}px` : "0px",
-            "--right-fade-width": showMask.right ? `${maskHeight}px` : "0px",
-          } as React.CSSProperties
-        }
-      />
-    </>
-  );
-};
 
 export default function WizardExpandable(props: WizardExpandableProps) {
   return <WizardExpandableInner {...props} />;
