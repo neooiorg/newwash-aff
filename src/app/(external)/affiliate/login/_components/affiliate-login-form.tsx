@@ -52,8 +52,8 @@ export function AffiliateLoginForm({
           {error}
         </p>
       )}
-      <Button type="submit" size="lg" disabled={pending}>
-        {pending ? "Đang đăng nhập..." : "Xem thống kê của tôi"}
+      <Button type="submit" disabled={pending}>
+        {pending ? "Đang đăng nhập..." : "Đăng nhập"}
       </Button>
     </form>
   );
