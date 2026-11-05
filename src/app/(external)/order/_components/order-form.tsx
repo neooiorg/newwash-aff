@@ -735,7 +735,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           Đặt lịch giặt ủi
         </DrawerTrigger>
       </div>
-      <DrawerContent className="h-[min(720px,calc(100dvh-1rem))] sm:h-[min(720px,calc(100dvh-2rem))]">
+      <DrawerContent className="h-[min(720px,calc(100dvh-1rem))] after:hidden sm:h-[min(720px,calc(100dvh-2rem))]">
         <DrawerHeader className="relative border-b px-4 pt-2 pb-5 text-left sm:px-8">
           <div className="flex items-start justify-between gap-4 pr-12">
             <div>
