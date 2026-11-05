@@ -248,7 +248,7 @@ export function ServicesWorkspace() {
   return (
     <div className="flex flex-col gap-6">
       <AffiliatePageHeader
-        title="Cài đặt dịch vụ"
+        title="Quản lý dịch vụ"
         description="Quản lý dịch vụ, giá và thời gian hiển thị trong popup đặt đơn. Thay đổi tự cập nhật trên form đang mở."
         actions={
           <Button onClick={() => setDraft({ ...blankService, sortOrder: services.length * 10 + 10 })}>

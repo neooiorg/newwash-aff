@@ -6,7 +6,7 @@ export function OverviewWorkspace({ initialAffiliateId = "" }: { initialAffiliat
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <AffiliatePageHeader
-        title="Thống kê affiliate"
+        title="Tổng quan"
         description="Theo dõi lượt nhấp, đơn hàng, doanh thu và hoa hồng của toàn hệ thống hoặc từng cộng tác viên."
       />
       <AffiliateAnalyticsDashboard mode="admin" initialAffiliateId={initialAffiliateId} />

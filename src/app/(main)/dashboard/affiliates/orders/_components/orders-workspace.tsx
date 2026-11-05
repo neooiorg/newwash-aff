@@ -199,7 +199,7 @@ export function OrdersWorkspace() {
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <AffiliatePageHeader
-        title="Đơn đặt từ popup"
+        title="Đơn hàng"
         description="Đơn từ biểu mẫu được lưu trực tiếp và cập nhật realtime; KiotViet dùng để đối chiếu xử lý thực tế."
         actions={
           <Button asChild variant="outline" size="sm">

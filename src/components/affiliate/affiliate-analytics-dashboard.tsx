@@ -2,16 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Banknote, CheckCircle2, HandCoins, MousePointerClick, ShoppingBag, Users } from "lucide-react";
+import { Banknote, CalendarIcon, CheckCircle2, HandCoins, MousePointerClick, ShoppingBag, Users } from "lucide-react";
+import type { DateRange } from "react-day-picker";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -60,11 +62,16 @@ function percent(value: number, total: number) {
   return total > 0 ? Math.min(100, (value / total) * 100) : 0;
 }
 
-function realtimeLabel(status: "connecting" | "live" | "offline", refreshing: boolean) {
-  if (refreshing) return "Đang cập nhật";
-  if (status === "live") return "Realtime";
-  if (status === "connecting") return "Đang kết nối";
-  return "Đang thử kết nối lại";
+function dateParam(date: Date | undefined) {
+  if (!date) return "";
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function dateLabel(date: Date) {
+  return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
 }
 
 function AnalyticsSkeleton() {
@@ -94,19 +101,18 @@ export function AffiliateAnalyticsDashboard({
   const [data, setData] = useState<AffiliateAnalytics | null>(null);
   const [preset, setPreset] = useState<Preset>("30d");
   const [affiliateId, setAffiliateId] = useState(initialAffiliateId);
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [customRange, setCustomRange] = useState<DateRange>();
   const [trendMetric, setTrendMetric] = useState<TrendMetric>("revenue");
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
   const requestController = useRef<AbortController | null>(null);
+  const customFrom = dateParam(customRange?.from);
+  const customTo = dateParam(customRange?.to);
 
   const refresh = useCallback(() => {
     requestController.current?.abort();
     const controller = new AbortController();
     requestController.current = controller;
-    setRefreshing(true);
     const params = new URLSearchParams({ preset });
     if (mode === "admin" && affiliateId) params.set("affiliateId", affiliateId);
     if (preset === "custom" && customFrom && customTo) {
@@ -129,7 +135,6 @@ export function AffiliateAnalyticsDashboard({
       .finally(() => {
         if (requestController.current !== controller) return;
         setLoading(false);
-        setRefreshing(false);
       });
   }, [affiliateId, customFrom, customTo, mode, preset]);
 
@@ -137,11 +142,7 @@ export function AffiliateAnalyticsDashboard({
     if (preset !== "custom" || (customFrom && customTo)) refresh();
   }, [customFrom, customTo, preset, refresh]);
 
-  const realtimeStatus = useAffiliateRealtime(
-    ["newwash_affiliate_clicks", "newwash_orders", "newwash_affiliates"],
-    refresh,
-    mode,
-  );
+  useAffiliateRealtime(["newwash_affiliate_clicks", "newwash_orders", "newwash_affiliates"], refresh, mode);
 
   const metrics = useMemo(() => {
     if (!data) return [];
@@ -158,7 +159,7 @@ export function AffiliateAnalyticsDashboard({
   return (
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex min-w-0 items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <ToggleGroup
             type="single"
             variant="outline"
@@ -172,19 +173,32 @@ export function AffiliateAnalyticsDashboard({
             <ToggleGroupItem value="30d">30 ngày</ToggleGroupItem>
             <ToggleGroupItem value="custom">Tùy chỉnh</ToggleGroupItem>
           </ToggleGroup>
+          {preset === "custom" && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="justify-start font-normal">
+                  <CalendarIcon data-icon="inline-start" />
+                  {customRange?.from
+                    ? customRange.to
+                      ? `${dateLabel(customRange.from)} – ${dateLabel(customRange.to)}`
+                      : dateLabel(customRange.from)
+                    : "Chọn khoảng ngày"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-auto p-0">
+                <Calendar
+                  mode="range"
+                  selected={customRange}
+                  onSelect={setCustomRange}
+                  defaultMonth={customRange?.from}
+                  numberOfMonths={1}
+                />
+              </PopoverContent>
+            </Popover>
+          )}
         </div>
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
-          <div className="flex items-center gap-2">
-            <Badge variant={realtimeStatus === "live" ? "secondary" : "outline"}>
-              {realtimeLabel(realtimeStatus, refreshing)}
-            </Badge>
-            {data && (
-              <span className="text-muted-foreground text-xs tabular-nums">
-                {data.range.from} — {data.range.to}
-              </span>
-            )}
-          </div>
           {mode === "admin" && (
             <Select
               value={affiliateId || "all"}
@@ -207,30 +221,6 @@ export function AffiliateAnalyticsDashboard({
           )}
         </div>
       </div>
-
-      {preset === "custom" && (
-        <FieldGroup className="grid max-w-xl gap-3 sm:grid-cols-2">
-          <Field>
-            <FieldLabel htmlFor={`${mode}-analytics-from`}>Từ ngày</FieldLabel>
-            <Input
-              id={`${mode}-analytics-from`}
-              type="date"
-              value={customFrom}
-              onChange={(event) => setCustomFrom(event.target.value)}
-            />
-          </Field>
-          <Field>
-            <FieldLabel htmlFor={`${mode}-analytics-to`}>Đến ngày</FieldLabel>
-            <Input
-              id={`${mode}-analytics-to`}
-              type="date"
-              min={customFrom}
-              value={customTo}
-              onChange={(event) => setCustomTo(event.target.value)}
-            />
-          </Field>
-        </FieldGroup>
-      )}
 
       {error && (
         <Alert variant="destructive" role="alert">
