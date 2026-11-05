@@ -1,7 +1,8 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
-import { createServer } from "node:http";
 import pg from "pg";
 import { WebSocket, WebSocketServer } from "ws";
+
+import { createHmac, timingSafeEqual } from "node:crypto";
+import { createServer } from "node:http";
 
 const port = Number(process.env.REALTIME_PORT || 3002);
 const appPort = Number(process.env.PORT || 3001);
@@ -38,6 +39,30 @@ function validSession(cookieHeader) {
   }
 }
 
+function cookieValue(cookieHeader, name) {
+  return cookieHeader
+    ?.split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${name}=`))
+    ?.slice(name.length + 1);
+}
+
+function validAffiliateSession(cookieHeader) {
+  try {
+    const value = cookieValue(cookieHeader, "newwash_affiliate");
+    if (!value) return null;
+    const [affiliateId, expires, signature] = decodeURIComponent(value).split(".");
+    if (!/^[0-9a-f-]{36}$/i.test(affiliateId || "") || !/^\d{10}$/.test(expires || "")) return null;
+    if (!/^[0-9a-f]{64}$/.test(signature || "") || Number(expires) <= Math.floor(Date.now() / 1000)) return null;
+    const expected = createHmac("sha256", process.env.AFFILIATE_SESSION_SECRET || sessionSecret)
+      .update(`${affiliateId}.${expires}`)
+      .digest();
+    return timingSafeEqual(expected, Buffer.from(signature, "hex")) ? affiliateId : null;
+  } catch {
+    return null;
+  }
+}
+
 function validOrigin(request) {
   const origin = request.headers.origin;
   const host = request.headers.host?.split(":")[0];
@@ -59,27 +84,45 @@ const server = createServer((_, response) => {
 const sockets = new WebSocketServer({ noServer: true, maxPayload: 1024, perMessageDeflate: false });
 
 server.on("upgrade", (request, socket, head) => {
-  const scope = request.url === "/services" ? "services" : request.url === "/realtime" ? "admin" : "";
-  if (!scope || !validOrigin(request) || (scope === "admin" && !validSession(request.headers.cookie))) {
+  const scope =
+    request.url === "/services"
+      ? "services"
+      : request.url === "/realtime"
+        ? "admin"
+        : request.url === "/affiliate-realtime"
+          ? "affiliate"
+          : "";
+  const affiliateId = scope === "affiliate" ? validAffiliateSession(request.headers.cookie) : null;
+  if (
+    !scope ||
+    !validOrigin(request) ||
+    (scope === "admin" && !validSession(request.headers.cookie)) ||
+    (scope === "affiliate" && !affiliateId)
+  ) {
     socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");
     socket.destroy();
     return;
   }
   sockets.handleUpgrade(request, socket, head, (client) => {
     client.scope = scope;
-    if (scope === "admin") client.sessionCookie = request.headers.cookie;
+    if (scope === "admin" || scope === "affiliate") client.sessionCookie = request.headers.cookie;
+    if (scope === "affiliate") client.affiliateId = affiliateId;
     sockets.emit("connection", client);
   });
 });
 
 sockets.on("connection", (client) => {
-  client.on("error", () => {});
+  client.on("error", () => {
+    // Socket errors are isolated to the affected browser connection.
+  });
   client.send(JSON.stringify({ type: "ready" }));
 });
 
 const heartbeat = setInterval(() => {
   for (const client of sockets.clients) {
     if (client.scope === "admin" && !validSession(client.sessionCookie)) client.close(1008, "Session expired");
+    else if (client.scope === "affiliate" && !validAffiliateSession(client.sessionCookie))
+      client.close(1008, "Session expired");
     else if (client.readyState === WebSocket.OPEN) client.ping();
   }
 }, 30_000);
@@ -100,7 +143,9 @@ async function connectDatabase() {
   const reconnect = () => {
     if (listener !== client || stopping) return;
     listener = undefined;
-    client.end().catch(() => {});
+    client.end().catch(() => {
+      // Reconnect continues even if the stale connection cannot close cleanly.
+    });
     retryTimer = setTimeout(connectDatabase, retryMs);
     retryMs = Math.min(retryMs * 2, 30_000);
   };
@@ -113,12 +158,22 @@ async function connectDatabase() {
     if (notification.channel !== "newwash_changes") return;
     try {
       const change = JSON.parse(notification.payload);
-      if (!["newwash_affiliates", "newwash_orders", "newwash_settings", "newwash_services"].includes(change.table)) return;
+      if (
+        ![
+          "newwash_affiliates",
+          "newwash_orders",
+          "newwash_settings",
+          "newwash_services",
+          "newwash_affiliate_clicks",
+        ].includes(change.table)
+      )
+        return;
       const message = JSON.stringify({ type: "invalidate", table: change.table });
       for (const socket of sockets.clients) {
         if (socket.readyState !== WebSocket.OPEN) continue;
-        if (socket.scope === "admin" || ["newwash_services", "newwash_settings"].includes(change.table))
-          socket.send(message);
+        const publicChange = ["newwash_services", "newwash_settings"].includes(change.table);
+        const ownChange = socket.scope === "affiliate" && socket.affiliateId === change.affiliateId;
+        if (socket.scope === "admin" || publicChange || ownChange) socket.send(message);
       }
     } catch {
       /* Ignore malformed notifications. */
@@ -147,7 +202,9 @@ function stop() {
   clearInterval(heartbeat);
   clearTimeout(retryTimer);
   for (const socket of sockets.clients) socket.close(1001, "Server stopping");
-  listener?.end().catch(() => {});
+  listener?.end().catch(() => {
+    // Shutdown is best effort because the database may already be unavailable.
+  });
   server.close();
 }
 process.on("SIGINT", stop);

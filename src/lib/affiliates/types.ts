@@ -63,3 +63,39 @@ export interface AffiliateOverview {
   pendingAffiliates: number;
   updatedAt: string;
 }
+
+export interface AffiliateAnalytics {
+  scope: "admin" | "affiliate";
+  range: { from: string; to: string };
+  selectedAffiliate: {
+    id: string;
+    name: string;
+    code: string;
+    commissionRate: number;
+  } | null;
+  affiliates: Array<{ id: string; name: string; code: string }>;
+  metrics: {
+    clicks: number;
+    orders: number;
+    completed: number;
+    revenue: number;
+    commission: number;
+    buyers: number;
+    conversionRate: number;
+  };
+  series: Array<{
+    date: string;
+    clicks: number;
+    orders: number;
+    completed: number;
+    revenue: number;
+  }>;
+  services: Array<{
+    service: string;
+    orders: number;
+    completed: number;
+    revenue: number;
+    commission: number;
+  }>;
+  updatedAt: string;
+}

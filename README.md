@@ -2,24 +2,25 @@
 
 Giao diện quản lý affiliate cho cửa hàng giặt ủi. Font mặc định là Manrope; dữ liệu cộng tác viên và đơn được lưu trong PostgreSQL trên Neon.
 
-Trang `/dashboard/affiliates` dùng số liệu minh họa cho KPI và biểu đồ. Các trang cộng tác viên và đơn đặt vẫn đọc dữ liệu thật từ Neon.
+Trang `/dashboard/affiliates` đọc dữ liệu thật từ Neon để hiển thị lượt nhấp, đơn hàng, doanh thu, hoa hồng ước tính, xu hướng và hiệu suất theo dịch vụ. Admin có thể xem toàn hệ thống hoặc lọc theo từng cộng tác viên.
 
 ## Luồng demo
 
-1. Chạy `npm install`, đặt `DATABASE_URL` trong `.env.local`, rồi chạy `node --env-file=.env.local scripts/migrate-db.mjs` và `npm run dev` (chỉ mở trên 127.0.0.1).
-2. Cộng tác viên gửi hồ sơ tại `/affiliate/apply`. Admin mở `/dashboard/affiliates/partners` để duyệt hoặc từ chối. Sau khi duyệt, admin có thể sao chép link hoặc tải QR.
-3. Tại `/dashboard/affiliates/embed`, lưu URL website cửa hàng và đặt script popup trên website đó. Link và QR của cộng tác viên mở URL này với `?aff=MA_AFF&nw_popup=1`; popup tự mở.
-4. Admin quản lý tên, giá/kg, khối lượng tối thiểu, thời gian giao, ghi chú và trạng thái dịch vụ tại `/dashboard/affiliates/services`. Popup dùng Wizard Expandable của Cult UI để đi qua bốn bước; danh sách dịch vụ và phụ phí giặt riêng đồ trắng được đọc từ Neon. Popup chuyển thông tin đặt lịch cho API của chính website cửa hàng. Website tạo đơn và trả `{ "orderId": "..." }` cho popup.
-5. Backend website gửi `order.created` và sau đó `order.completed` về API affiliate. Hệ thống affiliate ghi nhận người giới thiệu theo mã QR; trạng thái hoàn thành chỉ do website xác nhận.
-6. Mở `/embed-example.html` để xem website mẫu dùng chính `embed.js`.
+1. Chạy `npm install`, đặt `DATABASE_URL`, `ADMIN_SESSION_SECRET` và `AFFILIATE_SESSION_SECRET` trong `.env.local`, rồi chạy `node --env-file=.env.local scripts/migrate-db.mjs` và `npm run dev` (chỉ mở trên 127.0.0.1).
+2. Cộng tác viên gửi hồ sơ tại `/affiliate/apply`. Admin mở `/dashboard/affiliates/partners` để duyệt hoặc từ chối. Khi duyệt, hệ thống cấp mã affiliate và mã truy cập chỉ hiển thị trong lần cấp đó; admin có thể cấp lại mã truy cập khi cần.
+3. Cộng tác viên đăng nhập tại `/affiliate/login` để mở `/affiliate/portal`, nơi chỉ hiển thị thống kê của chính họ theo khoảng thời gian, xu hướng và dịch vụ.
+4. Tại `/dashboard/affiliates/embed`, lưu URL website cửa hàng và đặt script popup trên website đó. Link và QR của cộng tác viên mở URL này với `?aff=MA_AFF&nw_popup=1`; popup tự mở và ghi nhận một lượt nhấp trong phiên trình duyệt.
+5. Admin quản lý tên, giá/kg, khối lượng tối thiểu, thời gian giao, ghi chú và trạng thái dịch vụ tại `/dashboard/affiliates/services`. Popup dùng Wizard Expandable của Cult UI để đi qua bốn bước; danh sách dịch vụ và phụ phí giặt riêng đồ trắng được đọc từ Neon. Popup chuyển thông tin đặt lịch cho API của chính website cửa hàng. Website tạo đơn và trả `{ "orderId": "..." }` cho popup.
+6. Backend website gửi `order.created` và sau đó `order.completed` về API affiliate. Hệ thống affiliate ghi nhận người giới thiệu theo mã QR; trạng thái hoàn thành chỉ do website xác nhận.
+7. Mở `/embed-example.html` để xem website mẫu dùng chính `embed.js`.
 
 ## Dữ liệu realtime
 
-`npm run dev` khởi động Next.js ở cổng 3001 và WebSocket ở cổng 3002. Trigger PostgreSQL phát thông báo sau khi cộng tác viên, đơn hàng, dịch vụ hoặc cấu hình website thay đổi. WebSocket chỉ gửi tên bảng thay đổi, không gửi thông tin khách hàng; dashboard và popup tải lại dữ liệu qua API. Đăng ký aff, duyệt hồ sơ, sự kiện đơn từ website và webhook KiotViet đều được cập nhật trên các tab admin đang mở. Kết nối tự nối lại khi đứt và đồng bộ lại khi tab được mở lại.
+`npm run dev` khởi động Next.js ở cổng 3001 và WebSocket ở cổng 3002. Trigger PostgreSQL phát thông báo sau khi cộng tác viên, lượt nhấp, đơn hàng, dịch vụ hoặc cấu hình website thay đổi. WebSocket chỉ gửi tên bảng và mã cộng tác viên liên quan, không gửi thông tin khách hàng; dashboard, portal và popup tải lại dữ liệu qua API. Kênh admin nhận thay đổi toàn hệ thống, còn kênh affiliate chỉ nhận thay đổi thuộc cộng tác viên đang đăng nhập. Kết nối tự nối lại khi đứt và đồng bộ lại khi tab được mở lại.
 
 Chạy `node --env-file=.env.local scripts/migrate-db.mjs` để cài trigger. Kênh `LISTEN` cần kết nối PostgreSQL trực tiếp; mặc định server realtime bỏ hậu tố `-pooler` trong `DATABASE_URL` của Neon. Có thể đặt `REALTIME_DATABASE_URL` nếu dùng URL trực tiếp riêng.
 
-Khi triển khai, chạy `npm start` trên Node server thường trú và cấu hình reverse proxy cho WebSocket `/realtime` và `/services` tới `REALTIME_HOST:REALTIME_PORT` với HTTP Upgrade. Đặt `APP_ORIGIN` là origin chính xác của dashboard và `NEXT_PUBLIC_REALTIME_URL=wss://ten-mien-cua-ban/realtime`. Không đặt URL database hoặc khóa phiên ở biến `NEXT_PUBLIC_`. Triển khai chỉ có serverless request handlers sẽ không giữ được kết nối WebSocket/`LISTEN` này.
+Khi triển khai, chạy `npm start` trên Node server thường trú và cấu hình reverse proxy cho WebSocket `/realtime`, `/affiliate-realtime` và `/services` tới `REALTIME_HOST:REALTIME_PORT` với HTTP Upgrade. Đặt `APP_ORIGIN` là origin chính xác của dashboard và `NEXT_PUBLIC_REALTIME_URL=wss://ten-mien-cua-ban/realtime`. Dùng `AFFILIATE_SESSION_SECRET` riêng trong production; không đặt URL database hoặc khóa phiên ở biến `NEXT_PUBLIC_`. Triển khai chỉ có serverless request handlers sẽ không giữ được kết nối WebSocket/`LISTEN` này.
 
 Ví dụ nhúng vào website riêng (thay tên miền bằng địa chỉ triển khai của bạn):
 
@@ -43,7 +44,7 @@ Backend website gửi hai sự kiện đến `POST https://your-aff-platform.exa
 
 KiotViet Retail là nguồn đối chiếu tùy chọn, không quyết định trạng thái ghi nhận aff. Khi có `KIOTVIET_RETAILER`, `KIOTVIET_CLIENT_ID`, `KIOTVIET_CLIENT_SECRET`, admin có thể liên kết mã KiotViet để xem trạng thái tham chiếu. Webhook `order.update` và `invoice.update` có thể đăng ký tới `https://your-aff-platform.example/api/webhooks/kiotviet` với cùng secret Base64 trong `KIOTVIET_WEBHOOK_SECRET`.
 
-Ứng dụng lưu dữ liệu trên Neon. API đọc danh sách và xét duyệt yêu cầu phiên admin; biểu mẫu đăng ký và đặt đơn là công khai. Luồng này chưa có thanh toán hoặc quy tắc hoa hồng. Khi triển khai công khai, cần thêm cơ chế chống spam cho biểu mẫu. Không đưa `.env.local` lên Git.
+Ứng dụng lưu dữ liệu trên Neon. API đọc danh sách và xét duyệt yêu cầu phiên admin; portal thống kê yêu cầu phiên affiliate hợp lệ; biểu mẫu đăng ký và đặt đơn là công khai. Luồng này chưa có thanh toán hoặc quy tắc đối soát hoa hồng hoàn chỉnh; số hoa hồng đang hiển thị là ước tính theo tỷ lệ lưu cho từng cộng tác viên. Khi triển khai công khai, cần thêm cơ chế chống spam cho biểu mẫu. Không đưa `.env.local` lên Git.
 
 ---
 

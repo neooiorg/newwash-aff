@@ -1,6 +1,7 @@
 import { z } from "zod";
 
-import { adminUnavailable, isAdminRequest } from "@/lib/affiliates/access";
+import { createAffiliateAccessKey, hashAffiliateAccessKey } from "@/lib/affiliate-auth";
+import { adminUnavailable, isAdminRequest, isSameOriginRequest } from "@/lib/affiliates/access";
 import { getPool } from "@/lib/affiliates/db";
 import type { Partner } from "@/lib/affiliates/types";
 
@@ -14,7 +15,7 @@ const applicationInput = z.object({
 
 const decisionInput = z.object({
   id: z.uuid(),
-  decision: z.enum(["approved", "rejected"]),
+  decision: z.enum(["approved", "rejected", "reset_access"]),
 });
 
 type PartnerRow = {
@@ -40,13 +41,16 @@ function toPartner(row: PartnerRow): Partner {
 }
 
 function codeBase(name: string) {
-  return name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/Đ/g, "D")
-    .toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12) || "AFF";
-}
-
-function isSameOrigin(request: Request) {
-  const origin = request.headers.get("origin");
-  return !origin || origin === new URL(request.url).origin;
+  return (
+    name
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/Đ/g, "D")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "")
+      .slice(0, 12) || "AFF"
+  );
 }
 
 export async function GET(request: Request) {
@@ -62,7 +66,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!isSameOrigin(request)) return Response.json({ error: "Origin không hợp lệ." }, { status: 403 });
+  if (!isSameOriginRequest(request)) return Response.json({ error: "Origin không hợp lệ." }, { status: 403 });
   const input = applicationInput.safeParse(await request.json().catch(() => null));
   if (!input.success) return Response.json({ error: "Thông tin đăng ký không hợp lệ." }, { status: 400 });
 
@@ -73,7 +77,10 @@ export async function POST(request: Request) {
       [input.data.contact],
     );
     if (existing.rowCount) {
-      return Response.json({ error: "Thông tin liên hệ này đã có hồ sơ đang xét duyệt hoặc đã được duyệt." }, { status: 409 });
+      return Response.json(
+        { error: "Thông tin liên hệ này đã có hồ sơ đang xét duyệt hoặc đã được duyệt." },
+        { status: 409 },
+      );
     }
     const result = await getPool().query<{ id: string }>(
       `INSERT INTO newwash_affiliates (name, contact, channel, status)
@@ -93,6 +100,18 @@ export async function PATCH(request: Request) {
 
   const pool = getPool();
   try {
+    if (input.data.decision === "reset_access") {
+      const accessKey = createAffiliateAccessKey();
+      const result = await pool.query<PartnerRow>(
+        `UPDATE newwash_affiliates SET access_secret_hash = $2
+         WHERE id = $1 AND status = 'approved'
+         RETURNING id, name, contact, channel, code, status, created_at`,
+        [input.data.id, hashAffiliateAccessKey(accessKey)],
+      );
+      if (!result.rows[0]) return Response.json({ error: "Cộng tác viên chưa được duyệt." }, { status: 409 });
+      return Response.json({ partner: toPartner(result.rows[0]), accessKey });
+    }
+
     if (input.data.decision === "rejected") {
       const result = await pool.query<PartnerRow>(
         `UPDATE newwash_affiliates SET status = 'rejected', code = NULL
@@ -110,17 +129,19 @@ export async function PATCH(request: Request) {
     );
     if (!application.rows[0]) return Response.json({ error: "Hồ sơ không còn chờ duyệt." }, { status: 409 });
     const base = codeBase(application.rows[0].name);
+    const accessKey = createAffiliateAccessKey();
+    const accessSecretHash = hashAffiliateAccessKey(accessKey);
     for (let suffix = 1; suffix < 100; suffix++) {
       const code = suffix === 1 ? base : `${base.slice(0, 20 - String(suffix).length)}${suffix}`;
       try {
         const result = await pool.query<PartnerRow>(
-          `UPDATE newwash_affiliates SET status = 'approved', code = $2
+          `UPDATE newwash_affiliates SET status = 'approved', code = $2, access_secret_hash = $3
            WHERE id = $1 AND status = 'pending'
            RETURNING id, name, contact, channel, code, status, created_at`,
-          [input.data.id, code],
+          [input.data.id, code, accessSecretHash],
         );
         if (!result.rows[0]) return Response.json({ error: "Hồ sơ không còn chờ duyệt." }, { status: 409 });
-        return Response.json({ partner: toPartner(result.rows[0]) });
+        return Response.json({ partner: toPartner(result.rows[0]), accessKey });
       } catch (error) {
         if ((error as { code?: string }).code === "23505") continue;
         throw error;

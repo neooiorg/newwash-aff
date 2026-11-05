@@ -1,6 +1,6 @@
 (() => {
   var script = document.currentScript;
-  if (!script || !script.src || document.getElementById("newwash-popup-root")) return;
+  if (!script?.src || document.getElementById("newwash-popup-root")) return;
 
   var origin = new URL(script.src).origin;
   var params = new URLSearchParams(location.search);
@@ -16,6 +16,36 @@
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, 20);
+  var shouldTrackClick = Boolean(code && incomingCode);
+  var clickSessionKey;
+  var clickEventId;
+  if (shouldTrackClick) {
+    try {
+      clickSessionKey = `newwash-aff-click:${code}`;
+      if (sessionStorage.getItem(clickSessionKey)) shouldTrackClick = false;
+      else sessionStorage.setItem(clickSessionKey, "1");
+    } catch (_) {
+      /* Continue with one page-load event when session storage is unavailable. */
+    }
+  }
+  if (shouldTrackClick) {
+    clickEventId =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (character) => {
+            var random = (Math.random() * 16) | 0;
+            return (character === "x" ? random : (random & 3) | 8).toString(16);
+          });
+    fetch(`${origin}/api/affiliate-clicks`, {
+      method: "POST",
+      mode: "cors",
+      keepalive: true,
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code: code, eventId: clickEventId, landingUrl: location.href.slice(0, 1000) }),
+    }).catch(() => {
+      /* Tracking never blocks the host website or booking form. */
+    });
+  }
   var orderEndpoint = new URL(script.getAttribute("data-order-endpoint") || "/api/newwash/orders", location.href);
   window.NewWashAff = { getAffiliateCode: () => code };
   var root = document.createElement("div");
@@ -25,7 +55,7 @@
   var shadow = root.attachShadow({ mode: "open" });
   var stylesheet = document.createElement("link");
   stylesheet.rel = "stylesheet";
-  stylesheet.href = origin + "/embed.css";
+  stylesheet.href = `${origin}/embed.css`;
   shadow.appendChild(stylesheet);
 
   var bubble = document.createElement("button");
@@ -37,7 +67,7 @@
   var bubbleIcon = document.createElement("span");
   bubbleIcon.className = "newwash-bubble-icon";
   var bubbleImage = document.createElement("img");
-  bubbleImage.src = origin + "/laundry-icons/washer-lightning.png";
+  bubbleImage.src = `${origin}/laundry-icons/washer-lightning.png`;
   bubbleImage.alt = "";
   bubbleImage.setAttribute("aria-hidden", "true");
   bubbleIcon.appendChild(bubbleImage);
@@ -68,8 +98,8 @@
   function applyButtonPosition() {
     var maxX = Math.max(8, window.innerWidth - 208);
     var maxY = Math.max(8, window.innerHeight - 72);
-    bubble.style.setProperty("--nw-offset-x", Math.min(buttonOffsetX, maxX) + "px");
-    bubble.style.setProperty("--nw-offset-y", Math.min(buttonOffsetY, maxY) + "px");
+    bubble.style.setProperty("--nw-offset-x", `${Math.min(buttonOffsetX, maxX)}px`);
+    bubble.style.setProperty("--nw-offset-y", `${Math.min(buttonOffsetY, maxY)}px`);
   }
 
   function revealButton() {
@@ -80,7 +110,7 @@
     });
   }
 
-  fetch(origin + "/api/embed-config", { mode: "cors", cache: "no-store" })
+  fetch(`${origin}/api/embed-config`, { mode: "cors", cache: "no-store" })
     .then((response) => (response.ok ? response.json() : null))
     .then((config) => {
       if (!config) return;

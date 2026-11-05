@@ -1,7 +1,8 @@
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
 import pg from "pg";
+
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 const dbDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../db");
 const migrations = [
@@ -15,6 +16,8 @@ const migrations = [
   "008_service_icons.sql",
   "009_embed_button_position.sql",
   "010_direct_booking_details.sql",
+  "011_affiliate_analytics.sql",
+  "012_affiliate_access.sql",
 ];
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 10000 });
 
@@ -27,9 +30,13 @@ try {
   await client.query("COMMIT");
   console.log("NewWash affiliate schema is ready.");
 } catch (error) {
-  await client.query("ROLLBACK").catch(() => {});
+  await client.query("ROLLBACK").catch(() => {
+    // The connection may already be closed after a migration failure.
+  });
   console.error("Database migration failed:", error instanceof Error ? error.message : error);
   process.exitCode = 1;
 } finally {
-  await client.end().catch(() => {});
+  await client.end().catch(() => {
+    // Closing is best effort during process shutdown.
+  });
 }
