@@ -95,6 +95,18 @@
   var buttonOffsetX = 24;
   var buttonOffsetY = 24;
 
+  function syncVisualViewport() {
+    var viewport = window.visualViewport;
+    var viewportWidth = viewport?.width || window.innerWidth;
+    var viewportHeight = viewport?.height || window.innerHeight;
+    var viewportLeft = viewport?.offsetLeft || 0;
+    var viewportTop = viewport?.offsetTop || 0;
+    layer.style.setProperty("--nw-viewport-width", `${Math.round(viewportWidth)}px`);
+    layer.style.setProperty("--nw-viewport-height", `${Math.round(viewportHeight)}px`);
+    layer.style.setProperty("--nw-viewport-left", `${Math.round(viewportLeft)}px`);
+    layer.style.setProperty("--nw-viewport-top", `${Math.round(viewportTop)}px`);
+  }
+
   function applyButtonPosition() {
     var maxX = Math.max(8, window.innerWidth - 208);
     var maxY = Math.max(8, window.innerHeight - 72);
@@ -122,7 +134,15 @@
     })
     .finally(revealButton);
 
-  window.addEventListener("resize", applyButtonPosition, { passive: true });
+  function handleViewportChange() {
+    syncVisualViewport();
+    applyButtonPosition();
+  }
+
+  syncVisualViewport();
+  window.addEventListener("resize", handleViewportChange, { passive: true });
+  window.visualViewport?.addEventListener("resize", handleViewportChange, { passive: true });
+  window.visualViewport?.addEventListener("scroll", handleViewportChange, { passive: true });
 
   var frameUrl =
     origin +

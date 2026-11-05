@@ -148,10 +148,11 @@
 
 .newwash-layer {
   position: fixed;
-  inset: 0;
+  top: var(--nw-viewport-top, 0);
+  left: var(--nw-viewport-left, 0);
   z-index: 2147483641;
-  width: 100vw;
-  height: 100dvh;
+  width: var(--nw-viewport-width, 100vw);
+  height: var(--nw-viewport-height, 100dvh);
   overflow: hidden;
   background: transparent;
   opacity: 0;
@@ -161,14 +162,14 @@
 .newwash-layer.is-open { opacity: 1; pointer-events: auto; }
 .newwash-layer.is-closing { pointer-events: none; }
 
-.newwash-frame { display: block; width: 100%; height: 100dvh; border: 0; background: transparent; }
+.newwash-frame { display: block; width: 100%; height: 100%; border: 0; background: transparent; }
 
 @media (max-width: 640px) {
   .newwash-bubble { min-height: 52px; padding: 5px 14px 5px 6px; font-size: 14px; }
   .newwash-bubble-content { gap: 8px; }
   .newwash-bubble-icon { width: 40px; height: 40px; flex-basis: 40px; }
   .newwash-bubble-icon img { width: 34px; height: 34px; }
-  .newwash-frame { height: 100dvh; }
+  .newwash-frame { height: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

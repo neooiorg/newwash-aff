@@ -727,7 +727,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const activeStepIndex = Math.max(0, stepOrder.indexOf(activeStep));
   return (
     <>
-      <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
+      <Drawer fixed repositionInputs open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
         <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
         {!embedded ? (
           <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
