@@ -1,16 +1,6 @@
 "use client";
 
-import {
-  Check,
-  CheckCircle2,
-  ChevronDown,
-  Clock3,
-  MapPin,
-  Minus,
-  Phone,
-  Plus,
-  Shirt,
-} from "lucide-react";
+import { Check, CheckCircle2, ChevronDown, Clock3, MapPin, Minus, Phone, Plus, Shirt, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { cn } from "cn";
 
@@ -30,17 +20,14 @@ import type { BookingService, ServiceCategory } from "@/lib/booking-services";
 import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
 import { dateChoices, formatVnd, localDateKey, timeSlots } from "./booking-options";
 import {
-  FamilyDrawerAnimatedContent,
-  FamilyDrawerAnimatedWrapper,
-  FamilyDrawerClose,
-  FamilyDrawerContent,
-  FamilyDrawerDescription,
-  FamilyDrawerOverlay,
-  FamilyDrawerPortal,
-  FamilyDrawerRoot,
-  FamilyDrawerTitle,
-  FamilyDrawerTrigger,
-} from "./family-drawer";
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "./base-drawer";
 
 type OrderFormProps = { affiliateCode: string; embedded: boolean; preview?: boolean; hostOrigin: string };
 
@@ -469,7 +456,8 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                   <span className="flex min-w-0 flex-col items-start gap-1">
                     <span className="font-medium leading-tight">{item.label}</span>
                     <span className="text-xs font-normal text-muted-foreground">
-                      {item.duration}{item.note ? ` · ${item.note}` : ""}
+                      {item.duration}
+                      {item.note ? ` · ${item.note}` : ""}
                     </span>
                   </span>
                   <span className="flex shrink-0 items-center gap-3">
@@ -719,115 +707,121 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
 
   const activeStepIndex = Math.max(0, stepOrder.indexOf(activeStep));
   return (
-    <FamilyDrawerRoot open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
+    <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange} showSwipeHandle swipeDirection="down">
       <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
       <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
-        <FamilyDrawerTrigger asChild>
-          <Button
-            type="button"
-            size="lg"
-            className="rounded-full bg-yellow-400 px-6 font-semibold text-zinc-950 shadow-xl hover:bg-yellow-300"
-          >
-            Đặt lịch giặt ủi
-          </Button>
-        </FamilyDrawerTrigger>
+        <DrawerTrigger
+          render={
+            <Button
+              type="button"
+              size="lg"
+              className="rounded-full bg-yellow-400 px-6 font-semibold text-zinc-950 shadow-xl hover:bg-yellow-300"
+            />
+          }
+        >
+          Đặt lịch giặt ủi
+        </DrawerTrigger>
       </div>
-      <FamilyDrawerPortal>
-        <FamilyDrawerOverlay />
-        <FamilyDrawerContent>
-          <FamilyDrawerClose />
-          <FamilyDrawerAnimatedWrapper>
-            <FamilyDrawerAnimatedContent>
-              <main className="bg-background text-foreground">
-                <ScrollArea className="h-[min(720px,calc(100dvh-1rem))] w-full">
-                  <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-6 pb-8 sm:px-8 sm:pt-8">
-                    <header className="flex items-start justify-between gap-4 border-b border-border pr-12 pb-5">
-                      <div>
-                        <FamilyDrawerTitle>Thông tin đặt giặt ủi</FamilyDrawerTitle>
-                        <FamilyDrawerDescription className="mt-1">
-                          Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
-                        </FamilyDrawerDescription>
-                      </div>
-                      <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
-                        {activeStepIndex + 1}/{stepOrder.length}
-                      </span>
-                    </header>
-
-                    {submittedId ? (
-                      <Card className="border-border bg-background text-foreground">
-                        <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-                          <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
-                            <CheckCircle2 aria-hidden="true" />
-                          </span>
-                          <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
-                          <p className="max-w-sm text-sm text-muted-foreground">
-                            Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
-                          </p>
-                          <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <form
-                        ref={formRef}
-                        id="newwash-order-form"
-                        noValidate
-                        onSubmit={submit}
-                        className="flex flex-col gap-4"
-                      >
-                        {error && (
-                          <Alert variant="destructive" role="alert">
-                            <AlertTitle>Chưa thể đặt đơn</AlertTitle>
-                            <AlertDescription>{error}</AlertDescription>
-                          </Alert>
-                        )}
-                        <WizardExpandable
-                          steps={steps}
-                          expanded
-                          animateInitialOpen={false}
-                          activeStep={activeStep}
-                          onActiveStepChange={(value) => {
-                            if (value) {
-                              setActiveStep(value);
-                              setError("");
-                            }
-                          }}
-                          canNavigateToStep={canNavigateToStep}
-                          onNavigateBlocked={onNavigateBlocked}
-                          onComplete={() => {
-                            const contactError = stepError("contact");
-                            if (contactError) {
-                              setError(contactError);
-                              document.getElementById("phone")?.focus();
-                              return;
-                            }
-                            formRef.current?.requestSubmit();
-                          }}
-                          backLabel="Quay lại"
-                          nextLabel="Tiếp tục"
-                          completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
-                          canGoNext={
-                            !saving &&
-                            !servicesLoading &&
-                            !servicesError &&
-                            services.length > 0 &&
-                            (!preview || activeStep !== "contact")
-                          }
-                          className="max-w-none px-0 sm:max-w-none"
-                        />
-                        {preview && (
-                          <p className="text-center text-xs text-muted-foreground">
-                            Đây là bản xem trước; đơn hàng sẽ không được gửi.
-                          </p>
-                        )}
-                      </form>
-                    )}
-                  </div>
-                </ScrollArea>
-              </main>
-            </FamilyDrawerAnimatedContent>
-          </FamilyDrawerAnimatedWrapper>
-        </FamilyDrawerContent>
-      </FamilyDrawerPortal>
-    </FamilyDrawerRoot>
+      <DrawerContent className="h-[min(720px,calc(100dvh-1rem))] sm:h-[min(720px,calc(100dvh-2rem))]">
+        <DrawerHeader className="relative border-b px-4 pt-2 pb-5 text-left sm:px-8">
+          <div className="flex items-start justify-between gap-4 pr-12">
+            <div>
+              <DrawerTitle>Thông tin đặt giặt ủi</DrawerTitle>
+              <DrawerDescription className="mt-1">Chọn dịch vụ, địa chỉ và thời gian nhận đồ.</DrawerDescription>
+            </div>
+            <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
+              {activeStepIndex + 1}/{stepOrder.length}
+            </span>
+          </div>
+          <DrawerClose
+            render={
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute top-0 right-4 rounded-full sm:right-8"
+                aria-label="Đóng biểu mẫu"
+              />
+            }
+          >
+            <X />
+          </DrawerClose>
+        </DrawerHeader>
+        <ScrollArea className="min-h-0 flex-1">
+          <main className="bg-background text-foreground">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-5 pb-8 sm:px-8">
+              {submittedId ? (
+                <Card className="border-border bg-background text-foreground">
+                  <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+                    <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
+                      <CheckCircle2 aria-hidden="true" />
+                    </span>
+                    <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
+                    <p className="max-w-sm text-sm text-muted-foreground">
+                      Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
+                    </p>
+                    <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
+                  </CardContent>
+                </Card>
+              ) : (
+                <form
+                  ref={formRef}
+                  id="newwash-order-form"
+                  noValidate
+                  onSubmit={submit}
+                  className="flex flex-col gap-4"
+                >
+                  {error && (
+                    <Alert variant="destructive" role="alert">
+                      <AlertTitle>Chưa thể đặt đơn</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <WizardExpandable
+                    steps={steps}
+                    expanded
+                    animateInitialOpen={false}
+                    activeStep={activeStep}
+                    onActiveStepChange={(value) => {
+                      if (value) {
+                        setActiveStep(value);
+                        setError("");
+                      }
+                    }}
+                    canNavigateToStep={canNavigateToStep}
+                    onNavigateBlocked={onNavigateBlocked}
+                    onComplete={() => {
+                      const contactError = stepError("contact");
+                      if (contactError) {
+                        setError(contactError);
+                        document.getElementById("phone")?.focus();
+                        return;
+                      }
+                      formRef.current?.requestSubmit();
+                    }}
+                    backLabel="Quay lại"
+                    nextLabel="Tiếp tục"
+                    completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
+                    canGoNext={
+                      !saving &&
+                      !servicesLoading &&
+                      !servicesError &&
+                      services.length > 0 &&
+                      (!preview || activeStep !== "contact")
+                    }
+                    className="max-w-none px-0 sm:max-w-none"
+                  />
+                  {preview && (
+                    <p className="text-center text-xs text-muted-foreground">
+                      Đây là bản xem trước; đơn hàng sẽ không được gửi.
+                    </p>
+                  )}
+                </form>
+              )}
+            </div>
+          </main>
+        </ScrollArea>
+      </DrawerContent>
+    </Drawer>
   );
 }
