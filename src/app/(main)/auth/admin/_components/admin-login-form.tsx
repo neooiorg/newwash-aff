@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 
 import { loginAdmin } from "../actions";
 
-export function AdminLoginForm({ demoPassword }: { demoPassword: string }) {
+export function AdminLoginForm({ demoEmail, demoPassword }: { demoEmail: string; demoPassword: string }) {
   const [error, action, pending] = useActionState(loginAdmin, "");
 
   return (
@@ -16,14 +16,7 @@ export function AdminLoginForm({ demoPassword }: { demoPassword: string }) {
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="email">Email admin</FieldLabel>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            autoComplete="username"
-            required
-            defaultValue="admin@newwash.local"
-          />
+          <Input id="email" name="email" type="email" autoComplete="username" required defaultValue={demoEmail} />
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
@@ -37,8 +30,14 @@ export function AdminLoginForm({ demoPassword }: { demoPassword: string }) {
           />
         </Field>
       </FieldGroup>
-      {error && <p className="text-destructive text-sm" role="alert">{error}</p>}
-      <Button type="submit" disabled={pending}>{pending ? "Đang đăng nhập..." : "Đăng nhập"}</Button>
+      {error && (
+        <p className="text-destructive text-sm" role="alert">
+          {error}
+        </p>
+      )}
+      <Button type="submit" disabled={pending}>
+        {pending ? "Đang đăng nhập..." : "Đăng nhập"}
+      </Button>
     </form>
   );
 }

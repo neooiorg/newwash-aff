@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 import { Separator } from "@/components/ui/separator";
 import { APP_CONFIG } from "@/config/app-config";
-import { hasAdminSession } from "@/lib/admin-auth";
+import { ADMIN_EMAIL, hasAdminSession } from "@/lib/admin-auth";
 
 import { AdminLoginForm } from "./_components/admin-login-form";
 
@@ -11,7 +11,8 @@ export const metadata = { title: "Đăng nhập admin | NewWash Aff" };
 
 export default async function Page() {
   if (await hasAdminSession()) redirect("/dashboard/default");
-  const demoPassword = process.env.NODE_ENV === "development" ? process.env.ADMIN_DEMO_PASSWORD ?? "" : "";
+  const demoEmail = process.env.ADMIN_EMAIL ?? ADMIN_EMAIL;
+  const demoPassword = process.env.ADMIN_DEMO_PASSWORD ?? "";
 
   return (
     <main className="grid min-h-dvh gap-2 p-2 lg:grid-cols-2">
@@ -21,7 +22,7 @@ export default async function Page() {
             <h1 className="text-3xl font-medium">Đăng nhập tài khoản</h1>
             <p className="text-muted-foreground text-sm">Thông tin admin đã được điền sẵn cho giai đoạn test.</p>
           </div>
-          <AdminLoginForm demoPassword={demoPassword} />
+          <AdminLoginForm demoEmail={demoEmail} demoPassword={demoPassword} />
         </div>
         <p className="text-muted-foreground absolute bottom-5 text-xs">{APP_CONFIG.copyright}</p>
       </div>
@@ -44,7 +45,9 @@ export default async function Page() {
         <div className="absolute bottom-10 flex w-full gap-3 px-10">
           <div className="flex flex-1 flex-col gap-1">
             <h3 className="font-medium">Mã QR riêng</h3>
-            <p className="text-zinc-800 text-sm">Duyệt hồ sơ và cấp mã giới thiệu để cộng tác viên chia sẻ với khách hàng.</p>
+            <p className="text-zinc-800 text-sm">
+              Duyệt hồ sơ và cấp mã giới thiệu để cộng tác viên chia sẻ với khách hàng.
+            </p>
           </div>
           <Separator orientation="vertical" className="h-auto! bg-zinc-900/30" />
           <div className="flex flex-1 flex-col gap-1">
