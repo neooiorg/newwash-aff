@@ -37,10 +37,24 @@ export function useAffiliateRealtime(
       debounce = setTimeout(() => callback.current(), 100);
     }
 
-    function connect() {
+    async function connect() {
       if (!active) return;
       setStatus("connecting");
-      socket = new WebSocket(url);
+      try {
+        const response = await fetch(`/api/realtime-ticket?scope=${scope}`, { cache: "no-store" });
+        if (!response.ok) throw new Error("Realtime authorization failed");
+        const { ticket } = (await response.json()) as { ticket?: string };
+        if (!ticket || !active) throw new Error("Realtime ticket is unavailable");
+        const socketUrl = new URL(url);
+        socketUrl.searchParams.set("ticket", ticket);
+        socket = new WebSocket(socketUrl);
+      } catch {
+        if (!active) return;
+        setStatus("offline");
+        retry = setTimeout(() => void connect(), delay);
+        delay = Math.min(delay * 2, 30_000);
+        return;
+      }
       socket.addEventListener("open", () => {
         delay = 1000;
         setStatus("live");
@@ -57,7 +71,7 @@ export function useAffiliateRealtime(
       socket.addEventListener("close", () => {
         if (!active) return;
         setStatus("offline");
-        retry = setTimeout(connect, delay);
+        retry = setTimeout(() => void connect(), delay);
         delay = Math.min(delay * 2, 30_000);
       });
       socket.addEventListener("error", () => socket?.close());
@@ -67,7 +81,7 @@ export function useAffiliateRealtime(
       if (document.visibilityState === "visible") refresh();
     }
     document.addEventListener("visibilitychange", onVisible);
-    connect();
+    void connect();
     return () => {
       active = false;
       document.removeEventListener("visibilitychange", onVisible);

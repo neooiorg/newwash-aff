@@ -63,6 +63,20 @@ function validAffiliateSession(cookieHeader) {
   }
 }
 
+function validTicket(request, expectedScope) {
+  try {
+    const ticket = new URL(request.url, "http://realtime.local").searchParams.get("ticket");
+    if (!ticket) return null;
+    const [scope, subject, expires, signature] = ticket.split(".");
+    if (scope !== expectedScope || !subject || !/^\d{10}$/.test(expires || "")) return null;
+    if (!/^[0-9a-f]{64}$/.test(signature || "") || Number(expires) <= Math.floor(Date.now() / 1000)) return null;
+    const expected = createHmac("sha256", sessionSecret).update(`${scope}.${subject}.${expires}`).digest();
+    return timingSafeEqual(expected, Buffer.from(signature, "hex")) ? subject : null;
+  } catch {
+    return null;
+  }
+}
+
 function validOrigin(request) {
   const origin = request.headers.origin;
   const host = request.headers.host?.split(":")[0];
@@ -84,19 +98,21 @@ const server = createServer((_, response) => {
 const sockets = new WebSocketServer({ noServer: true, maxPayload: 1024, perMessageDeflate: false });
 
 server.on("upgrade", (request, socket, head) => {
+  const pathname = new URL(request.url, "http://realtime.local").pathname;
   const scope =
-    request.url === "/services"
+    pathname === "/services"
       ? "services"
-      : request.url === "/realtime"
+      : pathname === "/realtime"
         ? "admin"
-        : request.url === "/affiliate-realtime"
+        : pathname === "/affiliate-realtime"
           ? "affiliate"
           : "";
-  const affiliateId = scope === "affiliate" ? validAffiliateSession(request.headers.cookie) : null;
+  const ticketSubject = scope === "admin" || scope === "affiliate" ? validTicket(request, scope) : null;
+  const affiliateId = scope === "affiliate" ? ticketSubject || validAffiliateSession(request.headers.cookie) : null;
   if (
     !scope ||
     !validOrigin(request) ||
-    (scope === "admin" && !validSession(request.headers.cookie)) ||
+    (scope === "admin" && ticketSubject !== "admin" && !validSession(request.headers.cookie)) ||
     (scope === "affiliate" && !affiliateId)
   ) {
     socket.write("HTTP/1.1 401 Unauthorized\r\nConnection: close\r\n\r\n");
@@ -105,7 +121,7 @@ server.on("upgrade", (request, socket, head) => {
   }
   sockets.handleUpgrade(request, socket, head, (client) => {
     client.scope = scope;
-    if (scope === "admin" || scope === "affiliate") client.sessionCookie = request.headers.cookie;
+    if (scope === "admin" || scope === "affiliate") client.ticketExpiresAt = Date.now() + 5 * 60 * 1000;
     if (scope === "affiliate") client.affiliateId = affiliateId;
     sockets.emit("connection", client);
   });
@@ -120,9 +136,8 @@ sockets.on("connection", (client) => {
 
 const heartbeat = setInterval(() => {
   for (const client of sockets.clients) {
-    if (client.scope === "admin" && !validSession(client.sessionCookie)) client.close(1008, "Session expired");
-    else if (client.scope === "affiliate" && !validAffiliateSession(client.sessionCookie))
-      client.close(1008, "Session expired");
+    if ((client.scope === "admin" || client.scope === "affiliate") && Date.now() > client.ticketExpiresAt)
+      client.close(1008, "Ticket expired");
     else if (client.readyState === WebSocket.OPEN) client.ping();
   }
 }, 30_000);
