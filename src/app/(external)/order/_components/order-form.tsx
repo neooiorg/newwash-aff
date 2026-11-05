@@ -749,82 +749,80 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             </Button>
           </DrawerClose>
         </DrawerHeader>
-        <div className="relative min-h-0 flex-1 overflow-hidden">
-          <ScrollArea className="absolute inset-0 overflow-hidden">
-            <main className="bg-background text-foreground">
-              <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-5 pb-8 sm:px-8">
-                {submittedId ? (
-                  <Card className="border-border bg-background text-foreground">
-                    <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-                      <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
-                        <CheckCircle2 aria-hidden="true" />
-                      </span>
-                      <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
-                      <p className="max-w-sm text-sm text-muted-foreground">
-                        Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
-                      </p>
-                      <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <form
-                    ref={formRef}
-                    id="newwash-order-form"
-                    noValidate
-                    onSubmit={submit}
-                    className="flex flex-col gap-4"
-                  >
-                    {error && (
-                      <Alert variant="destructive" role="alert">
-                        <AlertTitle>Chưa thể đặt đơn</AlertTitle>
-                        <AlertDescription>{error}</AlertDescription>
-                      </Alert>
-                    )}
-                    <WizardExpandable
-                      steps={steps}
-                      expanded
-                      animateInitialOpen={false}
-                      activeStep={activeStep}
-                      onActiveStepChange={(value) => {
-                        if (value) {
-                          setActiveStep(value);
-                          setError("");
-                        }
-                      }}
-                      canNavigateToStep={canNavigateToStep}
-                      onNavigateBlocked={onNavigateBlocked}
-                      onComplete={() => {
-                        const contactError = stepError("contact");
-                        if (contactError) {
-                          setError(contactError);
-                          document.getElementById("phone")?.focus();
-                          return;
-                        }
-                        formRef.current?.requestSubmit();
-                      }}
-                      backLabel="Quay lại"
-                      nextLabel="Tiếp tục"
-                      completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
-                      canGoNext={
-                        !saving &&
-                        !servicesLoading &&
-                        !servicesError &&
-                        services.length > 0 &&
-                        (!preview || activeStep !== "contact")
+        <ScrollArea className="min-h-0 flex-1 overflow-hidden">
+          <main className="bg-background text-foreground">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-5 px-4 pt-5 pb-8 sm:px-8">
+              {submittedId ? (
+                <Card className="border-border bg-background text-foreground">
+                  <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+                    <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
+                      <CheckCircle2 aria-hidden="true" />
+                    </span>
+                    <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
+                    <p className="max-w-sm text-sm text-muted-foreground">
+                      Website cửa hàng đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
+                    </p>
+                    <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
+                  </CardContent>
+                </Card>
+              ) : (
+                <form
+                  ref={formRef}
+                  id="newwash-order-form"
+                  noValidate
+                  onSubmit={submit}
+                  className="flex flex-col gap-4"
+                >
+                  {error && (
+                    <Alert variant="destructive" role="alert">
+                      <AlertTitle>Chưa thể đặt đơn</AlertTitle>
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+                  <WizardExpandable
+                    steps={steps}
+                    expanded
+                    animateInitialOpen={false}
+                    activeStep={activeStep}
+                    onActiveStepChange={(value) => {
+                      if (value) {
+                        setActiveStep(value);
+                        setError("");
                       }
-                      className="max-w-none px-0 sm:max-w-none"
-                    />
-                    {preview && (
-                      <p className="text-center text-xs text-muted-foreground">
-                        Đây là bản xem trước; đơn hàng sẽ không được gửi.
-                      </p>
-                    )}
-                  </form>
-                )}
-              </div>
-            </main>
-          </ScrollArea>
-        </div>
+                    }}
+                    canNavigateToStep={canNavigateToStep}
+                    onNavigateBlocked={onNavigateBlocked}
+                    onComplete={() => {
+                      const contactError = stepError("contact");
+                      if (contactError) {
+                        setError(contactError);
+                        document.getElementById("phone")?.focus();
+                        return;
+                      }
+                      formRef.current?.requestSubmit();
+                    }}
+                    backLabel="Quay lại"
+                    nextLabel="Tiếp tục"
+                    completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
+                    canGoNext={
+                      !saving &&
+                      !servicesLoading &&
+                      !servicesError &&
+                      services.length > 0 &&
+                      (!preview || activeStep !== "contact")
+                    }
+                    className="max-w-none px-0 sm:max-w-none"
+                  />
+                  {preview && (
+                    <p className="text-center text-xs text-muted-foreground">
+                      Đây là bản xem trước; đơn hàng sẽ không được gửi.
+                    </p>
+                  )}
+                </form>
+              )}
+            </div>
+          </main>
+        </ScrollArea>
       </DrawerContent>
     </Drawer>
   );
