@@ -20,6 +20,8 @@
   window.NewWashAff = { getAffiliateCode: () => code };
   var root = document.createElement("div");
   root.id = "newwash-popup-root";
+  root.style.cssText =
+    "all:initial!important;position:fixed!important;right:0!important;bottom:0!important;display:block!important;width:0!important;height:0!important;overflow:visible!important;z-index:2147483640!important;";
   var shadow = root.attachShadow({ mode: "open" });
   var stylesheet = document.createElement("link");
   stylesheet.rel = "stylesheet";
@@ -30,6 +32,8 @@
   bubble.type = "button";
   bubble.className = "newwash-bubble";
   bubble.hidden = true;
+  var bubbleContent = document.createElement("span");
+  bubbleContent.className = "newwash-bubble-content";
   var bubbleIcon = document.createElement("span");
   bubbleIcon.className = "newwash-bubble-icon";
   var bubbleImage = document.createElement("img");
@@ -40,14 +44,9 @@
   var bubbleLabel = document.createElement("span");
   bubbleLabel.className = "newwash-bubble-label";
   bubbleLabel.textContent = "Đặt lịch giặt ủi";
-  var bubbleArrow = document.createElement("span");
-  bubbleArrow.className = "newwash-bubble-arrow";
-  bubbleArrow.setAttribute("aria-hidden", "true");
-  bubbleArrow.innerHTML =
-    '<svg viewBox="0 0 20 20" fill="none"><path d="M4 10h11m-4-4 4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  bubble.appendChild(bubbleIcon);
-  bubble.appendChild(bubbleLabel);
-  bubble.appendChild(bubbleArrow);
+  bubbleContent.appendChild(bubbleIcon);
+  bubbleContent.appendChild(bubbleLabel);
+  bubble.appendChild(bubbleContent);
   bubble.setAttribute("aria-label", "Mở biểu mẫu đặt lịch giặt ủi");
   shadow.appendChild(bubble);
 
@@ -154,7 +153,7 @@
       const requestId = event.data.requestId;
       const order = event.data.order;
       if (typeof requestId !== "string" || !order || typeof order !== "object") return;
-      (async () => {
+      void (async () => {
         try {
           if (orderEndpoint.origin !== location.origin) throw new Error("API đặt đơn phải thuộc website cửa hàng.");
           const response = await fetch(orderEndpoint.href, {

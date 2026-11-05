@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { ArrowRight, Check, Copy, ExternalLink, Eye } from "lucide-react";
+import { Check, Copy, ExternalLink, Eye } from "lucide-react";
 import { toast } from "sonner";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -255,7 +255,7 @@ export function EmbedWorkspace() {
                     }}
                   >
                     <Button
-                      className="h-14 gap-2 rounded-full border border-yellow-500 bg-yellow-400 py-1.5 pr-2.5 pl-1.5 font-bold tracking-tight text-zinc-950 shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:bg-yellow-300 hover:shadow-xl active:translate-y-0 active:scale-[0.98]"
+                      className="h-14 gap-2 rounded-full border border-yellow-500 bg-yellow-400 py-1.5 pr-4 pl-1.5 font-bold tracking-tight text-zinc-950 shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:bg-yellow-300 hover:shadow-xl active:translate-y-0 active:scale-[0.98]"
                       type="button"
                     >
                       <span className="grid size-10 place-items-center rounded-full bg-yellow-50 shadow-sm">
@@ -268,9 +268,6 @@ export function EmbedWorkspace() {
                         />
                       </span>
                       Đặt lịch giặt ủi
-                      <span className="grid size-7 place-items-center rounded-full bg-zinc-950 text-yellow-400">
-                        <ArrowRight aria-hidden="true" />
-                      </span>
                     </Button>
                   </div>
                 </div>
