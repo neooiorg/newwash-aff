@@ -152,7 +152,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const [drawerOpen, setDrawerOpen] = useState(preview && !embedded);
   const pendingRequest = useRef("");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const closeFallbackRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!embedded) return;
@@ -254,7 +253,6 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     return () => {
       window.removeEventListener("message", receive);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      if (closeFallbackRef.current) clearTimeout(closeFallbackRef.current);
     };
   }, [embedded, hostOrigin]);
 
@@ -356,29 +354,12 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     }, 15_000);
   }
 
-  const notifyParentClosed = useCallback(() => {
-    if (!embedded || !hostOrigin) return;
-    window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
-  }, [embedded, hostOrigin]);
-
   const handleDrawerOpenChange = useCallback(
     (open: boolean) => {
       setDrawerOpen(open);
-      if (closeFallbackRef.current) clearTimeout(closeFallbackRef.current);
-      if (!open && embedded && hostOrigin) {
-        closeFallbackRef.current = setTimeout(notifyParentClosed, 650);
-      }
+      if (!open && embedded && hostOrigin) window.parent.postMessage({ type: "newwash:close" }, hostOrigin);
     },
-    [embedded, hostOrigin, notifyParentClosed],
-  );
-
-  const handleDrawerAnimationEnd = useCallback(
-    (open: boolean) => {
-      if (open) return;
-      if (closeFallbackRef.current) clearTimeout(closeFallbackRef.current);
-      notifyParentClosed();
-    },
-    [notifyParentClosed],
+    [embedded, hostOrigin],
   );
 
   function stepError(stepId: string): string {
@@ -732,7 +713,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
 
   const activeStepIndex = Math.max(0, stepOrder.indexOf(activeStep));
   return (
-    <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange} onAnimationEnd={handleDrawerAnimationEnd}>
+    <Drawer open={drawerOpen} onOpenChange={handleDrawerOpenChange}>
       <EmbeddedOpenSync enabled={embedded} hostOrigin={hostOrigin} onOpen={() => handleDrawerOpenChange(true)} />
       <div className="flex min-h-dvh items-end justify-end bg-transparent p-4 sm:p-6">
         <DrawerTrigger asChild>

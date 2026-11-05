@@ -40,6 +40,7 @@
   layer.appendChild(iframe);
   shadow.appendChild(layer);
   (document.body || document.documentElement).appendChild(root);
+  var closeTimer = 0;
 
   var frameUrl = origin + "/order?embed=1&aff=" + encodeURIComponent(code)
     + "&host=" + encodeURIComponent(location.origin)
@@ -54,6 +55,11 @@
   }
 
   function open() {
+    if (closeTimer) {
+      window.clearTimeout(closeTimer);
+      closeTimer = 0;
+    }
+    layer.classList.remove("is-closing");
     if (!layer.hidden) {
       expandFrame();
       return;
@@ -66,10 +72,15 @@
   }
 
   function close() {
-    if (layer.hidden) return;
-    layer.hidden = true;
-    layer.setAttribute("aria-hidden", "true");
-    bubble.hidden = false;
+    if (layer.hidden || closeTimer) return;
+    layer.classList.add("is-closing");
+    closeTimer = window.setTimeout(function () {
+      layer.hidden = true;
+      layer.classList.remove("is-closing");
+      layer.setAttribute("aria-hidden", "true");
+      bubble.hidden = false;
+      closeTimer = 0;
+    }, 500);
   }
 
   iframe.addEventListener("load", function () {
