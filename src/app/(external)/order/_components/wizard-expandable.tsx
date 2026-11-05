@@ -622,7 +622,7 @@ const WizardExpandableInner = React.memo<WizardExpandableProps>(function WizardE
                     }
                   }}
                 >
-                  <ScrollArea className="w-full pb-2">
+                  <ScrollArea className="w-full overflow-y-hidden pb-2 [&_[data-orientation=vertical]]:hidden [&_[data-slot=scroll-area-viewport]]:overflow-y-hidden!">
                     <div
                       aria-label="Wizard steps"
                       className="flex w-max min-w-full touch-pan-x items-center p-px"
