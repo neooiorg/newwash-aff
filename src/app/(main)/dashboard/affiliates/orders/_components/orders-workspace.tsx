@@ -237,6 +237,12 @@ export function OrdersWorkspace() {
           searchPlaceholder="Tìm mã đơn, khách hoặc mã aff"
           emptyMessage={orders.length ? "Không có đơn phù hợp." : "Chưa có đơn đặt từ popup."}
           initialSorting={[{ id: "createdAt", desc: true }]}
+          initialColumnVisibility={{
+            externalOrderId: false,
+            pickupSchedule: false,
+            source: false,
+            address: false,
+          }}
           filters={orderFilters}
           filter={{
             column: "status",

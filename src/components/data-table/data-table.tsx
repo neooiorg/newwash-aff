@@ -1,5 +1,7 @@
 "use client";
 
+import { type ReactNode, useState } from "react";
+
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -10,14 +12,13 @@ import {
   useTable,
 } from "@tanstack/react-table";
 import { ChevronLeft, ChevronRight, ChevronsUpDown, Search, Settings2 } from "lucide-react";
-import { useState, type ReactNode } from "react";
 
 import {
   DataTableFilter,
-  isActiveDataTableFilter,
-  matchesDataTableFilter,
   type DataTableFilterDefinition,
   type DataTableFilterRule,
+  isActiveDataTableFilter,
+  matchesDataTableFilter,
 } from "@/components/data-table/data-table-filter";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +29,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { dataTableFeatures, type DataTableFeatures } from "@/lib/data-table-features";
+import { type DataTableFeatures, dataTableFeatures } from "@/lib/data-table-features";
 
 export type DataTableColumn<TData extends RowData> = ColumnDef<DataTableFeatures, TData>;
 
@@ -43,6 +45,7 @@ interface DataTableProps<TData extends RowData> {
   emptyMessage: string;
   selectedRowId?: string;
   initialSorting?: SortingState;
+  initialColumnVisibility?: ColumnVisibilityState;
   filter?: { column: string; label: string; options: { value: string; label: string }[] };
   filters?: DataTableFilterDefinition<TData>[];
   toolbarEnd?: ReactNode;
@@ -58,6 +61,7 @@ export function DataTable<TData extends RowData>({
   emptyMessage,
   selectedRowId,
   initialSorting = [],
+  initialColumnVisibility = {},
   filter,
   filters = [],
   toolbarEnd,
@@ -66,7 +70,10 @@ export function DataTable<TData extends RowData>({
   const [joinOperator, setJoinOperator] = useState<"and" | "or">("and");
   const [sorting, setSorting] = useState<SortingState>(initialSorting);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({ [searchColumn]: false });
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({
+    ...initialColumnVisibility,
+    [searchColumn]: false,
+  });
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
 
   const activeRules = rules.filter(isActiveDataTableFilter);
@@ -198,7 +205,7 @@ export function DataTable<TData extends RowData>({
         </div>
       )}
 
-      <div className="overflow-x-auto rounded-lg border">
+      <ScrollArea className="w-full rounded-lg border pb-2">
         <Table className="min-w-[720px]">
           <TableHeader className="bg-muted/30">
             {table.getHeaderGroups().map((group) => (
@@ -246,16 +253,14 @@ export function DataTable<TData extends RowData>({
             )}
           </TableBody>
         </Table>
-      </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
 
       <div data-slot="data-table-pagination" className="flex flex-wrap items-center justify-between gap-3 text-sm">
         <span className="text-muted-foreground">{table.getFilteredRowModel().rows.length} dòng</span>
         <div className="flex items-center gap-2">
           <span className="text-muted-foreground">Dòng mỗi trang</span>
-          <Select
-            value={String(pagination.pageSize)}
-            onValueChange={(value) => table.setPageSize(Number(value))}
-          >
+          <Select value={String(pagination.pageSize)} onValueChange={(value) => table.setPageSize(Number(value))}>
             <SelectTrigger size="sm" aria-label="Dòng mỗi trang">
               <SelectValue />
             </SelectTrigger>
