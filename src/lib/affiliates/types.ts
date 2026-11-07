@@ -22,6 +22,7 @@ export interface ReferralOrder {
   externalOrderId: string | null;
   source: "legacy" | "website";
   orderAmount: number | null;
+  affiliateCommissionAmount: number | null;
   bookingDetails: {
     serviceCode?: string;
     category?: "laundry" | "other";

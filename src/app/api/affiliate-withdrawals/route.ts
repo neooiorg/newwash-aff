@@ -61,7 +61,7 @@ async function balanceFor(affiliateId: string) {
   }>(
     `SELECT
       coalesce((
-        SELECT sum(o.order_amount * a.commission_rate_bps / 10000.0)
+        SELECT sum(o.affiliate_commission_amount)
         FROM newwash_orders o
         JOIN newwash_affiliates a ON a.id = o.affiliate_id
         WHERE o.affiliate_id = $1 AND o.source = 'website' AND o.status = 'Hoàn tất giao'

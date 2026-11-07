@@ -17,8 +17,8 @@ import type { ReferralOrder } from "@/lib/affiliates/types";
 import { AffiliatePageHeader } from "../../../_components/affiliate-page-header";
 import { OrderManagementDialog } from "../../_components/order-management-dialog";
 
-function formatCurrency(value: number | null) {
-  return value ? `${value.toLocaleString("vi-VN")}đ` : "Chờ báo giá";
+function formatCurrency(value: number | null, fallback = "Chờ báo giá") {
+  return value !== null ? `${value.toLocaleString("vi-VN")}đ` : fallback;
 }
 
 function formatDate(value: string | null) {
@@ -129,6 +129,14 @@ export function OrderDetail({ orderId }: { orderId: string }) {
                 value={details.quantityKg ? `${details.quantityKg.toLocaleString("vi-VN")} kg` : "Chờ cân"}
               />
               <DetailRow label="Giá thực tế" value={formatCurrency(order.orderAmount)} />
+              <DetailRow
+                label="Hoa hồng affiliate"
+                value={
+                  order.partnerCode
+                    ? formatCurrency(order.affiliateCommissionAmount, "Chưa đặt hoa hồng")
+                    : "Không có affiliate"
+                }
+              />
               <DetailRow label="Lịch nhận đồ" value={formatSchedule(details.pickupDate, details.pickupTime)} />
               <DetailRow label="Lịch giao đồ" value={formatSchedule(details.deliveryDate, details.deliveryTime)} />
               <DetailRow label="Địa chỉ nhận" value={order.address} />

@@ -173,6 +173,23 @@ export function OrdersWorkspace() {
             <span className="text-muted-foreground">Trực tiếp</span>
           ),
       },
+      {
+        id: "affiliateCommissionAmount",
+        accessorKey: "affiliateCommissionAmount",
+        header: "Hoa hồng aff",
+        cell: ({ row }) =>
+          row.original.partnerCode ? (
+            row.original.affiliateCommissionAmount !== null ? (
+              <span className="font-medium tabular-nums">
+                {row.original.affiliateCommissionAmount.toLocaleString("vi-VN")}đ
+              </span>
+            ) : (
+              <span className="text-muted-foreground">Chưa đặt</span>
+            )
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          ),
+      },
       { id: "createdAt", accessorKey: "createdAt", header: "Ngày" },
       {
         id: "search",
@@ -244,6 +261,7 @@ export function OrdersWorkspace() {
             pickupSchedule: false,
             source: false,
             address: false,
+            affiliateCommissionAmount: false,
           }}
           filters={orderFilters}
           filter={{

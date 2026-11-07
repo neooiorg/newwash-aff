@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { ChartBar, WalletCards } from "lucide-react";
+import { ChartBar, ReceiptText, WalletCards } from "lucide-react";
 import { useShallow } from "zustand/react/shallow";
 
 import {
@@ -29,6 +29,7 @@ const affiliateSidebarItems = [
     label: "NewWash Aff",
     items: [
       { id: "affiliate-portal", title: "Tổng quan của tôi", url: "/affiliate/portal", icon: ChartBar },
+      { id: "affiliate-orders", title: "Đơn hàng", url: "/affiliate/portal/orders", icon: ReceiptText },
       { id: "affiliate-withdrawals", title: "Ví", url: "/affiliate/portal/withdrawals", icon: WalletCards },
     ],
   },

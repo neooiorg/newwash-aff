@@ -9,6 +9,7 @@ export const runtime = "nodejs";
 const updateOrderInput = z.object({
   id: z.string().uuid(),
   orderAmount: z.number().int().positive().max(1_000_000_000).nullable(),
+  affiliateCommissionAmount: z.number().int().min(0).max(1_000_000_000).nullable(),
   status: z.enum(["Mới", "Đang xử lý", "Hoàn tất giao", "Đã hủy"]),
 });
 
@@ -25,6 +26,7 @@ type OrderRow = {
   external_order_id: string | null;
   source: "legacy" | "website";
   order_amount: number | null;
+  affiliate_commission_amount: number | null;
   booking_details: ReferralOrder["bookingDetails"];
 };
 
@@ -43,6 +45,7 @@ function toOrder(row: OrderRow): ReferralOrder {
     externalOrderId: row.external_order_id,
     source: row.source,
     orderAmount: row.order_amount,
+    affiliateCommissionAmount: row.affiliate_commission_amount,
     bookingDetails: row.booking_details ?? {},
   };
 }
@@ -59,7 +62,8 @@ export async function GET(request: Request) {
     const result = await getPool().query<OrderRow>(
       `SELECT o.id, o.customer, o.phone, o.service, o.address, o.status, o.created_at,
         o.completed_at,
-        o.external_order_id, o.source, o.order_amount::double precision AS order_amount, o.booking_details,
+        o.external_order_id, o.source, o.order_amount::double precision AS order_amount,
+        o.affiliate_commission_amount::double precision AS affiliate_commission_amount, o.booking_details,
         COALESCE(a.code, '') AS partner_code
        FROM newwash_orders o LEFT JOIN newwash_affiliates a ON a.id = o.affiliate_id
        ${parsedOrderId?.success ? "WHERE o.id = $1" : ""}
@@ -86,13 +90,26 @@ export async function PATCH(request: Request) {
   }
 
   try {
+    const current = await getPool().query<{ affiliate_id: string | null }>(
+      "SELECT affiliate_id FROM newwash_orders WHERE id = $1",
+      [parsed.data.id],
+    );
+    if (!current.rows[0]) return Response.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
+    if (
+      parsed.data.status === "Hoàn tất giao" &&
+      current.rows[0].affiliate_id &&
+      parsed.data.affiliateCommissionAmount === null
+    ) {
+      return Response.json({ error: "Vui lòng nhập hoa hồng affiliate trước khi hoàn tất giao." }, { status: 400 });
+    }
     const result = await getPool().query<OrderRow>(
       `WITH updated AS (
          UPDATE newwash_orders
          SET order_amount = $2,
-             status = $3,
+             affiliate_commission_amount = $3,
+             status = $4,
              completed_at = CASE
-               WHEN $3 = 'Hoàn tất giao' THEN COALESCE(completed_at, now())
+               WHEN $4 = 'Hoàn tất giao' THEN COALESCE(completed_at, now())
                ELSE NULL
              END
          WHERE id = $1
@@ -100,10 +117,16 @@ export async function PATCH(request: Request) {
        )
        SELECT u.id, u.customer, u.phone, u.service, u.address, u.status, u.created_at,
          u.completed_at,
-         u.external_order_id, u.source, u.order_amount::double precision AS order_amount, u.booking_details,
+         u.external_order_id, u.source, u.order_amount::double precision AS order_amount,
+         u.affiliate_commission_amount::double precision AS affiliate_commission_amount, u.booking_details,
          COALESCE(a.code, '') AS partner_code
        FROM updated u LEFT JOIN newwash_affiliates a ON a.id = u.affiliate_id`,
-      [parsed.data.id, parsed.data.orderAmount, parsed.data.status],
+      [
+        parsed.data.id,
+        parsed.data.orderAmount,
+        current.rows[0].affiliate_id ? parsed.data.affiliateCommissionAmount : null,
+        parsed.data.status,
+      ],
     );
     const order = result.rows[0];
     if (!order) return Response.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
