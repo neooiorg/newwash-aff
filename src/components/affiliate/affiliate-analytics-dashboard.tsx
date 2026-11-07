@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarIcon, Ellipsis } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
+import { AffiliateFilterCombobox } from "@/components/affiliate/affiliate-filter-combobox";
 import { AsciiLoadingReveal, AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { AffiliateAnalytics } from "@/lib/affiliates/types";
@@ -214,24 +214,11 @@ export function AffiliateAnalyticsDashboard({
 
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
           {mode === "admin" && (
-            <Select
-              value={affiliateId || "all"}
-              onValueChange={(value) => setAffiliateId(value === "all" ? "" : value)}
-            >
-              <SelectTrigger size="sm" className="w-full sm:w-64" aria-label="Chọn cộng tác viên">
-                <SelectValue placeholder="Tất cả cộng tác viên" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="all">Tất cả cộng tác viên</SelectItem>
-                  {data?.affiliates.map((affiliate) => (
-                    <SelectItem key={affiliate.id} value={affiliate.id}>
-                      {affiliate.name} · {affiliate.code}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+            <AffiliateFilterCombobox
+              affiliates={data?.affiliates ?? []}
+              value={affiliateId}
+              onValueChange={setAffiliateId}
+            />
           )}
         </div>
       </div>
