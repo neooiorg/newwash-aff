@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { CircleUser, EllipsisVertical, LogOut } from "lucide-react";
+import { CircleUser, EllipsisVertical, Link2, LogOut } from "lucide-react";
 
 import { logoutAffiliate } from "@/app/(external)/affiliate/login/actions";
 import { logoutAdmin } from "@/app/(main)/auth/admin/actions";
@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -48,18 +49,29 @@ export function NavUser({
           <DropdownMenuContent className="min-w-56 rounded-lg" side={isMobile ? "bottom" : "right"} align="end">
             <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <Link href={accountHref}>
-                <CircleUser /> {accountLabel}
-              </Link>
-            </DropdownMenuItem>
+            <DropdownMenuGroup>
+              <DropdownMenuItem asChild>
+                <Link href={accountHref}>
+                  <CircleUser /> {accountLabel}
+                </Link>
+              </DropdownMenuItem>
+              {mode === "affiliate" ? (
+                <DropdownMenuItem asChild>
+                  <Link href="/affiliate/portal/link">
+                    <Link2 /> Link & QR của tôi
+                  </Link>
+                </DropdownMenuItem>
+              ) : null}
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <form action={logoutAction}>
-              <DropdownMenuItem asChild>
-                <button type="submit" className="w-full">
-                  <LogOut /> Đăng xuất
-                </button>
-              </DropdownMenuItem>
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <button type="submit" className="w-full">
+                    <LogOut /> Đăng xuất
+                  </button>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
             </form>
           </DropdownMenuContent>
         </DropdownMenu>
