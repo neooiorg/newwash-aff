@@ -2,7 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useState } from "react";
 
-import { Banknote, Clock3, HandCoins, Landmark } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { AffiliatePageHeader } from "@/app/(main)/dashboard/affiliates/_components/affiliate-page-header";
@@ -93,19 +93,38 @@ export function AffiliateWithdrawalsWorkspace() {
     }
   }
 
+  const processingCount = withdrawals.filter((item) => item.status === "pending" || item.status === "approved").length;
+  const paidCount = withdrawals.filter((item) => item.status === "paid").length;
   const metrics = [
-    { label: "Hoa hồng tích lũy", value: balance?.earned ?? 0, icon: HandCoins },
-    { label: "Có thể rút", value: balance?.available ?? 0, icon: Banknote },
-    { label: "Đang xử lý", value: balance?.processing ?? 0, icon: Clock3 },
-    { label: "Đã thanh toán", value: balance?.paid ?? 0, icon: Landmark },
+    {
+      label: "Hoa hồng tích lũy",
+      value: balance?.earned ?? 0,
+      badge: "Tổng cộng",
+      detail: "Hoa hồng từ các đơn đã hoàn tất",
+    },
+    {
+      label: "Có thể rút",
+      value: balance?.available ?? 0,
+      badge: "Khả dụng",
+      detail: "Số dư có thể tạo yêu cầu ngay",
+    },
+    {
+      label: "Đang xử lý",
+      value: balance?.processing ?? 0,
+      badge: `${processingCount} yêu cầu`,
+      detail: "Số dư đang chờ duyệt hoặc chuyển tiền",
+    },
+    {
+      label: "Đã thanh toán",
+      value: balance?.paid ?? 0,
+      badge: `${paidCount} yêu cầu`,
+      detail: "Tổng hoa hồng đã được chuyển",
+    },
   ];
 
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
-      <AffiliatePageHeader
-        title="Rút tiền"
-        description="Theo dõi hoa hồng và gửi yêu cầu chuyển khoản tới quản trị viên."
-      />
+      <AffiliatePageHeader title="Ví" description="Theo dõi hoa hồng và gửi yêu cầu chuyển khoản tới quản trị viên." />
       {error && (
         <Alert variant="destructive">
           <AlertTitle>Không thể xử lý</AlertTitle>
@@ -113,25 +132,36 @@ export function AffiliateWithdrawalsWorkspace() {
         </Alert>
       )}
       {loading ? (
-        <AsciiPanelSkeleton className="h-28 w-full" height={80} rows={5} />
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Đang tải số dư ví">
+          {Array.from({ length: 4 }, (_, index) => (
+            <AsciiPanelSkeleton
+              key={`wallet-balance-${index + 1}`}
+              className="h-36 w-full"
+              height={112}
+              rows={7}
+              seed={index + 31}
+            />
+          ))}
+        </section>
       ) : (
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Số dư hoa hồng">
-          {metrics.map((metric) => {
-            const Icon = metric.icon;
-            return (
-              <Card key={metric.label} size="sm">
-                <CardHeader>
-                  <CardDescription>{metric.label}</CardDescription>
-                  <CardAction>
-                    <Icon className="text-muted-foreground size-4" />
-                  </CardAction>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-medium tabular-nums">{vnd(metric.value)}</div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          {metrics.map((metric) => (
+            <Card key={metric.label}>
+              <CardHeader>
+                <CardDescription>{metric.label}</CardDescription>
+                <CardAction>
+                  <ArrowUpRight className="text-muted-foreground size-4" />
+                </CardAction>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="text-3xl leading-none tracking-tight tabular-nums">{vnd(metric.value)}</span>
+                  <Badge variant="outline">{metric.badge}</Badge>
+                </div>
+                <p className="text-muted-foreground text-sm">{metric.detail}</p>
+              </CardContent>
+            </Card>
+          ))}
         </section>
       )}
       <div className="grid items-start gap-4 xl:grid-cols-12">
