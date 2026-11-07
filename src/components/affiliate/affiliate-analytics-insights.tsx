@@ -1,7 +1,18 @@
 "use client";
 
 import { Ellipsis } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, ComposedChart, LabelList, type LabelProps, Line, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  type BarShapeProps,
+  CartesianGrid,
+  ComposedChart,
+  LabelList,
+  type LabelProps,
+  Line,
+  XAxis,
+  YAxis,
+} from "recharts";
 
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -11,25 +22,25 @@ import type { AffiliateAnalytics } from "@/lib/affiliates/types";
 
 const conversionConfig = {
   completion: {
-    color: "var(--muted-foreground)",
+    color: "var(--foreground)",
     label: "Hoàn tất",
   },
   conversion: {
-    color: "var(--chart-3)",
+    color: "var(--color-yellow-400)",
     label: "Chuyển đổi",
   },
 } satisfies ChartConfig;
 
 const activityConfig = {
   clicks: {
-    color: "var(--chart-3)",
+    color: "var(--color-yellow-400)",
     label: "Lượt nhấp",
   },
 } satisfies ChartConfig;
 
 const distributionConfig = {
   value: {
-    color: "var(--chart-1)",
+    color: "var(--color-yellow-400)",
     label: "Giá trị",
   },
 } satisfies ChartConfig;
@@ -50,6 +61,43 @@ function formatDate(value: string) {
 
 function rate(value: number, total: number) {
   return total > 0 ? (value / total) * 100 : 0;
+}
+
+function ActivityBarShape(props: BarShapeProps) {
+  const { height, payload, width, x, y } = props;
+  const clicks = Number((payload as { clicks?: number } | undefined)?.clicks ?? 0);
+  const barHeightValue = Number(height);
+  const barWidthValue = Number(width);
+  const xValue = Number(x);
+  const yValue = Number(y);
+  const baselineY = yValue + barHeightValue - 2;
+  const visibleHeight = Math.max(0, barHeightValue - 4);
+  const fillOpacity = clicks > 0 ? 0.9 : 0.25;
+
+  return (
+    <g>
+      <rect
+        fill="var(--color-clicks)"
+        fillOpacity={fillOpacity}
+        height={2}
+        rx={1}
+        width={barWidthValue}
+        x={xValue}
+        y={baselineY}
+      />
+      {clicks > 0 && visibleHeight > 0 ? (
+        <rect
+          fill="var(--color-clicks)"
+          fillOpacity={fillOpacity}
+          height={visibleHeight}
+          rx={2}
+          width={barWidthValue}
+          x={xValue}
+          y={yValue}
+        />
+      ) : null}
+    </g>
+  );
 }
 
 function ConversionQuality({ data }: { data: AffiliateAnalytics }) {
@@ -155,7 +203,7 @@ function RecentActivity({ data }: { data: AffiliateAnalytics }) {
               cursor={false}
               content={<ChartTooltipContent hideLabel={false} labelFormatter={(value) => formatDate(String(value))} />}
             />
-            <Bar dataKey="clicks" fill="var(--color-clicks)" fillOpacity={0.55} radius={[3, 3, 0, 0]} />
+            <Bar dataKey="clicks" fill="var(--color-clicks)" shape={ActivityBarShape} />
           </BarChart>
         </ChartContainer>
         <div className="grid grid-cols-2">
@@ -251,7 +299,7 @@ function DistributionChart({ data, metric }: { data: AffiliateAnalytics; metric:
         <YAxis dataKey="service" hide tickLine={false} type="category" />
         <XAxis dataKey="value" hide type="number" />
         <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="line" />} />
-        <Bar barSize={40} dataKey="value" fill="var(--color-value)" fillOpacity={0.5} radius={8}>
+        <Bar barSize={40} dataKey="value" fill="var(--color-value)" fillOpacity={0.7} radius={8}>
           <LabelList className="fill-foreground" dataKey="service" fontSize={14} offset={12} position="insideLeft" />
           <LabelList content={renderValueLabel} dataKey="label" />
         </Bar>

@@ -6,13 +6,13 @@ import { Banknote, Clock3, HandCoins, Landmark } from "lucide-react";
 import { toast } from "sonner";
 
 import { AffiliatePageHeader } from "@/app/(main)/dashboard/affiliates/_components/affiliate-page-header";
+import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 
@@ -113,7 +113,7 @@ export function AffiliateWithdrawalsWorkspace() {
         </Alert>
       )}
       {loading ? (
-        <Skeleton className="h-28 w-full" />
+        <AsciiPanelSkeleton className="h-28 w-full" height={80} rows={5} />
       ) : (
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Số dư hoa hồng">
           {metrics.map((metric) => {

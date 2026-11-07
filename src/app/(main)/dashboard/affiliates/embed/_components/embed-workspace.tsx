@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Check, Copy, ExternalLink, Eye } from "lucide-react";
 import { toast } from "sonner";
 
+import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,7 +17,6 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Slider } from "@/components/ui/slider";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import { referralUrl } from "@/lib/affiliates/links";
@@ -283,7 +283,7 @@ export function EmbedWorkspace() {
               </FieldSet>
             </FieldGroup>
             {loading ? (
-              <Skeleton className="h-28 w-full" />
+              <AsciiPanelSkeleton className="h-28 w-full" height={80} rows={5} />
             ) : origin ? (
               <CodeBlock size="sm">
                 <CodeBlockHeader>

@@ -8,6 +8,7 @@ import { Check, Copy, Download, KeyRound, X } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 
+import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,7 +16,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import { referralUrl as buildReferralUrl } from "@/lib/affiliates/links";
 import type { Partner } from "@/lib/affiliates/types";
@@ -277,7 +277,7 @@ export function PartnersWorkspace() {
       )}
 
       {loading ? (
-        <Skeleton className="h-80 w-full" />
+        <AsciiPanelSkeleton className="h-80 w-full" />
       ) : (
         <DataTable
           data={sortedPartners}

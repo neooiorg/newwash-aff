@@ -9,16 +9,16 @@ import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/
 import type { AffiliateOverview } from "@/lib/affiliates/types";
 
 const ordersConfig = {
-  orders: { label: "Đơn đặt", color: "var(--chart-3)" },
-  completed: { label: "Hoàn tất", color: "var(--chart-4)" },
+  orders: { label: "Đơn đặt", color: "var(--color-yellow-400)" },
+  completed: { label: "Hoàn tất", color: "var(--foreground)" },
 } satisfies ChartConfig;
 
 const revenueConfig = {
-  revenue: { label: "Doanh thu", color: "var(--chart-4)" },
+  revenue: { label: "Doanh thu", color: "var(--color-yellow-400)" },
 } satisfies ChartConfig;
 
 const affiliatesConfig = {
-  orders: { label: "Đơn đặt", color: "var(--chart-4)" },
+  orders: { label: "Đơn đặt", color: "var(--color-yellow-400)" },
 } satisfies ChartConfig;
 
 function compactVnd(value: number) {
@@ -109,7 +109,9 @@ export function OverviewCharts({
                     <Users />
                   </EmptyMedia>
                   <EmptyTitle>Chưa có đơn affiliate trong tháng</EmptyTitle>
-                  <EmptyDescription>Biểu đồ sẽ cập nhật ngay khi website ghi nhận đơn qua mã affiliate.</EmptyDescription>
+                  <EmptyDescription>
+                    Biểu đồ sẽ cập nhật ngay khi website ghi nhận đơn qua mã affiliate.
+                  </EmptyDescription>
                 </EmptyHeader>
               </Empty>
             )}

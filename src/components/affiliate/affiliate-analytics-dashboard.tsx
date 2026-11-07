@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarIcon, Ellipsis } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
+import { AsciiLoadingReveal, AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +13,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { AffiliateAnalytics } from "@/lib/affiliates/types";
@@ -52,17 +52,23 @@ function AnalyticsSkeleton() {
       <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
         <div className="grid md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="h-32 rounded-none border-r border-b last:border-b-0" />
+            <AsciiPanelSkeleton
+              className="h-32 rounded-none border-r border-b p-3 ring-0 last:border-b-0"
+              height={96}
+              key={index}
+              rows={6}
+              seed={index + 1}
+            />
           ))}
         </div>
       </div>
       <div className="grid gap-4 xl:grid-cols-12">
-        <Skeleton className="h-88 rounded-xl xl:col-span-7" />
-        <Skeleton className="h-88 rounded-xl xl:col-span-5" />
+        <AsciiPanelSkeleton className="h-88 xl:col-span-7" height={320} rows={18} seed={7} />
+        <AsciiPanelSkeleton className="h-88 xl:col-span-5" height={320} rows={18} seed={8} />
       </div>
       <div className="grid gap-4 xl:grid-cols-12">
-        <Skeleton className="h-80 rounded-xl xl:col-span-7" />
-        <Skeleton className="h-80 rounded-xl xl:col-span-5" />
+        <AsciiPanelSkeleton className="h-80 xl:col-span-7" height={288} rows={16} seed={9} />
+        <AsciiPanelSkeleton className="h-80 xl:col-span-5" height={288} rows={16} seed={10} />
       </div>
     </div>
   );
@@ -246,46 +252,46 @@ export function AffiliateAnalyticsDashboard({
         </Alert>
       )}
 
-      {loading && !data ? <AnalyticsSkeleton /> : null}
-
-      {data ? (
-        <>
-          <section
-            aria-label="Các chỉ số chính"
-            className="overflow-hidden rounded-xl bg-card shadow-xs ring-1 ring-foreground/10"
-          >
-            <div className="grid md:grid-cols-2 xl:grid-cols-3">
-              {metrics.map((metric) => (
-                <AsciiStatCard key={metric.key} value={`${metric.value}-${metric.badge}`}>
-                  <Card
-                    className="h-full min-h-32 rounded-none border-b border-r border-border/60 py-4 ring-0"
-                    data-ascii="surface"
-                  >
-                    <CardHeader>
-                      <CardTitle className="text-sm font-normal">{metric.label}</CardTitle>
-                      <CardAction>
-                        <Ellipsis className="size-4 text-muted-foreground" aria-hidden="true" />
-                      </CardAction>
-                    </CardHeader>
-                    <CardContent className="flex flex-col gap-4">
-                      <div className="flex items-center justify-between gap-4">
-                        <div className="text-2xl leading-none font-medium tracking-tight tabular-nums">
-                          {metric.value}
+      <AsciiLoadingReveal loading={loading && !data} skeleton={<AnalyticsSkeleton />}>
+        {data ? (
+          <>
+            <section
+              aria-label="Các chỉ số chính"
+              className="overflow-hidden rounded-xl bg-card shadow-xs ring-1 ring-foreground/10"
+            >
+              <div className="grid md:grid-cols-2 xl:grid-cols-3">
+                {metrics.map((metric) => (
+                  <AsciiStatCard key={metric.key} value={`${metric.value}-${metric.badge}`}>
+                    <Card
+                      className="h-full min-h-32 rounded-none border-b border-r border-border/60 py-4 ring-0"
+                      data-ascii="surface"
+                    >
+                      <CardHeader>
+                        <CardTitle className="text-sm font-normal">{metric.label}</CardTitle>
+                        <CardAction>
+                          <Ellipsis className="size-4 text-muted-foreground" aria-hidden="true" />
+                        </CardAction>
+                      </CardHeader>
+                      <CardContent className="flex flex-col gap-4">
+                        <div className="flex items-center justify-between gap-4">
+                          <div className="text-2xl leading-none font-medium tracking-tight tabular-nums">
+                            {metric.value}
+                          </div>
+                          <Badge className="max-w-36 truncate bg-green-500/10 text-green-700 dark:bg-green-500/15 dark:text-green-300">
+                            {metric.badge}
+                          </Badge>
                         </div>
-                        <Badge className="max-w-36 truncate bg-green-500/10 text-green-700 dark:bg-green-500/15 dark:text-green-300">
-                          {metric.badge}
-                        </Badge>
-                      </div>
-                      <p className="truncate text-xs text-muted-foreground">{metric.detail}</p>
-                    </CardContent>
-                  </Card>
-                </AsciiStatCard>
-              ))}
-            </div>
-          </section>
-          <AffiliateAnalyticsInsights data={data} />
-        </>
-      ) : null}
+                        <p className="truncate text-xs text-muted-foreground">{metric.detail}</p>
+                      </CardContent>
+                    </Card>
+                  </AsciiStatCard>
+                ))}
+              </div>
+            </section>
+            <AffiliateAnalyticsInsights data={data} />
+          </>
+        ) : null}
+      </AsciiLoadingReveal>
     </div>
   );
 }

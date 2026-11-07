@@ -1,20 +1,10 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { AsciiReveal } from "ascii-reveal";
 
-type AsciiTheme = CSSProperties & {
-  "--ascii-accent": string;
-  "--ascii-flash": string;
-  "--ascii-glyph": string;
-};
-
-const asciiTheme: AsciiTheme = {
-  "--ascii-accent": "var(--primary)",
-  "--ascii-flash": "var(--primary)",
-  "--ascii-glyph": "var(--muted-foreground)",
-};
+import { newWashAsciiTheme } from "@/components/ascii-feedback";
 
 export function AsciiStatCard({ children, value }: { children: ReactNode; value: string }) {
   return (
@@ -28,7 +18,7 @@ export function AsciiStatCard({ children, value }: { children: ReactNode; value:
       preset="decode"
       revealOnHydrate
       speed={1.35}
-      style={asciiTheme}
+      style={newWashAsciiTheme}
     >
       {children}
     </AsciiReveal>

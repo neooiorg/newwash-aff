@@ -7,6 +7,7 @@ import Image from "next/image";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
+import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -23,7 +24,6 @@ import {
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -234,7 +234,7 @@ export function ServicesWorkspace() {
         </Alert>
       )}
       {loading ? (
-        <Skeleton className="h-80 w-full" />
+        <AsciiPanelSkeleton className="h-80 w-full" />
       ) : (
         <DataTable
           data={services}

@@ -5,13 +5,13 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, CircleDollarSign, Clock3, WalletCards, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 
 import { AffiliatePageHeader } from "../../_components/affiliate-page-header";
@@ -217,7 +217,7 @@ export function PayoutsWorkspace() {
         })}
       </section>
       {loading ? (
-        <Skeleton className="h-80 w-full" />
+        <AsciiPanelSkeleton className="h-80 w-full" />
       ) : (
         <DataTable
           data={items}
