@@ -5,8 +5,8 @@ import Link from "next/link";
 import { BellRing, CircleUser, EllipsisVertical, Link2, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
-import { logoutAffiliate } from "@/app/(external)/affiliate/login/actions";
 import { logoutAdmin } from "@/app/(main)/auth/admin/actions";
+import { logoutAffiliate } from "@/app/(main)/auth/admin/affiliate-actions";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,

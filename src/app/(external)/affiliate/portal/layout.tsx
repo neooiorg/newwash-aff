@@ -17,13 +17,13 @@ import { getPreference } from "@/server/server-actions";
 
 export default async function AffiliatePortalLayout({ children }: Readonly<{ children: ReactNode }>) {
   const affiliateId = await getApprovedAffiliateSessionId();
-  if (!affiliateId) redirect("/affiliate/login");
+  if (!affiliateId) redirect("/auth/admin?mode=affiliate");
   const result = await getPool().query<{ name: string; code: string }>(
     "SELECT name, coalesce(code, '') AS code FROM newwash_affiliates WHERE id = $1 AND status = 'approved'",
     [affiliateId],
   );
   const affiliate = result.rows[0];
-  if (!affiliate) redirect("/affiliate/login");
+  if (!affiliate) redirect("/auth/admin?mode=affiliate");
 
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";

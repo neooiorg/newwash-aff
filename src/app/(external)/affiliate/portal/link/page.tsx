@@ -9,7 +9,7 @@ export const metadata = { title: "Link & QR của tôi | NewWash Aff" };
 
 export default async function Page() {
   const affiliateId = await getApprovedAffiliateSessionId();
-  if (!affiliateId) redirect("/affiliate/login");
+  if (!affiliateId) redirect("/auth/admin?mode=affiliate");
   const [affiliateResult, settingsResult] = await Promise.all([
     getPool().query<{ code: string }>(
       "SELECT coalesce(code, '') AS code FROM newwash_affiliates WHERE id = $1 AND status = 'approved'",

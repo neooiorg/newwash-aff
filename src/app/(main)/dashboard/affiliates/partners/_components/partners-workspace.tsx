@@ -328,7 +328,7 @@ export function PartnersWorkspace() {
                   <Download data-icon="inline-start" /> Tải QR
                 </Button>
                 <Button asChild size="sm" variant="outline">
-                  <Link href="/affiliate/login" target="_blank">
+                  <Link href="/auth/admin?mode=affiliate" target="_blank">
                     Trang đăng nhập
                   </Link>
                 </Button>
@@ -364,7 +364,7 @@ export function PartnersWorkspace() {
                   <Copy data-icon="inline-start" /> Sao chép thông tin
                 </Button>
                 <Button asChild size="sm" variant="outline">
-                  <Link href="/affiliate/login" target="_blank">
+                  <Link href="/auth/admin?mode=affiliate" target="_blank">
                     Mở trang đăng nhập
                   </Link>
                 </Button>

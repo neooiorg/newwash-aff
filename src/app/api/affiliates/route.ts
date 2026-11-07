@@ -11,6 +11,7 @@ const applicationInput = z.object({
   name: z.string().trim().min(1).max(80),
   contact: z.string().trim().min(5).max(100),
   channel: z.string().trim().max(50).default("Trực tiếp"),
+  password: z.string().min(8).max(64),
 });
 
 const decisionInput = z.object({
@@ -83,9 +84,14 @@ export async function POST(request: Request) {
       );
     }
     const result = await getPool().query<{ id: string }>(
-      `INSERT INTO newwash_affiliates (name, contact, channel, status)
-       VALUES ($1, $2, $3, 'pending') RETURNING id`,
-      [input.data.name, input.data.contact, input.data.channel || "Trực tiếp"],
+      `INSERT INTO newwash_affiliates (name, contact, channel, status, access_secret_hash)
+       VALUES ($1, $2, $3, 'pending', $4) RETURNING id`,
+      [
+        input.data.name,
+        input.data.contact,
+        input.data.channel || "Trực tiếp",
+        hashAffiliateAccessKey(input.data.password),
+      ],
     );
     return Response.json({ application: { id: result.rows[0].id, status: "pending" } }, { status: 201 });
   } catch {
@@ -123,14 +129,14 @@ export async function PATCH(request: Request) {
       return Response.json({ partner: toPartner(result.rows[0]) });
     }
 
-    const application = await pool.query<{ name: string }>(
-      "SELECT name FROM newwash_affiliates WHERE id = $1 AND status = 'pending'",
+    const application = await pool.query<{ name: string; access_secret_hash: string | null }>(
+      "SELECT name, access_secret_hash FROM newwash_affiliates WHERE id = $1 AND status = 'pending'",
       [input.data.id],
     );
     if (!application.rows[0]) return Response.json({ error: "Hồ sơ không còn chờ duyệt." }, { status: 409 });
     const base = codeBase(application.rows[0].name);
-    const accessKey = createAffiliateAccessKey();
-    const accessSecretHash = hashAffiliateAccessKey(accessKey);
+    const accessKey = application.rows[0].access_secret_hash ? "" : createAffiliateAccessKey();
+    const accessSecretHash = application.rows[0].access_secret_hash ?? hashAffiliateAccessKey(accessKey);
     for (let suffix = 1; suffix < 100; suffix++) {
       const code = suffix === 1 ? base : `${base.slice(0, 20 - String(suffix).length)}${suffix}`;
       try {
@@ -141,7 +147,7 @@ export async function PATCH(request: Request) {
           [input.data.id, code, accessSecretHash],
         );
         if (!result.rows[0]) return Response.json({ error: "Hồ sơ không còn chờ duyệt." }, { status: 409 });
-        return Response.json({ partner: toPartner(result.rows[0]), accessKey });
+        return Response.json({ partner: toPartner(result.rows[0]), ...(accessKey ? { accessKey } : {}) });
       } catch (error) {
         if ((error as { code?: string }).code === "23505") continue;
         throw error;

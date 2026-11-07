@@ -2,11 +2,14 @@
 
 import { useActionState } from "react";
 
+import Link from "next/link";
+
+import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 
-import { loginAffiliate } from "../actions";
+import { loginAffiliate } from "../affiliate-actions";
 
 export function AffiliateLoginForm({
   defaultAccount = "",
@@ -34,27 +37,25 @@ export function AffiliateLoginForm({
         </Field>
         <Field>
           <FieldLabel htmlFor="affiliate-password">Mật khẩu</FieldLabel>
-          <Input
+          <PasswordInput
             id="affiliate-password"
             name="password"
-            type="password"
             autoComplete="current-password"
             required
             minLength={8}
-            maxLength={32}
+            maxLength={64}
             defaultValue={defaultPassword}
             placeholder="Nhập mật khẩu"
           />
         </Field>
       </FieldGroup>
-      {error && (
-        <p className="text-destructive text-sm" role="alert">
-          {error}
-        </p>
-      )}
+      {error && <FieldError>{error}</FieldError>}
       <Button type="submit" disabled={pending}>
         {pending ? "Đang đăng nhập..." : "Đăng nhập"}
       </Button>
+      <FieldDescription className="text-center">
+        Chưa có tài khoản? <Link href="/affiliate/apply">Đăng ký cộng tác viên</Link>
+      </FieldDescription>
     </form>
   );
 }

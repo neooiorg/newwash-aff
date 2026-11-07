@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 
+import { PasswordInput } from "@/components/password-input";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -20,10 +21,9 @@ export function AdminLoginForm({ demoEmail, demoPassword }: { demoEmail: string;
         </Field>
         <Field>
           <FieldLabel htmlFor="password">Mật khẩu</FieldLabel>
-          <Input
+          <PasswordInput
             id="password"
             name="password"
-            type="password"
             autoComplete="current-password"
             required
             defaultValue={demoPassword}

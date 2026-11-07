@@ -36,5 +36,5 @@ export async function loginAffiliate(_previous: string, formData: FormData): Pro
 
 export async function logoutAffiliate() {
   (await cookies()).delete(AFFILIATE_COOKIE);
-  redirect("/affiliate/login");
+  redirect("/auth/admin?mode=affiliate");
 }
