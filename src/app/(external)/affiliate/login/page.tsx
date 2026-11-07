@@ -30,7 +30,7 @@ export default async function Page() {
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
-          <AffiliateLoginForm />
+          <AffiliateLoginForm defaultCode="MINHANHDEMO" defaultAccessKey="NEWWASH2026" />
           <p className="text-muted-foreground text-center text-sm">
             Chưa đăng ký?{" "}
             <Link href="/affiliate/apply" className="text-foreground font-medium underline underline-offset-4">
