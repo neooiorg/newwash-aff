@@ -30,7 +30,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   pages: { signIn: "/auth/admin", error: "/auth/admin" },
   callbacks: {
     async signIn({ user, profile }) {
-      if (!user.email || profile?.email_verified !== true) return false;
+      if (!user.email || profile?.email_verified === false) return false;
       return Boolean(await resolveGoogleIdentity(user.email));
     },
     async jwt({ token, user, account }) {
