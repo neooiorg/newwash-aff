@@ -22,6 +22,8 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { AffiliateAnalytics } from "@/lib/affiliates/types";
 
+import { AsciiStatValue } from "./ascii-stat-value";
+
 type Preset = "yesterday" | "7d" | "30d" | "custom";
 type TrendMetric = "revenue" | "orders" | "clicks";
 
@@ -245,7 +247,13 @@ export function AffiliateAnalyticsDashboard({
                     </CardAction>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl leading-none font-medium tracking-tight tabular-nums">{metric.value}</div>
+                    <div className="text-2xl leading-none font-medium tracking-tight tabular-nums">
+                      {metric.key === "clicks" || metric.key === "orders" ? (
+                        <AsciiStatValue value={metric.value} />
+                      ) : (
+                        metric.value
+                      )}
+                    </div>
                   </CardContent>
                 </Card>
               );
