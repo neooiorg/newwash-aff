@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 
-import { CircleUser, EllipsisVertical, Link2, LogOut } from "lucide-react";
+import { BellRing, CircleUser, EllipsisVertical, Link2, LogOut } from "lucide-react";
+import { toast } from "sonner";
 
 import { logoutAffiliate } from "@/app/(external)/affiliate/login/actions";
 import { logoutAdmin } from "@/app/(main)/auth/admin/actions";
@@ -17,6 +18,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
+import { Switch } from "@/components/ui/switch";
+import { useDeviceNotifications } from "@/hooks/use-device-notifications";
 
 export function NavUser({
   user,
@@ -29,6 +32,18 @@ export function NavUser({
   const accountHref = mode === "affiliate" ? "/affiliate/portal" : "/dashboard/account";
   const accountLabel = mode === "affiliate" ? "Tổng quan của tôi" : "Tài khoản admin";
   const logoutAction = mode === "affiliate" ? logoutAffiliate : logoutAdmin;
+  const { enabled: deviceNotificationsEnabled, setEnabled: setDeviceNotificationsEnabled } = useDeviceNotifications();
+
+  async function updateDeviceNotifications(checked: boolean) {
+    const result = await setDeviceNotificationsEnabled(checked);
+    if (checked && !result.enabled) {
+      toast.error("Chưa thể bật thông báo", {
+        description: "Hãy cho phép thông báo trong cài đặt trình duyệt rồi thử lại.",
+      });
+      return;
+    }
+    toast.success(result.enabled ? "Đã bật thông báo trên thiết bị này" : "Đã tắt thông báo trên thiết bị này");
+  }
 
   return (
     <SidebarMenu>
@@ -62,6 +77,15 @@ export function NavUser({
                   </Link>
                 </DropdownMenuItem>
               ) : null}
+              <DropdownMenuItem onSelect={(event) => event.preventDefault()}>
+                <BellRing />
+                <span className="flex-1">Thông báo trên thiết bị này</span>
+                <Switch
+                  checked={deviceNotificationsEnabled}
+                  onCheckedChange={(checked) => void updateDeviceNotifications(checked)}
+                  aria-label="Thông báo trên thiết bị này"
+                />
+              </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <form action={logoutAction}>

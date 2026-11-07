@@ -5,7 +5,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { Bell, BellRing, CheckCheck, HandCoins, MousePointerClick, ShoppingBag, Volume2, VolumeX } from "lucide-react";
+import { Bell, BellRing, CheckCheck, HandCoins, MousePointerClick, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
+import { useDeviceNotifications } from "@/hooks/use-device-notifications";
 
 type NotificationScope = "admin" | "affiliate";
 
@@ -81,13 +82,13 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
   const router = useRouter();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [soundEnabled, setSoundEnabled] = useState(true);
+  const { enabled: deviceNotificationsEnabled } = useDeviceNotifications();
   const initialized = useRef(false);
   const knownIds = useRef(new Set<string>());
   const audioContext = useRef<AudioContext | null>(null);
 
   const playChime = useCallback(() => {
-    if (!soundEnabled || !audioContext.current) return;
+    if (!deviceNotificationsEnabled || !audioContext.current) return;
     const context = audioContext.current;
     void context
       .resume()
@@ -108,7 +109,32 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
       .catch(() => {
         // Browsers may keep audio suspended until the first user interaction.
       });
-  }, [soundEnabled]);
+  }, [deviceNotificationsEnabled]);
+
+  const showDeviceNotification = useCallback(
+    (item: NotificationItem) => {
+      if (
+        !deviceNotificationsEnabled ||
+        !("Notification" in window) ||
+        Notification.permission !== "granted" ||
+        document.visibilityState === "visible"
+      ) {
+        return;
+      }
+
+      const notification = new Notification(item.title, {
+        body: item.message,
+        icon: "/newwash-mark.svg",
+        tag: item.id,
+      });
+      notification.onclick = () => {
+        window.focus();
+        notification.close();
+        if (item.href) router.push(item.href);
+      };
+    },
+    [deviceNotificationsEnabled, router],
+  );
 
   const refresh = useCallback(async () => {
     try {
@@ -122,6 +148,7 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
           playChime();
           for (const item of incoming.slice(0, 3).reverse()) {
             showDashboardToast(item, () => router.push(item.href));
+            showDeviceNotification(item);
           }
         }
       } else {
@@ -134,12 +161,9 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
     } finally {
       setLoading(false);
     }
-  }, [playChime, router, scope]);
+  }, [playChime, router, scope, showDeviceNotification]);
 
   useEffect(() => {
-    const stored = localStorage.getItem("newwash-notification-sound");
-    if (stored === "off") setSoundEnabled(false);
-
     function unlockAudio() {
       if (audioContext.current) return;
       const AudioContextClass =
@@ -184,12 +208,6 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
     });
   }
 
-  function toggleSound() {
-    const next = !soundEnabled;
-    setSoundEnabled(next);
-    localStorage.setItem("newwash-notification-sound", next ? "on" : "off");
-  }
-
   const unread = notifications.filter((item) => !item.readAt).length;
 
   return (
@@ -213,14 +231,6 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
             </PopoverDescription>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              onClick={toggleSound}
-              aria-label={soundEnabled ? "Tắt âm thanh" : "Bật âm thanh"}
-            >
-              {soundEnabled ? <Volume2 /> : <VolumeX />}
-            </Button>
             {unread ? (
               <Button
                 variant="ghost"
