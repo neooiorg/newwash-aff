@@ -838,7 +838,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
         <DrawerContent
           className={cn(
             "light overflow-hidden rounded-t-3xl bg-white text-zinc-950 sm:bottom-6 sm:mx-auto sm:max-w-3xl sm:rounded-3xl sm:border sm:shadow-2xl",
-            compactViewport ? "h-[calc(100dvh-0.25rem)] max-h-[calc(100dvh-0.25rem)]" : "h-[88dvh] max-h-[88dvh]",
+            compactViewport ? "h-[calc(100dvh-0.25rem)] max-h-[calc(100dvh-0.25rem)]!" : "h-[88dvh] max-h-[88dvh]!",
           )}
           onInteractOutside={(event) => {
             const target = event.detail.originalEvent.target;
