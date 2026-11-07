@@ -49,15 +49,18 @@ export async function GET(request: Request) {
     params,
   );
 
-  const notifications = result.rows.map((item) => ({
-    id: item.id,
-    type: item.type,
-    title: item.title,
-    message: item.message,
-    href: item.href,
-    readAt: item.read_at?.toISOString() ?? null,
-    createdAt: item.created_at.toISOString(),
-  }));
+  const notifications = result.rows.map((item) => {
+    const compactAffiliateClick = scope === "affiliate" && item.type === "affiliate_click";
+    return {
+      id: item.id,
+      type: item.type,
+      title: compactAffiliateClick ? "Có lượt nhấp mới" : item.title,
+      message: compactAffiliateClick ? "Một khách vừa mở liên kết affiliate của bạn." : item.message,
+      href: item.href,
+      readAt: item.read_at?.toISOString() ?? null,
+      createdAt: item.created_at.toISOString(),
+    };
+  });
   return Response.json({ notifications, unread: notifications.filter((item) => !item.readAt).length });
 }
 

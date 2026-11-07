@@ -231,6 +231,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   useEffect(() => {
     let focusTimer: ReturnType<typeof setTimeout> | undefined;
     function syncViewport() {
+      window.scrollTo(0, 0);
       const height = window.visualViewport?.height ?? window.innerHeight;
       setCompactViewport(window.innerWidth < 640 && height < 640);
       clearTimeout(focusTimer);
@@ -239,11 +240,15 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
 
     syncViewport();
     window.addEventListener("resize", syncViewport, { passive: true });
+    window.addEventListener("scroll", syncViewport, { passive: true });
     window.visualViewport?.addEventListener("resize", syncViewport, { passive: true });
+    window.visualViewport?.addEventListener("scroll", syncViewport, { passive: true });
     return () => {
       clearTimeout(focusTimer);
       window.removeEventListener("resize", syncViewport);
+      window.removeEventListener("scroll", syncViewport);
       window.visualViewport?.removeEventListener("resize", syncViewport);
+      window.visualViewport?.removeEventListener("scroll", syncViewport);
     };
   }, [keepFocusedControlVisible]);
 
@@ -260,12 +265,31 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   useEffect(() => {
     if (!embedded) return;
     const previousHtmlBackground = document.documentElement.style.background;
+    const previousHtmlHeight = document.documentElement.style.height;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+    const previousHtmlOverscroll = document.documentElement.style.overscrollBehavior;
     const previousBodyBackground = document.body.style.background;
+    const previousBodyHeight = document.body.style.height;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyOverscroll = document.body.style.overscrollBehavior;
     document.documentElement.style.background = "transparent";
+    document.documentElement.style.height = "100%";
+    document.documentElement.style.overflow = "hidden";
+    document.documentElement.style.overscrollBehavior = "none";
     document.body.style.background = "transparent";
+    document.body.style.height = "100%";
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+    window.scrollTo(0, 0);
     return () => {
       document.documentElement.style.background = previousHtmlBackground;
+      document.documentElement.style.height = previousHtmlHeight;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.documentElement.style.overscrollBehavior = previousHtmlOverscroll;
       document.body.style.background = previousBodyBackground;
+      document.body.style.height = previousBodyHeight;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.overscrollBehavior = previousBodyOverscroll;
     };
   }, [embedded]);
 
@@ -849,7 +873,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             <OrderSuccess orderId={submittedId} onClose={() => handleDrawerOpenChange(false)} />
           ) : (
             <>
-              <DrawerHeader className="relative w-full shrink-0 px-5 pt-3 pb-4 text-left sm:px-6 sm:pb-5">
+              <DrawerHeader className="sticky top-0 z-20 w-full shrink-0 bg-white px-5 pt-3 pb-4 text-left sm:px-6 sm:pb-5">
                 <div className="flex items-center justify-between gap-2 pr-10">
                   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                     <Image
@@ -899,7 +923,11 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                       onSubmit={submit}
                       onFocusCapture={(event) => {
                         const target = event.target;
-                        setTimeout(() => keepFocusedControlVisible(target), 80);
+                        window.scrollTo(0, 0);
+                        setTimeout(() => {
+                          window.scrollTo(0, 0);
+                          keepFocusedControlVisible(target);
+                        }, 80);
                       }}
                       className="flex min-w-0 max-w-full flex-col gap-4"
                     >

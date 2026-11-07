@@ -170,8 +170,8 @@ BEGIN
     'affiliate',
     NEW.affiliate_id,
     'affiliate_click',
-    'Link của bạn có lượt nhấp mới',
-    left(coalesce(nullif(NEW.landing_url, ''), 'Khách vừa mở liên kết affiliate.'), 500),
+    'Có lượt nhấp mới',
+    'Một khách vừa mở liên kết affiliate của bạn.',
     '/affiliate/portal',
     jsonb_build_object('clickId', NEW.id)
   );

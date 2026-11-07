@@ -52,7 +52,18 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <TooltipProvider>
           <PreferencesStoreProvider initialValues={PREFERENCE_DEFAULTS}>
             {children}
-            <Toaster />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                classNames: {
+                  toast: "!border-border !bg-popover !text-popover-foreground shadow-lg",
+                  title: "!font-semibold !text-popover-foreground",
+                  description: "!text-popover-foreground/80",
+                  icon: "!text-popover-foreground",
+                  actionButton: "!bg-primary !text-primary-foreground",
+                },
+              }}
+            />
           </PreferencesStoreProvider>
         </TooltipProvider>
       </body>

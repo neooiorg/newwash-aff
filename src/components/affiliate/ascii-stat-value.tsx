@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import { AsciiReveal } from "ascii-reveal";
 
@@ -16,24 +16,21 @@ const asciiTheme: AsciiTheme = {
   "--ascii-glyph": "var(--muted-foreground)",
 };
 
-export function AsciiStatValue({ value }: { value: string }) {
+export function AsciiStatCard({ children, value }: { children: ReactNode; value: string }) {
   return (
     <AsciiReveal
       key={value}
-      as="span"
-      className="inline-block"
-      duration="fast"
+      className="h-full"
+      duration="cinematic"
       fallback
       lazy={false}
-      origin="center"
+      origin="top-left"
       preset="decode"
-      selector="[data-ascii-value]"
-      speed={1.25}
+      revealOnHydrate
+      speed={1.35}
       style={asciiTheme}
     >
-      <span className="inline-block" data-ascii-digits data-ascii-value>
-        {value}
-      </span>
+      {children}
     </AsciiReveal>
   );
 }
