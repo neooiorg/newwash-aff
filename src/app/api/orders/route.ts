@@ -49,6 +49,12 @@ function toOrder(row: OrderRow): ReferralOrder {
 
 export async function GET(request: Request) {
   if (!(await isAdminRequest(request))) return adminUnavailable();
+  const orderId = new URL(request.url).searchParams.get("id");
+  const parsedOrderId = orderId ? z.string().uuid().safeParse(orderId) : null;
+  if (parsedOrderId && !parsedOrderId.success) {
+    return Response.json({ error: "Mã đơn hàng chưa hợp lệ." }, { status: 400 });
+  }
+
   try {
     const result = await getPool().query<OrderRow>(
       `SELECT o.id, o.customer, o.phone, o.service, o.address, o.status, o.created_at,
@@ -56,8 +62,15 @@ export async function GET(request: Request) {
         o.external_order_id, o.source, o.order_amount::double precision AS order_amount, o.booking_details,
         COALESCE(a.code, '') AS partner_code
        FROM newwash_orders o LEFT JOIN newwash_affiliates a ON a.id = o.affiliate_id
-       ORDER BY o.created_at DESC, o.id DESC LIMIT 500`,
+       ${parsedOrderId?.success ? "WHERE o.id = $1" : ""}
+       ORDER BY o.created_at DESC, o.id DESC LIMIT ${parsedOrderId?.success ? 1 : 500}`,
+      parsedOrderId?.success ? [parsedOrderId.data] : [],
     );
+    if (parsedOrderId?.success) {
+      const order = result.rows[0];
+      if (!order) return Response.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
+      return Response.json({ order: toOrder(order) });
+    }
     return Response.json({ orders: result.rows.map(toOrder) });
   } catch {
     return Response.json({ error: "Không đọc được đơn từ database." }, { status: 503 });

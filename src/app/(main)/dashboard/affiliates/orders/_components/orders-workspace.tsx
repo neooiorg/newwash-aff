@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 
-import { SquarePen } from "lucide-react";
+import { Eye, MoreHorizontal, SquarePen } from "lucide-react";
 
 import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
@@ -12,6 +12,13 @@ import type { DataTableFilterDefinition } from "@/components/data-table/data-tab
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { ReferralOrder } from "@/lib/affiliates/types";
 
@@ -88,18 +95,6 @@ export function OrdersWorkspace() {
         accessorKey: "externalOrderId",
         header: "Mã đơn website",
         cell: ({ row }) => row.original.externalOrderId || "—",
-      },
-      {
-        id: "actions",
-        header: "Thao tác",
-        enableSorting: false,
-        enableHiding: false,
-        cell: ({ row }) => (
-          <Button variant="outline" size="sm" onClick={() => setSelectedOrderId(row.original.databaseId)}>
-            <SquarePen data-icon="inline-start" />
-            Cập nhật trạng thái
-          </Button>
-        ),
       },
       {
         id: "status",
@@ -189,6 +184,35 @@ export function OrdersWorkspace() {
         filterFn: "includesString",
         enableSorting: false,
         enableHiding: false,
+      },
+      {
+        id: "actions",
+        header: "",
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" aria-label={`Thao tác đơn ${row.original.id}`}>
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-44">
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <Link href={`/dashboard/affiliates/orders/${row.original.databaseId}`}>
+                    <Eye />
+                    Xem chi tiết
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setSelectedOrderId(row.original.databaseId)}>
+                  <SquarePen />
+                  Cập nhật trạng thái
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ),
       },
     ],
     [],
