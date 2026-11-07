@@ -1,4 +1,4 @@
-import { ChartBar, Code2, type LucideIcon, Package, ReceiptText, Settings2, Users, WalletCards } from "lucide-react";
+import { ChartBar, Code2, HandCoins, type LucideIcon, Package, ReceiptText, Settings2, Users } from "lucide-react";
 
 export type NavBadge = "new" | "updated" | "soon";
 
@@ -46,7 +46,12 @@ export const sidebarItems: NavGroup[] = [
       { id: "affiliate-overview", title: "Tổng quan", url: "/dashboard/affiliates", icon: ChartBar },
       { id: "affiliate-partners", title: "Cộng tác viên", url: "/dashboard/affiliates/partners", icon: Users },
       { id: "affiliate-orders", title: "Đơn hàng", url: "/dashboard/affiliates/orders", icon: ReceiptText },
-      { id: "affiliate-payouts", title: "Ví", url: "/dashboard/affiliates/payouts", icon: WalletCards },
+      {
+        id: "affiliate-payouts",
+        title: "Yêu cầu rút tiền",
+        url: "/dashboard/affiliates/payouts",
+        icon: HandCoins,
+      },
       {
         id: "affiliate-settings",
         title: "Cài đặt",

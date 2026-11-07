@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { ArrowUpRight, Check, CircleDollarSign, X } from "lucide-react";
+import { Check, CircleDollarSign, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
@@ -11,7 +11,6 @@ import type { DataTableFilterDefinition } from "@/components/data-table/data-tab
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 
 import { AffiliatePageHeader } from "../../_components/affiliate-page-header";
@@ -177,71 +176,17 @@ export function PayoutsWorkspace() {
     },
   ];
 
-  const pending = items.filter((item) => item.status === "pending");
-  const approved = items.filter((item) => item.status === "approved");
-  const paid = items.filter((item) => item.status === "paid");
-  const metrics = [
-    {
-      label: "Chờ duyệt",
-      value: vnd(pending.reduce((sum, item) => sum + item.amount, 0)),
-      badge: `${pending.length} yêu cầu`,
-      detail: "Đang chờ quản trị viên xử lý",
-    },
-    {
-      label: "Chờ chuyển tiền",
-      value: vnd(approved.reduce((sum, item) => sum + item.amount, 0)),
-      badge: `${approved.length} yêu cầu`,
-      detail: "Đã duyệt, chưa xác nhận thanh toán",
-    },
-    {
-      label: "Đã thanh toán",
-      value: vnd(paid.reduce((sum, item) => sum + item.amount, 0)),
-      badge: `${paid.length} yêu cầu`,
-      detail: "Tổng các yêu cầu đã hoàn tất",
-    },
-  ];
-
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
-      <AffiliatePageHeader title="Ví" description="Duyệt yêu cầu và xác nhận thanh toán hoa hồng cho cộng tác viên." />
+      <AffiliatePageHeader
+        title="Yêu cầu rút tiền"
+        description="Phê duyệt, từ chối và cập nhật trạng thái thanh toán cho yêu cầu của cộng tác viên."
+      />
       {error && (
         <Alert variant="destructive">
           <AlertTitle>Không thể xử lý</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-      )}
-      {loading ? (
-        <section className="grid gap-4 md:grid-cols-3" aria-label="Đang tải tổng quan ví">
-          {Array.from({ length: 3 }, (_, index) => (
-            <AsciiPanelSkeleton
-              key={`wallet-metric-${index + 1}`}
-              className="h-36 w-full"
-              height={112}
-              rows={7}
-              seed={index + 21}
-            />
-          ))}
-        </section>
-      ) : (
-        <section className="grid gap-4 md:grid-cols-3" aria-label="Tổng quan ví">
-          {metrics.map((metric) => (
-            <Card key={metric.label}>
-              <CardHeader>
-                <CardDescription>{metric.label}</CardDescription>
-                <CardAction>
-                  <ArrowUpRight className="text-muted-foreground size-4" />
-                </CardAction>
-              </CardHeader>
-              <CardContent className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-3xl leading-none tracking-tight tabular-nums">{metric.value}</span>
-                  <Badge variant="outline">{metric.badge}</Badge>
-                </div>
-                <p className="text-muted-foreground text-sm">{metric.detail}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </section>
       )}
       {loading ? (
         <AsciiPanelSkeleton className="h-80 w-full" />
