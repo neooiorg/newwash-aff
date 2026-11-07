@@ -61,7 +61,7 @@ export function AppSidebar({
           <SidebarMenuItem>
             <SidebarMenuButton asChild size="lg">
               <Link prefetch={false} href={homeHref} aria-label={`${APP_CONFIG.name} · Tổng quan`}>
-                <span className="rounded-md bg-white px-1 group-data-[collapsible=icon]:hidden">
+                <span className="px-1 group-data-[collapsible=icon]:hidden">
                   <Image
                     src="/newwash-logo.svg"
                     alt="Newwash"
