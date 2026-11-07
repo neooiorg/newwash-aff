@@ -5,7 +5,7 @@ import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } fro
 import Image from "next/image";
 
 import { cn } from "cn";
-import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Minus, Phone, Plus, Shirt, Sparkles, X } from "lucide-react";
+import { Check, ChevronDown, Clock3, MapPin, Minus, Phone, Plus, Shirt, Sparkles, X } from "lucide-react";
 import { Toaster as SileoToaster, sileo } from "sileo";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -597,9 +597,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                     <span className="flex min-w-0 flex-1 flex-col items-start gap-1 overflow-hidden">
                       <span className="font-semibold leading-tight sm:text-base">{item.label}</span>
                       <span className="line-clamp-2 max-w-full text-xs font-normal leading-4 text-zinc-500 sm:text-sm">
-                        {item.code === "special"
-                          ? "Ghi chú thêm về cách giặt, loại đồ, v.v."
-                          : `Trả đồ sau ${item.duration}`}
+                        {item.duration === "Báo khi nhận đồ" ? item.duration : `Trả đồ sau ${item.duration}`}
                         {item.note ? ` · ${item.note}` : ""}
                       </span>
                     </span>
@@ -608,20 +606,16 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                     <span className="max-w-20 text-right font-bold text-xs tabular-nums sm:max-w-none sm:text-lg">
                       {item.pricePerKg !== null ? `${formatVnd(item.pricePerKg)}/kg` : "Báo giá"}
                     </span>
-                    {item.code === "special" ? (
-                      <ChevronRight aria-hidden="true" className="size-6 text-foreground" />
-                    ) : (
-                      <span
-                        className={cn(
-                          "flex size-6 items-center justify-center rounded-full border-2",
-                          serviceCode === item.code ? "border-yellow-400 bg-yellow-400" : "border-zinc-200 bg-white",
-                        )}
-                      >
-                        {serviceCode === item.code ? (
-                          <span aria-hidden="true" className="size-3 rounded-full bg-zinc-950" />
-                        ) : null}
-                      </span>
-                    )}
+                    <span
+                      className={cn(
+                        "flex size-6 items-center justify-center rounded-full border-2",
+                        serviceCode === item.code ? "border-yellow-400 bg-yellow-400" : "border-zinc-200 bg-white",
+                      )}
+                    >
+                      {serviceCode === item.code ? (
+                        <span aria-hidden="true" className="size-3 rounded-full bg-zinc-950" />
+                      ) : null}
+                    </span>
                   </span>
                 </ToggleGroupItem>
               ))}
