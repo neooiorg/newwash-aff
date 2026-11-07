@@ -808,7 +808,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             <OrderSuccess orderId={submittedId} onClose={() => handleDrawerOpenChange(false)} />
           ) : (
             <>
-              <DrawerHeader className="relative shrink-0 px-5 pt-3 pb-4 text-left sm:px-8 sm:pb-5">
+              <DrawerHeader className="relative mx-auto w-full max-w-2xl shrink-0 px-5 pt-3 pb-4 text-left sm:px-8 sm:pb-5">
                 <div className="flex items-center justify-between gap-2 pr-10">
                   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                     <Image
