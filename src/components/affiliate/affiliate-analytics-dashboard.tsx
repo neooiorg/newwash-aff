@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Banknote, CalendarIcon, CheckCircle2, HandCoins, MousePointerClick, ShoppingBag, Users } from "lucide-react";
+import { CalendarIcon, Ellipsis } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
@@ -32,15 +32,6 @@ const chartConfig = {
   orders: { label: "Đơn hàng", color: "var(--chart-3)" },
   clicks: { label: "Lượt nhấp", color: "var(--chart-2)" },
 } satisfies ChartConfig;
-
-const metricIcons = {
-  clicks: MousePointerClick,
-  orders: ShoppingBag,
-  completed: CheckCircle2,
-  revenue: Banknote,
-  commission: HandCoins,
-  buyers: Users,
-};
 
 function formatVnd(value: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -79,10 +70,12 @@ function dateLabel(date: Date) {
 function AnalyticsSkeleton() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {Array.from({ length: 6 }, (_, index) => (
-          <Skeleton key={index} className="h-28 rounded-xl" />
-        ))}
+      <div className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
+        <div className="grid md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 6 }, (_, index) => (
+            <Skeleton key={index} className="h-32 rounded-none border-r border-b last:border-b-0" />
+          ))}
+        </div>
       </div>
       <div className="grid gap-4 xl:grid-cols-12">
         <Skeleton className="h-88 rounded-xl xl:col-span-8" />
@@ -148,13 +141,54 @@ export function AffiliateAnalyticsDashboard({
 
   const metrics = useMemo(() => {
     if (!data) return [];
+    const completionRate = percent(data.metrics.completed, data.metrics.orders);
+    const averageOrderValue = data.metrics.completed ? data.metrics.revenue / data.metrics.completed : 0;
+    const commissionRate = percent(data.metrics.commission, data.metrics.revenue);
+    const ordersPerBuyer = data.metrics.buyers ? data.metrics.orders / data.metrics.buyers : 0;
+
     return [
-      { key: "clicks", label: "Lượt nhấp", value: data.metrics.clicks.toLocaleString("vi-VN") },
-      { key: "orders", label: "Đơn hàng", value: data.metrics.orders.toLocaleString("vi-VN") },
-      { key: "completed", label: "Đơn hoàn tất", value: data.metrics.completed.toLocaleString("vi-VN") },
-      { key: "revenue", label: "Doanh thu", value: formatVnd(data.metrics.revenue) },
-      { key: "commission", label: "Hoa hồng ước tính", value: formatVnd(data.metrics.commission) },
-      { key: "buyers", label: "Khách đặt", value: data.metrics.buyers.toLocaleString("vi-VN") },
+      {
+        badge: "Live",
+        detail: "Cập nhật theo thời gian thực",
+        key: "clicks",
+        label: "Lượt nhấp",
+        value: data.metrics.clicks.toLocaleString("vi-VN"),
+      },
+      {
+        badge: `${data.metrics.conversionRate.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`,
+        detail: "Tỷ lệ từ lượt nhấp thành đơn",
+        key: "orders",
+        label: "Đơn hàng",
+        value: data.metrics.orders.toLocaleString("vi-VN"),
+      },
+      {
+        badge: `${completionRate.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`,
+        detail: `Trên ${data.metrics.orders.toLocaleString("vi-VN")} đơn phát sinh`,
+        key: "completed",
+        label: "Đơn hoàn tất",
+        value: data.metrics.completed.toLocaleString("vi-VN"),
+      },
+      {
+        badge: averageOrderValue ? formatVnd(averageOrderValue) : "—",
+        detail: "Giá trị trung bình mỗi đơn hoàn tất",
+        key: "revenue",
+        label: "Doanh thu",
+        value: formatVnd(data.metrics.revenue),
+      },
+      {
+        badge: `${commissionRate.toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%`,
+        detail: "Tỷ lệ hoa hồng thực tế",
+        key: "commission",
+        label: "Hoa hồng ước tính",
+        value: formatVnd(data.metrics.commission),
+      },
+      {
+        badge: `${ordersPerBuyer.toLocaleString("vi-VN", { maximumFractionDigits: 1 })} đơn`,
+        detail: "Số đơn trung bình mỗi khách",
+        key: "buyers",
+        label: "Khách đặt",
+        value: data.metrics.buyers.toLocaleString("vi-VN"),
+      },
     ] as const;
   }, [data]);
 
@@ -235,28 +269,38 @@ export function AffiliateAnalyticsDashboard({
 
       {data ? (
         <>
-          <section aria-label="Các chỉ số chính" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {metrics.map((metric) => {
-              const Icon = metricIcons[metric.key];
-              const card = (
-                <Card key={metric.key} className="h-full" data-ascii="surface" size="sm">
-                  <CardHeader>
-                    <CardDescription>{metric.label}</CardDescription>
-                    <CardAction>
-                      <Icon className="size-4 text-muted-foreground" aria-hidden="true" />
-                    </CardAction>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl leading-none font-medium tracking-tight tabular-nums">{metric.value}</div>
-                  </CardContent>
-                </Card>
-              );
-              return (
-                <AsciiStatCard key={metric.key} value={metric.value}>
-                  {card}
+          <section
+            aria-label="Các chỉ số chính"
+            className="overflow-hidden rounded-xl bg-card shadow-xs ring-1 ring-foreground/10"
+          >
+            <div className="grid md:grid-cols-2 xl:grid-cols-3">
+              {metrics.map((metric) => (
+                <AsciiStatCard key={metric.key} value={`${metric.value}-${metric.badge}`}>
+                  <Card
+                    className="h-full min-h-32 rounded-none border-b border-r border-border/60 py-4 ring-0"
+                    data-ascii="surface"
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-sm font-normal">{metric.label}</CardTitle>
+                      <CardAction>
+                        <Ellipsis className="size-4 text-muted-foreground" aria-hidden="true" />
+                      </CardAction>
+                    </CardHeader>
+                    <CardContent className="flex flex-col gap-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="text-2xl leading-none font-medium tracking-tight tabular-nums">
+                          {metric.value}
+                        </div>
+                        <Badge className="max-w-36 truncate bg-green-500/10 text-green-700 dark:bg-green-500/15 dark:text-green-300">
+                          {metric.badge}
+                        </Badge>
+                      </div>
+                      <p className="truncate text-xs text-muted-foreground">{metric.detail}</p>
+                    </CardContent>
+                  </Card>
                 </AsciiStatCard>
-              );
-            })}
+              ))}
+            </div>
           </section>
 
           <div className="grid items-stretch gap-4 xl:grid-cols-12">
