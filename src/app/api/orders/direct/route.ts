@@ -73,6 +73,7 @@ export async function POST(request: Request) {
       notes: input.notes,
       coupon: input.coupon,
       hostOrigin: input.hostOrigin,
+      estimatedTotal: input.estimatedTotal,
     };
     const inserted = await getPool().query<{ id: string }>(
       `INSERT INTO newwash_orders
@@ -87,7 +88,7 @@ export async function POST(request: Request) {
         input.service,
         input.pickupAddress,
         affiliateId,
-        input.estimatedTotal,
+        null,
         JSON.stringify(details),
       ],
     );

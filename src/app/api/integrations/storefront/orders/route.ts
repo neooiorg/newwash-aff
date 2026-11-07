@@ -1,7 +1,8 @@
-import { timingSafeEqual } from "node:crypto";
 import { z } from "zod";
 
 import { getPool } from "@/lib/affiliates/db";
+
+import { timingSafeEqual } from "node:crypto";
 
 export const runtime = "nodejs";
 
@@ -50,19 +51,11 @@ export async function POST(request: Request) {
       const result = await getPool().query<{ id: string }>(
         `INSERT INTO newwash_orders
            (external_order_id, source, customer, phone, service, address, affiliate_id, order_amount)
-         SELECT $1, 'website', $3, $4, $5, $6, id, $7
+         SELECT $1, 'website', $3, $4, $5, $6, id, NULL
          FROM newwash_affiliates WHERE code = $2 AND status = 'approved'
          ON CONFLICT (external_order_id) WHERE external_order_id IS NOT NULL DO NOTHING
          RETURNING id`,
-        [
-          event.orderId,
-          event.affiliateCode,
-          event.customer || "Khách hàng",
-          event.phone,
-          event.service,
-          event.address,
-          event.amount ?? null,
-        ],
+        [event.orderId, event.affiliateCode, event.customer || "Khách hàng", event.phone, event.service, event.address],
       );
       if (result.rows[0]) return Response.json({ recorded: true, duplicate: false }, { status: 201 });
 
@@ -81,13 +74,14 @@ export async function POST(request: Request) {
     }
 
     const result = await getPool().query(
-      `UPDATE newwash_orders SET status = 'Hoàn tất', completed_at = COALESCE(completed_at, now()),
-         order_amount = COALESCE($2, order_amount)
-       WHERE external_order_id = $1 AND source = 'website'`,
-      [parsed.data.orderId, parsed.data.amount ?? null],
+      `UPDATE newwash_orders
+       SET status = CASE WHEN status = 'Mới' THEN 'Đang xử lý' ELSE status END
+       WHERE external_order_id = $1 AND source = 'website'
+         AND status NOT IN ('Hoàn tất giao', 'Đã hủy')`,
+      [parsed.data.orderId],
     );
     if (!result.rowCount) return Response.json({ error: "Chưa ghi nhận sự kiện tạo đơn cho mã này." }, { status: 409 });
-    return Response.json({ recorded: true });
+    return Response.json({ recorded: true, awaitingAdminConfirmation: true });
   } catch {
     return Response.json({ error: "Không ghi nhận được sự kiện từ website." }, { status: 503 });
   }

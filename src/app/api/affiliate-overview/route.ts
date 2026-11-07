@@ -43,8 +43,8 @@ export async function GET(request: Request) {
          SELECT to_char(m.month_start, 'YYYY-MM') AS key,
            'T' || extract(month FROM m.month_start)::int AS month,
            count(o.id)::int AS orders,
-           count(o.id) FILTER (WHERE o.status = 'Hoàn tất')::int AS completed,
-           coalesce(sum(o.order_amount) FILTER (WHERE o.status = 'Hoàn tất'), 0)::text AS revenue
+           count(o.id) FILTER (WHERE o.status = 'Hoàn tất giao')::int AS completed,
+           coalesce(sum(o.order_amount) FILTER (WHERE o.status = 'Hoàn tất giao'), 0)::text AS revenue
          FROM months m
          LEFT JOIN newwash_orders o ON o.source = 'website'
            AND (o.created_at AT TIME ZONE 'Asia/Bangkok') >= m.month_start

@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS newwash_orders (
   service text NOT NULL,
   address text NOT NULL CHECK (length(address) BETWEEN 1 AND 240),
   affiliate_id uuid REFERENCES newwash_affiliates(id) ON DELETE RESTRICT,
-  status text NOT NULL DEFAULT 'Mới' CHECK (status IN ('Mới', 'Đang xử lý', 'Hoàn tất')),
+  status text NOT NULL DEFAULT 'Mới' CHECK (status IN ('Mới', 'Đang xử lý', 'Hoàn tất giao', 'Đã hủy')),
   created_at timestamptz NOT NULL DEFAULT now()
 );
 

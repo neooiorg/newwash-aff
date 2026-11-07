@@ -85,14 +85,14 @@ export async function GET(request: Request) {
           (SELECT count(*)::int FROM newwash_orders
            WHERE source = 'website' AND (created_at AT TIME ZONE 'Asia/Bangkok')::date BETWEEN $1::date AND $2::date AND (${filter})) AS orders,
           (SELECT count(*)::int FROM newwash_orders
-           WHERE source = 'website' AND status = 'Hoàn tất'
+           WHERE source = 'website' AND status = 'Hoàn tất giao'
              AND (created_at AT TIME ZONE 'Asia/Bangkok')::date BETWEEN $1::date AND $2::date AND (${filter})) AS completed,
           (SELECT coalesce(sum(order_amount), 0)::text FROM newwash_orders
-           WHERE source = 'website' AND status = 'Hoàn tất'
+           WHERE source = 'website' AND status = 'Hoàn tất giao'
              AND (created_at AT TIME ZONE 'Asia/Bangkok')::date BETWEEN $1::date AND $2::date AND (${filter})) AS revenue,
           (SELECT coalesce(sum(o.order_amount * a.commission_rate_bps / 10000.0), 0)::text
            FROM newwash_orders o JOIN newwash_affiliates a ON a.id = o.affiliate_id
-           WHERE o.source = 'website' AND o.status = 'Hoàn tất'
+           WHERE o.source = 'website' AND o.status = 'Hoàn tất giao'
              AND (o.created_at AT TIME ZONE 'Asia/Bangkok')::date BETWEEN $1::date AND $2::date
              AND ($3::uuid IS NULL OR o.affiliate_id = $3::uuid)) AS commission,
           (SELECT count(DISTINCT phone)::int FROM newwash_orders
@@ -116,8 +116,8 @@ export async function GET(request: Request) {
            GROUP BY 1
          ), orders AS (
            SELECT (created_at AT TIME ZONE 'Asia/Bangkok')::date AS day, count(*)::int AS orders,
-             count(*) FILTER (WHERE status = 'Hoàn tất')::int AS completed,
-             coalesce(sum(order_amount) FILTER (WHERE status = 'Hoàn tất'), 0)::text AS revenue
+             count(*) FILTER (WHERE status = 'Hoàn tất giao')::int AS completed,
+             coalesce(sum(order_amount) FILTER (WHERE status = 'Hoàn tất giao'), 0)::text AS revenue
            FROM newwash_orders
            WHERE source = 'website' AND (created_at AT TIME ZONE 'Asia/Bangkok')::date BETWEEN $1::date AND $2::date
              AND (${filter})
@@ -137,15 +137,15 @@ export async function GET(request: Request) {
         commission: string;
       }>(
         `SELECT o.service, count(*)::int AS orders,
-          count(*) FILTER (WHERE o.status = 'Hoàn tất')::int AS completed,
-          coalesce(sum(o.order_amount) FILTER (WHERE o.status = 'Hoàn tất'), 0)::text AS revenue,
+          count(*) FILTER (WHERE o.status = 'Hoàn tất giao')::int AS completed,
+          coalesce(sum(o.order_amount) FILTER (WHERE o.status = 'Hoàn tất giao'), 0)::text AS revenue,
           coalesce(sum(o.order_amount * a.commission_rate_bps / 10000.0)
-            FILTER (WHERE o.status = 'Hoàn tất'), 0)::text AS commission
+            FILTER (WHERE o.status = 'Hoàn tất giao'), 0)::text AS commission
          FROM newwash_orders o JOIN newwash_affiliates a ON a.id = o.affiliate_id
          WHERE o.source = 'website' AND (o.created_at AT TIME ZONE 'Asia/Bangkok')::date BETWEEN $1::date AND $2::date
            AND ($3::uuid IS NULL OR o.affiliate_id = $3::uuid)
          GROUP BY o.service
-         ORDER BY coalesce(sum(o.order_amount) FILTER (WHERE o.status = 'Hoàn tất'), 0) DESC, count(*) DESC
+         ORDER BY coalesce(sum(o.order_amount) FILTER (WHERE o.status = 'Hoàn tất giao'), 0) DESC, count(*) DESC
          LIMIT 10`,
         params,
       ),

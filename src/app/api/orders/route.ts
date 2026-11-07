@@ -1,8 +1,16 @@
+import { z } from "zod";
+
 import { adminUnavailable, isAdminRequest } from "@/lib/affiliates/access";
 import { getPool } from "@/lib/affiliates/db";
 import type { ReferralOrder } from "@/lib/affiliates/types";
 
 export const runtime = "nodejs";
+
+const updateOrderInput = z.object({
+  id: z.string().uuid(),
+  orderAmount: z.number().int().positive().max(1_000_000_000).nullable(),
+  status: z.enum(["Mới", "Đang xử lý", "Hoàn tất giao", "Đã hủy"]),
+});
 
 type OrderRow = {
   id: string;
@@ -59,5 +67,41 @@ export async function GET(request: Request) {
     return Response.json({ orders: result.rows.map(toOrder) });
   } catch {
     return Response.json({ error: "Không đọc được đơn từ database." }, { status: 503 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  if (!(await isAdminRequest(request))) return adminUnavailable();
+  const parsed = updateOrderInput.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return Response.json({ error: "Thông tin cập nhật chưa hợp lệ." }, { status: 400 });
+  if (parsed.data.status === "Hoàn tất giao" && !parsed.data.orderAmount) {
+    return Response.json({ error: "Vui lòng nhập số tiền thực tế trước khi hoàn tất giao." }, { status: 400 });
+  }
+
+  try {
+    const result = await getPool().query<OrderRow>(
+      `WITH updated AS (
+         UPDATE newwash_orders
+         SET order_amount = $2,
+             status = $3,
+             completed_at = CASE
+               WHEN $3 = 'Hoàn tất giao' THEN COALESCE(completed_at, now())
+               ELSE NULL
+             END
+         WHERE id = $1
+         RETURNING *
+       )
+       SELECT u.id, u.customer, u.phone, u.service, u.address, u.status, u.created_at,
+         u.kiotviet_order_code, u.kiotviet_invoice_code, u.kiotviet_status, u.completed_at,
+         u.external_order_id, u.source, u.order_amount::double precision AS order_amount, u.booking_details,
+         COALESCE(a.code, '') AS partner_code
+       FROM updated u LEFT JOIN newwash_affiliates a ON a.id = u.affiliate_id`,
+      [parsed.data.id, parsed.data.orderAmount, parsed.data.status],
+    );
+    const order = result.rows[0];
+    if (!order) return Response.json({ error: "Không tìm thấy đơn hàng." }, { status: 404 });
+    return Response.json({ order: toOrder(order) });
+  } catch {
+    return Response.json({ error: "Không cập nhật được đơn hàng." }, { status: 503 });
   }
 }

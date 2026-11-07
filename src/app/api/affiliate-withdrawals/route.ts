@@ -64,7 +64,7 @@ async function balanceFor(affiliateId: string) {
         SELECT sum(o.order_amount * a.commission_rate_bps / 10000.0)
         FROM newwash_orders o
         JOIN newwash_affiliates a ON a.id = o.affiliate_id
-        WHERE o.affiliate_id = $1 AND o.source = 'website' AND o.status = 'Hoàn tất'
+        WHERE o.affiliate_id = $1 AND o.source = 'website' AND o.status = 'Hoàn tất giao'
       ), 0)::text AS earned,
       coalesce((
         SELECT sum(amount) FROM newwash_withdrawals

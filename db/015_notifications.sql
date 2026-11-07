@@ -79,12 +79,12 @@ BEGIN
       );
     END IF;
   ELSIF NEW.status IS DISTINCT FROM OLD.status THEN
-    IF NEW.status = 'Hoàn tất' THEN
+    IF NEW.status = 'Hoàn tất giao' THEN
       INSERT INTO newwash_notifications (recipient_scope, type, title, message, href, metadata)
       VALUES (
         'admin',
         'order_completed',
-        'Đơn hàng đã hoàn tất',
+        'Đơn hàng đã giao thành công',
         display_code || ' · ' || display_customer || amount_label,
         '/dashboard/affiliates/orders',
         jsonb_build_object('orderId', NEW.id, 'status', NEW.status)

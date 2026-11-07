@@ -31,6 +31,7 @@ import type { BookingService, ServiceCategory } from "@/lib/booking-services";
 import { getLaundryServiceIcon } from "@/lib/laundry-service-icons";
 
 import { dateChoices, formatVnd, localDateKey, timeSlots } from "./booking-options";
+import { VietMapAddressInput } from "./vietmap-address-input";
 import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
 
 type OrderFormProps = { affiliateCode: string; embedded: boolean; preview?: boolean; hostOrigin: string };
@@ -665,12 +666,11 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="pickup-address">Địa chỉ nhận đồ</FieldLabel>
-              <Input
+              <VietMapAddressInput
                 id="pickup-address"
                 value={pickupAddress}
-                onChange={(event) => setPickupAddress(event.target.value)}
+                onValueChange={setPickupAddress}
                 placeholder="Số nhà, đường, phường, quận"
-                autoComplete="street-address"
               />
             </Field>
             <Field orientation="horizontal">
@@ -686,10 +686,10 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             {!sameDeliveryAddress && (
               <Field>
                 <FieldLabel htmlFor="delivery-address">Địa chỉ giao đồ *</FieldLabel>
-                <Input
+                <VietMapAddressInput
                   id="delivery-address"
                   value={deliveryAddress}
-                  onChange={(event) => setDeliveryAddress(event.target.value)}
+                  onValueChange={setDeliveryAddress}
                   placeholder="Số nhà, đường, phường, quận"
                 />
               </Field>

@@ -17,7 +17,7 @@ export interface ReferralOrder {
   address: string;
   partnerCode: string;
   createdAt: string;
-  status: "Mới" | "Đang xử lý" | "Hoàn tất";
+  status: "Mới" | "Đang xử lý" | "Hoàn tất giao" | "Đã hủy";
   kiotvietOrderCode: string | null;
   kiotvietInvoiceCode: string | null;
   kiotvietStatus: string | null;
@@ -37,6 +37,7 @@ export interface ReferralOrder {
     notes?: string;
     coupon?: string;
     hostOrigin?: string;
+    estimatedTotal?: number | null;
   };
 }
 

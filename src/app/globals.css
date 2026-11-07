@@ -201,6 +201,10 @@ html:has([data-landing-page]) {
   text-transform: none !important;
 }
 
+[data-sileo-toast] {
+  filter: drop-shadow(0 0 0.5px var(--border));
+}
+
 @media (max-width: 639px) {
   [data-sileo-toast] {
     --sileo-width: calc(100vw - 1.5rem);

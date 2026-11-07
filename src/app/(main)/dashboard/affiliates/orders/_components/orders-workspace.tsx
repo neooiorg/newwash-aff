@@ -41,7 +41,8 @@ const orderFilters: DataTableFilterDefinition<ReferralOrder>[] = [
     options: [
       { value: "Mới", label: "Mới" },
       { value: "Đang xử lý", label: "Đang xử lý" },
-      { value: "Hoàn tất", label: "Hoàn tất" },
+      { value: "Hoàn tất giao", label: "Hoàn tất giao" },
+      { value: "Đã hủy", label: "Đã hủy" },
     ],
   },
   { column: "createdAt", label: "Ngày", variant: "date" },
@@ -75,7 +76,7 @@ export function OrdersWorkspace() {
 
   const websiteOrders = orders.filter((order) => order.source === "website");
   const newOrders = websiteOrders.filter((order) => order.status === "Mới").length;
-  const completedOrders = websiteOrders.filter((order) => order.status === "Hoàn tất").length;
+  const completedOrders = websiteOrders.filter((order) => order.status === "Hoàn tất giao").length;
   const columns = useMemo<DataTableColumn<ReferralOrder>[]>(
     () => [
       {
@@ -140,6 +141,17 @@ export function OrdersWorkspace() {
         ),
       },
       {
+        id: "orderAmount",
+        accessorKey: "orderAmount",
+        header: "Thực thu",
+        cell: ({ row }) =>
+          row.original.orderAmount ? (
+            <span className="font-medium tabular-nums">{row.original.orderAmount.toLocaleString("vi-VN")}đ</span>
+          ) : (
+            <span className="text-muted-foreground">Chờ báo giá</span>
+          ),
+      },
+      {
         id: "partnerCode",
         accessorKey: "partnerCode",
         header: "Mã aff",
@@ -200,7 +212,7 @@ export function OrdersWorkspace() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <AffiliatePageHeader
         title="Đơn hàng"
-        description="Đơn từ biểu mẫu được lưu trực tiếp và cập nhật realtime; KiotViet dùng để đối chiếu xử lý thực tế."
+        description="Cân và kiểm tra đồ, nhập số tiền thực tế rồi hoàn tất giao để ghi nhận doanh thu và hoa hồng."
         actions={
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/affiliates/partners">Xem cộng tác viên</Link>
@@ -223,7 +235,7 @@ export function OrdersWorkspace() {
             Đơn mới <strong className="text-foreground ml-1 font-semibold">{newOrders}</strong>
           </span>
           <span>
-            Hoàn tất <strong className="text-foreground ml-1 font-semibold">{completedOrders}</strong>
+            Hoàn tất giao <strong className="text-foreground ml-1 font-semibold">{completedOrders}</strong>
           </span>
           <span>KiotViet: {kiotvietConfigured ? "Đã cấu hình" : "Chưa cấu hình"}</span>
         </div>
@@ -247,7 +259,8 @@ export function OrdersWorkspace() {
             options: [
               { value: "Mới", label: "Mới" },
               { value: "Đang xử lý", label: "Đang xử lý" },
-              { value: "Hoàn tất", label: "Hoàn tất" },
+              { value: "Hoàn tất giao", label: "Hoàn tất giao" },
+              { value: "Đã hủy", label: "Đã hủy" },
             ],
           }}
         />
