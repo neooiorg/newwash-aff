@@ -294,7 +294,7 @@ export function EmbedWorkspace() {
             ) : null}
             <p className="text-muted-foreground text-sm">
               Đơn từ popup được lưu trực tiếp vào NewWash Aff và xuất hiện realtime trong trang Đơn hàng. Website chỉ
-              cần gửi sự kiện hoàn thành hoặc đồng bộ KiotViet khi có kết quả xử lý thực tế.
+              admin sẽ nhập giá thực tế và cập nhật trạng thái giao hàng trực tiếp trong hệ thống.
             </p>
             <div className="flex flex-wrap gap-2">
               <Button onClick={copyScript} disabled={!origin}>

@@ -21,9 +21,6 @@ type OrderRow = {
   partner_code: string;
   created_at: Date;
   status: ReferralOrder["status"];
-  kiotviet_order_code: string | null;
-  kiotviet_invoice_code: string | null;
-  kiotviet_status: string | null;
   completed_at: Date | null;
   external_order_id: string | null;
   source: "legacy" | "website";
@@ -42,9 +39,6 @@ function toOrder(row: OrderRow): ReferralOrder {
     partnerCode: row.partner_code,
     createdAt: row.created_at.toISOString().slice(0, 10),
     status: row.status,
-    kiotvietOrderCode: row.kiotviet_order_code,
-    kiotvietInvoiceCode: row.kiotviet_invoice_code,
-    kiotvietStatus: row.kiotviet_status,
     completedAt: row.completed_at?.toISOString() ?? null,
     externalOrderId: row.external_order_id,
     source: row.source,
@@ -58,7 +52,7 @@ export async function GET(request: Request) {
   try {
     const result = await getPool().query<OrderRow>(
       `SELECT o.id, o.customer, o.phone, o.service, o.address, o.status, o.created_at,
-        o.kiotviet_order_code, o.kiotviet_invoice_code, o.kiotviet_status, o.completed_at,
+        o.completed_at,
         o.external_order_id, o.source, o.order_amount::double precision AS order_amount, o.booking_details,
         COALESCE(a.code, '') AS partner_code
        FROM newwash_orders o LEFT JOIN newwash_affiliates a ON a.id = o.affiliate_id
@@ -92,7 +86,7 @@ export async function PATCH(request: Request) {
          RETURNING *
        )
        SELECT u.id, u.customer, u.phone, u.service, u.address, u.status, u.created_at,
-         u.kiotviet_order_code, u.kiotviet_invoice_code, u.kiotviet_status, u.completed_at,
+         u.completed_at,
          u.external_order_id, u.source, u.order_amount::double precision AS order_amount, u.booking_details,
          COALESCE(a.code, '') AS partner_code
        FROM updated u LEFT JOIN newwash_affiliates a ON a.id = u.affiliate_id`,

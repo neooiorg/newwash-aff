@@ -18,9 +18,6 @@ export interface ReferralOrder {
   partnerCode: string;
   createdAt: string;
   status: "Mới" | "Đang xử lý" | "Hoàn tất giao" | "Đã hủy";
-  kiotvietOrderCode: string | null;
-  kiotvietInvoiceCode: string | null;
-  kiotvietStatus: string | null;
   completedAt: string | null;
   externalOrderId: string | null;
   source: "legacy" | "website";

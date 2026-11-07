@@ -14,7 +14,7 @@ import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { ReferralOrder } from "@/lib/affiliates/types";
 
 import { AffiliatePageHeader } from "../../_components/affiliate-page-header";
-import { KiotVietOrderDialog } from "./kiotviet-order-dialog";
+import { OrderManagementDialog } from "./order-management-dialog";
 
 const orderFilters: DataTableFilterDefinition<ReferralOrder>[] = [
   { column: "id", label: "Mã đơn", variant: "text" },
@@ -33,7 +33,6 @@ const orderFilters: DataTableFilterDefinition<ReferralOrder>[] = [
       { value: "legacy", label: "Demo cũ" },
     ],
   },
-  { column: "kiotvietOrderCode", label: "Mã KiotViet", variant: "text" },
   {
     column: "status",
     label: "Trạng thái",
@@ -52,17 +51,14 @@ export function OrdersWorkspace() {
   const [orders, setOrders] = useState<ReferralOrder[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
-  const [kiotvietConfigured, setKiotvietConfigured] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState("");
 
   const refresh = useCallback(() => {
-    Promise.all([fetch("/api/orders"), fetch("/api/orders/kiotviet")])
-      .then(async ([ordersResponse, kiotvietResponse]) => {
-        const [ordersData, kiotvietData] = await Promise.all([ordersResponse.json(), kiotvietResponse.json()]);
-        if (!ordersResponse.ok || !kiotvietResponse.ok)
-          throw new Error(ordersData.error || kiotvietData.error || "Không tải được đơn.");
+    fetch("/api/orders", { cache: "no-store" })
+      .then(async (ordersResponse) => {
+        const ordersData = await ordersResponse.json();
+        if (!ordersResponse.ok) throw new Error(ordersData.error || "Không tải được đơn.");
         setOrders(ordersData.orders);
-        setKiotvietConfigured(kiotvietData.configured);
         setError("");
       })
       .catch((cause) => setError(cause instanceof Error ? cause.message : "Không tải được đơn."))
@@ -162,19 +158,6 @@ export function OrdersWorkspace() {
             <span className="text-muted-foreground">Trực tiếp</span>
           ),
       },
-      {
-        id: "kiotvietOrderCode",
-        accessorKey: "kiotvietOrderCode",
-        header: "KiotViet",
-        cell: ({ row }) => (
-          <div className="flex flex-col gap-0.5 text-xs">
-            <span>{row.original.kiotvietOrderCode || "Chưa liên kết"}</span>
-            {row.original.kiotvietStatus && (
-              <span className="text-muted-foreground">{row.original.kiotvietStatus}</span>
-            )}
-          </div>
-        ),
-      },
       { id: "createdAt", accessorKey: "createdAt", header: "Ngày" },
       {
         id: "status",
@@ -188,7 +171,7 @@ export function OrdersWorkspace() {
       {
         id: "search",
         accessorFn: (row) =>
-          `${row.id} ${row.externalOrderId ?? ""} ${row.customer} ${row.phone} ${row.service} ${row.partnerCode} ${row.kiotvietOrderCode ?? ""}`,
+          `${row.id} ${row.externalOrderId ?? ""} ${row.customer} ${row.phone} ${row.service} ${row.partnerCode}`,
         filterFn: "includesString",
         enableSorting: false,
         enableHiding: false,
@@ -237,7 +220,6 @@ export function OrdersWorkspace() {
           <span>
             Hoàn tất giao <strong className="text-foreground ml-1 font-semibold">{completedOrders}</strong>
           </span>
-          <span>KiotViet: {kiotvietConfigured ? "Đã cấu hình" : "Chưa cấu hình"}</span>
         </div>
       )}
 
@@ -265,14 +247,11 @@ export function OrdersWorkspace() {
           }}
         />
       )}
-      <KiotVietOrderDialog
+      <OrderManagementDialog
         order={orders.find((order) => order.databaseId === selectedOrderId) ?? null}
-        configured={kiotvietConfigured}
         onClose={() => setSelectedOrderId("")}
-        onSynced={(synced) =>
-          setOrders((current) =>
-            current.map((order) => (order.databaseId === synced.databaseId ? { ...order, ...synced } : order)),
-          )
+        onUpdated={(updated) =>
+          setOrders((current) => current.map((order) => (order.databaseId === updated.databaseId ? updated : order)))
         }
       />
     </div>

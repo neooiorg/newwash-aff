@@ -8,7 +8,7 @@ const dbDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 const migrations = [
   "001_affiliates.sql",
   "002_affiliate_approval.sql",
-  "003_storefront_kiotviet.sql",
+  "003_storefront_settings.sql",
   "004_storefront_orders.sql",
   "005_realtime.sql",
   "006_booking_services.sql",
@@ -23,6 +23,7 @@ const migrations = [
   "015_notifications.sql",
   "016_refresh_service_catalog.sql",
   "017_order_fulfillment_workflow.sql",
+  "018_remove_kiotviet.sql",
 ];
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 10000 });
 
