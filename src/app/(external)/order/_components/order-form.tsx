@@ -5,12 +5,11 @@ import { type FormEvent, useCallback, useEffect, useMemo, useRef, useState } fro
 import Image from "next/image";
 
 import { cn } from "cn";
-import { CheckCircle2, ChevronDown, ChevronRight, Clock3, MapPin, Minus, Phone, Plus, Shirt, X } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock3, MapPin, Minus, Phone, Plus, Shirt, Sparkles, X } from "lucide-react";
 import { Toaster as SileoToaster, sileo } from "sileo";
 
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import {
@@ -36,11 +35,66 @@ import WizardExpandable, { type WizardNavigateContext, type WizardStep } from ".
 
 type OrderFormProps = { affiliateCode: string; embedded: boolean; preview?: boolean; hostOrigin: string };
 
-function FormCloseAction({ onClose }: { onClose: () => void }) {
+function OrderSuccess({ orderId, onClose }: { orderId: string; onClose: () => void }) {
+  function showOrder() {
+    sileo.info({
+      title: "Mã đơn của bạn",
+      description: `${orderId} · Cửa hàng sẽ liên hệ với bạn để xác nhận.`,
+      position: "top-center",
+      duration: 4200,
+    });
+  }
+
   return (
-    <Button type="button" onClick={onClose} className="mt-2">
-      Đóng
-    </Button>
+    <ScrollArea className="min-h-0 flex-1 overflow-hidden">
+      <section className="relative mx-auto flex min-h-[calc(88dvh-1.5rem)] w-full max-w-lg flex-col items-center justify-center overflow-hidden px-6 py-10 text-center sm:px-10 sm:py-14">
+        <div className="relative mb-7 flex size-48 items-center justify-center sm:size-56">
+          <span className="absolute inset-x-5 top-7 bottom-3 -rotate-6 rounded-[40%_60%_52%_48%] bg-yellow-100" />
+          <Sparkles aria-hidden="true" className="absolute top-8 right-2 size-7 text-yellow-400 sm:right-0 sm:size-8" />
+          <Sparkles aria-hidden="true" className="absolute bottom-8 left-0 size-6 text-yellow-400 sm:-left-1" />
+          <Image
+            alt="Máy giặt và khăn sạch"
+            className="relative size-44 object-contain drop-shadow-xl sm:size-52"
+            height={224}
+            priority
+            src="/laundry-icons/booking-header.png"
+            width={224}
+          />
+          <span className="absolute top-5 right-5 flex size-14 items-center justify-center rounded-full border-4 border-white bg-green-500 text-white shadow-lg sm:right-3 sm:size-16">
+            <Check aria-hidden="true" className="size-8 stroke-[3] sm:size-9" />
+          </span>
+        </div>
+
+        <div className="flex max-w-md flex-col items-center gap-3">
+          <DrawerTitle className="text-balance text-3xl font-extrabold tracking-tight text-zinc-950 sm:text-4xl">
+            Đặt giặt ủi thành công!
+          </DrawerTitle>
+          <DrawerDescription className="max-w-sm text-pretty text-base leading-relaxed text-zinc-500 sm:text-lg">
+            Đơn giặt ủi của bạn đã được ghi nhận. Chúng tôi sẽ liên hệ sớm để xác nhận.
+          </DrawerDescription>
+        </div>
+
+        <div className="mt-9 flex w-full max-w-md flex-col gap-3">
+          <Button
+            type="button"
+            size="lg"
+            onClick={onClose}
+            className="h-13 rounded-full bg-yellow-400 font-bold text-zinc-950 shadow-md hover:bg-yellow-300"
+          >
+            Về trang chủ
+          </Button>
+          <Button
+            type="button"
+            size="lg"
+            variant="outline"
+            onClick={showOrder}
+            className="h-13 rounded-full font-semibold"
+          >
+            Xem đơn hàng
+          </Button>
+        </div>
+      </section>
+    </ScrollArea>
   );
 }
 
@@ -750,114 +804,105 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             if (target instanceof Element && target.closest("[data-sileo-viewport]")) event.preventDefault();
           }}
         >
-          <DrawerHeader className="relative shrink-0 px-5 pt-3 pb-4 text-left sm:px-8 sm:pb-5">
-            <div className="flex items-center justify-between gap-2 pr-10">
-              <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                <Image
-                  alt=""
-                  aria-hidden="true"
-                  className="size-12 shrink-0 object-contain sm:size-16"
-                  height={72}
-                  priority
-                  src="/laundry-icons/booking-header.png"
-                  width={72}
-                />
-                <div className="min-w-0">
-                  <DrawerTitle className="whitespace-nowrap text-lg font-bold tracking-tight sm:text-2xl">
-                    Thông tin đặt giặt ủi
-                  </DrawerTitle>
-                  <DrawerDescription className="mt-0.5 text-sm leading-tight text-zinc-500 sm:mt-1 sm:text-base">
-                    Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
-                  </DrawerDescription>
-                </div>
-              </div>
-              <span className="shrink-0 rounded-full bg-yellow-100 px-2.5 py-1 font-bold text-sm text-amber-600 tabular-nums sm:px-3 sm:py-1.5 sm:text-base">
-                {activeStepIndex + 1}/{stepOrder.length}
-              </span>
-            </div>
-            <DrawerClose asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute top-0 right-3 size-11 rounded-full sm:right-8 sm:size-9"
-                aria-label="Đóng biểu mẫu"
-              >
-                <X />
-              </Button>
-            </DrawerClose>
-          </DrawerHeader>
-          <ScrollArea className="min-h-0 flex-1 overflow-hidden">
-            <main className="w-dvw min-w-0 max-w-dvw overflow-x-hidden bg-white text-zinc-950 sm:w-full sm:max-w-full">
-              <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
-                {submittedId ? (
-                  <Card className="border-border bg-background text-foreground">
-                    <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
-                      <span className="flex size-14 items-center justify-center rounded-full bg-yellow-400 text-zinc-950">
-                        <CheckCircle2 aria-hidden="true" />
-                      </span>
-                      <h2 className="text-xl font-semibold">Đã gửi đơn thành công</h2>
-                      <p className="max-w-sm text-sm text-muted-foreground">
-                        Hệ thống đã tiếp nhận đơn {submittedId}. Cửa hàng sẽ liên hệ với bạn.
-                      </p>
-                      <FormCloseAction onClose={() => handleDrawerOpenChange(false)} />
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <form
-                    ref={formRef}
-                    id="newwash-order-form"
-                    noValidate
-                    onSubmit={submit}
-                    className="flex min-w-0 max-w-full flex-col gap-4"
-                  >
-                    <p className="sr-only" aria-live="assertive">
-                      {error}
-                    </p>
-                    <WizardExpandable
-                      steps={steps}
-                      expanded
-                      animateInitialOpen={false}
-                      activeStep={activeStep}
-                      onActiveStepChange={(value) => {
-                        if (value) {
-                          setActiveStep(value);
-                          setError("");
-                        }
-                      }}
-                      canNavigateToStep={canNavigateToStep}
-                      onNavigateBlocked={onNavigateBlocked}
-                      onComplete={() => {
-                        const contactError = stepError("contact");
-                        if (contactError) {
-                          showOrderError(contactError);
-                          document.getElementById("phone")?.focus();
-                          return;
-                        }
-                        formRef.current?.requestSubmit();
-                      }}
-                      backLabel="Quay lại"
-                      nextLabel="Tiếp tục"
-                      completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
-                      canGoNext={
-                        !saving &&
-                        !servicesLoading &&
-                        !servicesError &&
-                        services.length > 0 &&
-                        (!preview || activeStep !== "contact")
-                      }
-                      className="max-w-none px-0 sm:max-w-none"
+          {submittedId ? (
+            <OrderSuccess orderId={submittedId} onClose={() => handleDrawerOpenChange(false)} />
+          ) : (
+            <>
+              <DrawerHeader className="relative shrink-0 px-5 pt-3 pb-4 text-left sm:px-8 sm:pb-5">
+                <div className="flex items-center justify-between gap-2 pr-10">
+                  <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                    <Image
+                      alt=""
+                      aria-hidden="true"
+                      className="size-12 shrink-0 object-contain sm:size-16"
+                      height={72}
+                      priority
+                      src="/laundry-icons/booking-header.png"
+                      width={72}
                     />
-                    {preview && (
-                      <p className="text-center text-xs text-muted-foreground">
-                        Đây là bản xem trước; đơn hàng sẽ không được gửi.
+                    <div className="min-w-0">
+                      <DrawerTitle className="whitespace-nowrap text-lg font-bold tracking-tight sm:text-2xl">
+                        Thông tin đặt giặt ủi
+                      </DrawerTitle>
+                      <DrawerDescription className="mt-0.5 text-sm leading-tight text-zinc-500 sm:mt-1 sm:text-base">
+                        Chọn dịch vụ, địa chỉ và thời gian nhận đồ.
+                      </DrawerDescription>
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-yellow-100 px-2.5 py-1 font-bold text-sm text-amber-600 tabular-nums sm:px-3 sm:py-1.5 sm:text-base">
+                    {activeStepIndex + 1}/{stepOrder.length}
+                  </span>
+                </div>
+                <DrawerClose asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-0 right-3 size-11 rounded-full sm:right-8 sm:size-9"
+                    aria-label="Đóng biểu mẫu"
+                  >
+                    <X />
+                  </Button>
+                </DrawerClose>
+              </DrawerHeader>
+              <ScrollArea className="min-h-0 flex-1 overflow-hidden">
+                <main className="w-dvw min-w-0 max-w-dvw overflow-x-hidden bg-white text-zinc-950 sm:w-full sm:max-w-full">
+                  <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
+                    <form
+                      ref={formRef}
+                      id="newwash-order-form"
+                      noValidate
+                      onSubmit={submit}
+                      className="flex min-w-0 max-w-full flex-col gap-4"
+                    >
+                      <p className="sr-only" aria-live="assertive">
+                        {error}
                       </p>
-                    )}
-                  </form>
-                )}
-              </div>
-            </main>
-          </ScrollArea>
+                      <WizardExpandable
+                        steps={steps}
+                        expanded
+                        animateInitialOpen={false}
+                        activeStep={activeStep}
+                        onActiveStepChange={(value) => {
+                          if (value) {
+                            setActiveStep(value);
+                            setError("");
+                          }
+                        }}
+                        canNavigateToStep={canNavigateToStep}
+                        onNavigateBlocked={onNavigateBlocked}
+                        onComplete={() => {
+                          const contactError = stepError("contact");
+                          if (contactError) {
+                            showOrderError(contactError);
+                            document.getElementById("phone")?.focus();
+                            return;
+                          }
+                          formRef.current?.requestSubmit();
+                        }}
+                        backLabel="Quay lại"
+                        nextLabel="Tiếp tục"
+                        completeLabel={saving ? "Đang gửi..." : preview ? "Bản xem trước" : "Đặt ngay"}
+                        canGoNext={
+                          !saving &&
+                          !servicesLoading &&
+                          !servicesError &&
+                          services.length > 0 &&
+                          (!preview || activeStep !== "contact")
+                        }
+                        className="max-w-none px-0 sm:max-w-none"
+                      />
+                      {preview && (
+                        <p className="text-center text-xs text-muted-foreground">
+                          Đây là bản xem trước; đơn hàng sẽ không được gửi.
+                        </p>
+                      )}
+                    </form>
+                  </div>
+                </main>
+              </ScrollArea>
+            </>
+          )}
         </DrawerContent>
       </Drawer>
       <SileoToaster
