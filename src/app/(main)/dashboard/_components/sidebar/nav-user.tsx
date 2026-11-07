@@ -20,6 +20,7 @@ import {
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar";
 import { Switch } from "@/components/ui/switch";
 import { useDeviceNotifications } from "@/hooks/use-device-notifications";
+import { playDeviceNotificationChime, unlockDeviceNotificationAudio } from "@/lib/device-notification-audio";
 
 export function NavUser({
   user,
@@ -35,6 +36,7 @@ export function NavUser({
   const { enabled: deviceNotificationsEnabled, setEnabled: setDeviceNotificationsEnabled } = useDeviceNotifications();
 
   async function updateDeviceNotifications(checked: boolean) {
+    if (checked) void unlockDeviceNotificationAudio();
     const result = await setDeviceNotificationsEnabled(checked);
     if (checked && !result.enabled) {
       toast.error("Chưa thể bật thông báo", {
@@ -42,6 +44,7 @@ export function NavUser({
       });
       return;
     }
+    if (result.enabled) void playDeviceNotificationChime();
     toast.success(result.enabled ? "Đã bật thông báo trên thiết bị này" : "Đã tắt thông báo trên thiết bị này");
   }
 

@@ -207,7 +207,45 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
   const [error, setError] = useState("");
   const [submittedId, setSubmittedId] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(preview && !embedded);
+  const [compactViewport, setCompactViewport] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   const submissionRequestId = useRef("");
+
+  const keepFocusedControlVisible = useCallback((target: Element | null) => {
+    if (!(target instanceof HTMLElement)) return;
+    if (!target.matches("input, textarea, [contenteditable='true']")) return;
+    const viewport = scrollAreaRef.current?.querySelector<HTMLElement>("[data-slot='scroll-area-viewport']");
+    if (!viewport) return;
+
+    const targetRect = target.getBoundingClientRect();
+    const viewportRect = viewport.getBoundingClientRect();
+    const topClearance = 16;
+    const bottomClearance = 104;
+    if (targetRect.bottom > viewportRect.bottom - bottomClearance) {
+      viewport.scrollBy({ top: targetRect.bottom - viewportRect.bottom + bottomClearance, behavior: "smooth" });
+    } else if (targetRect.top < viewportRect.top + topClearance) {
+      viewport.scrollBy({ top: targetRect.top - viewportRect.top - topClearance, behavior: "smooth" });
+    }
+  }, []);
+
+  useEffect(() => {
+    let focusTimer: ReturnType<typeof setTimeout> | undefined;
+    function syncViewport() {
+      const height = window.visualViewport?.height ?? window.innerHeight;
+      setCompactViewport(window.innerWidth < 640 && height < 640);
+      clearTimeout(focusTimer);
+      focusTimer = setTimeout(() => keepFocusedControlVisible(document.activeElement), 80);
+    }
+
+    syncViewport();
+    window.addEventListener("resize", syncViewport, { passive: true });
+    window.visualViewport?.addEventListener("resize", syncViewport, { passive: true });
+    return () => {
+      clearTimeout(focusTimer);
+      window.removeEventListener("resize", syncViewport);
+      window.visualViewport?.removeEventListener("resize", syncViewport);
+    };
+  }, [keepFocusedControlVisible]);
 
   const showOrderError = useCallback((message: string) => {
     setError(message);
@@ -798,7 +836,10 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           </div>
         ) : null}
         <DrawerContent
-          className="light h-[88dvh] max-h-[88dvh] overflow-hidden rounded-t-3xl bg-white text-zinc-950 sm:bottom-6 sm:mx-auto sm:max-w-3xl sm:rounded-3xl sm:border sm:shadow-2xl"
+          className={cn(
+            "light overflow-hidden rounded-t-3xl bg-white text-zinc-950 sm:bottom-6 sm:mx-auto sm:max-w-3xl sm:rounded-3xl sm:border sm:shadow-2xl",
+            compactViewport ? "h-[calc(100dvh-0.25rem)] max-h-[calc(100dvh-0.25rem)]" : "h-[88dvh] max-h-[88dvh]",
+          )}
           onInteractOutside={(event) => {
             const target = event.detail.originalEvent.target;
             if (target instanceof Element && target.closest("[data-sileo-viewport]")) event.preventDefault();
@@ -845,14 +886,21 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                   </Button>
                 </DrawerClose>
               </DrawerHeader>
-              <ScrollArea className="min-h-0 flex-1 overflow-hidden">
-                <main className="w-dvw min-w-0 max-w-dvw overflow-x-hidden bg-white text-zinc-950 sm:w-full sm:max-w-full">
+              <ScrollArea
+                ref={scrollAreaRef}
+                className="min-h-0 flex-1 overflow-hidden [&_[data-slot=scroll-area-viewport]]:scroll-pb-28"
+              >
+                <main className="w-full min-w-0 max-w-full overflow-x-hidden bg-white text-zinc-950">
                   <div className="flex w-full min-w-0 flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-6 sm:pt-5 sm:pb-8">
                     <form
                       ref={formRef}
                       id="newwash-order-form"
                       noValidate
                       onSubmit={submit}
+                      onFocusCapture={(event) => {
+                        const target = event.target;
+                        setTimeout(() => keepFocusedControlVisible(target), 80);
+                      }}
                       className="flex min-w-0 max-w-full flex-col gap-4"
                     >
                       <p className="sr-only" aria-live="assertive">

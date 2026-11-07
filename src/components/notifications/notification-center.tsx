@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import { useDeviceNotifications } from "@/hooks/use-device-notifications";
+import { playDeviceNotificationChime } from "@/lib/device-notification-audio";
 
 type NotificationScope = "admin" | "affiliate";
 
@@ -85,31 +86,6 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
   const { enabled: deviceNotificationsEnabled } = useDeviceNotifications();
   const initialized = useRef(false);
   const knownIds = useRef(new Set<string>());
-  const audioContext = useRef<AudioContext | null>(null);
-
-  const playChime = useCallback(() => {
-    if (!deviceNotificationsEnabled || !audioContext.current) return;
-    const context = audioContext.current;
-    void context
-      .resume()
-      .then(() => {
-        const oscillator = context.createOscillator();
-        const gain = context.createGain();
-        oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(660, context.currentTime);
-        oscillator.frequency.setValueAtTime(880, context.currentTime + 0.1);
-        gain.gain.setValueAtTime(0.0001, context.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.32);
-        oscillator.connect(gain);
-        gain.connect(context.destination);
-        oscillator.start();
-        oscillator.stop(context.currentTime + 0.34);
-      })
-      .catch(() => {
-        // Browsers may keep audio suspended until the first user interaction.
-      });
-  }, [deviceNotificationsEnabled]);
 
   const showDeviceNotification = useCallback(
     (item: NotificationItem) => {
@@ -145,7 +121,7 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
       if (initialized.current) {
         const incoming = next.filter((item) => !knownIds.current.has(item.id));
         if (incoming.length) {
-          playChime();
+          if (deviceNotificationsEnabled) void playDeviceNotificationChime();
           for (const item of incoming.slice(0, 3).reverse()) {
             showDashboardToast(item, () => router.push(item.href));
             showDeviceNotification(item);
@@ -161,25 +137,7 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
     } finally {
       setLoading(false);
     }
-  }, [playChime, router, scope, showDeviceNotification]);
-
-  useEffect(() => {
-    function unlockAudio() {
-      if (audioContext.current) return;
-      const AudioContextClass =
-        window.AudioContext ??
-        (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-      if (AudioContextClass) audioContext.current = new AudioContextClass();
-    }
-
-    document.addEventListener("pointerdown", unlockAudio, { once: true });
-    document.addEventListener("keydown", unlockAudio, { once: true });
-    return () => {
-      document.removeEventListener("pointerdown", unlockAudio);
-      document.removeEventListener("keydown", unlockAudio);
-      void audioContext.current?.close();
-    };
-  }, []);
+  }, [deviceNotificationsEnabled, router, scope, showDeviceNotification]);
 
   useEffect(() => {
     void refresh();

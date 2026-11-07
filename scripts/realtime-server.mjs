@@ -209,7 +209,7 @@ async function connectDatabase() {
   }
 }
 
-server.listen(port, process.env.REALTIME_HOST || "127.0.0.1", () => {
+server.listen(port, process.env.REALTIME_HOST || "0.0.0.0", () => {
   console.log(`Realtime WebSocket listening on port ${port}.`);
   void connectDatabase();
 });
