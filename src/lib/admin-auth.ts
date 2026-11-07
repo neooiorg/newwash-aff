@@ -1,7 +1,10 @@
 import "server-only";
 
-import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
+
+import { auth } from "@/auth";
+
+import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
 
 export const ADMIN_COOKIE = "newwash_admin";
 export const ADMIN_EMAIL = "admin@newwash.local";
@@ -39,7 +42,8 @@ export function isValidAdminSession(value: string | undefined): boolean {
 }
 
 export async function hasAdminSession(): Promise<boolean> {
-  return isValidAdminSession((await cookies()).get(ADMIN_COOKIE)?.value);
+  if (isValidAdminSession((await cookies()).get(ADMIN_COOKIE)?.value)) return true;
+  return (await auth())?.user.role === "admin";
 }
 
 export const adminCookieOptions = {

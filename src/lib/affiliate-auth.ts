@@ -2,6 +2,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
+import { auth } from "@/auth";
 import { getPool } from "@/lib/affiliates/db";
 
 import { createHmac, randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
@@ -41,7 +42,10 @@ function zUuid(value: string | undefined): value is string {
 }
 
 export async function getAffiliateSessionId() {
-  return parseAffiliateSession((await cookies()).get(AFFILIATE_COOKIE)?.value);
+  const cookieAffiliateId = parseAffiliateSession((await cookies()).get(AFFILIATE_COOKIE)?.value);
+  if (cookieAffiliateId) return cookieAffiliateId;
+  const session = await auth();
+  return session?.user.role === "affiliate" ? session.user.affiliateId : null;
 }
 
 export async function getApprovedAffiliateSessionId() {

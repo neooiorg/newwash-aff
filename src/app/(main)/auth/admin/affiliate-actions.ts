@@ -3,6 +3,7 @@
 import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { auth, signOut } from "@/auth";
 import {
   AFFILIATE_COOKIE,
   affiliateCookieOptions,
@@ -36,5 +37,6 @@ export async function loginAffiliate(_previous: string, formData: FormData): Pro
 
 export async function logoutAffiliate() {
   (await cookies()).delete(AFFILIATE_COOKIE);
+  if (await auth()) await signOut({ redirectTo: "/auth/admin?mode=affiliate" });
   redirect("/auth/admin?mode=affiliate");
 }

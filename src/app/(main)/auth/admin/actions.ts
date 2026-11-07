@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { auth, signOut } from "@/auth";
 import { ADMIN_COOKIE, adminCookieOptions, makeAdminSession, verifyAdminPassword } from "@/lib/admin-auth";
 
 export async function loginAdmin(_previous: string, formData: FormData): Promise<string> {
@@ -15,5 +16,6 @@ export async function loginAdmin(_previous: string, formData: FormData): Promise
 
 export async function logoutAdmin(): Promise<void> {
   (await cookies()).delete(ADMIN_COOKIE);
+  if (await auth()) await signOut({ redirectTo: "/auth/admin" });
   redirect("/auth/admin");
 }
