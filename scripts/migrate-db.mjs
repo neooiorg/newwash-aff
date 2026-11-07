@@ -26,6 +26,7 @@ const migrations = [
   "018_remove_kiotviet.sql",
   "019_seed_demo_affiliate.sql",
   "020_order_affiliate_commission.sql",
+  "021_seed_nttantts_affiliate.sql",
 ];
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 10000 });
 

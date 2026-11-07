@@ -34,7 +34,7 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ e
             <AdminLoginForm demoEmail={demoEmail} demoPassword={demoPassword} />
           </TabsContent>
           <TabsContent value="affiliate" className="pt-4">
-            <AffiliateLoginForm defaultAccount="minhanh.demo@newwash.local" defaultPassword="NewWash@2026" />
+            <AffiliateLoginForm defaultAccount="nttantts@gmail.com" defaultPassword="NewWash@2026" />
           </TabsContent>
         </Tabs>
         <div className="flex flex-col gap-4">
