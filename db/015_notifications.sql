@@ -46,6 +46,7 @@ DECLARE
   display_code text;
   display_customer text;
   amount_label text;
+  commission_label text;
 BEGIN
   display_code := 'NW-' || upper(left(NEW.id::text, 8));
   display_customer := coalesce(nullif(NEW.customer, ''), 'Khách hàng');
@@ -78,27 +79,60 @@ BEGIN
       );
     END IF;
   ELSIF NEW.status IS DISTINCT FROM OLD.status THEN
-    INSERT INTO newwash_notifications (recipient_scope, type, title, message, href, metadata)
-    VALUES (
-      'admin',
-      'order_status',
-      'Đơn hàng đổi trạng thái',
-      display_code || ' chuyển sang “' || NEW.status || '”',
-      '/dashboard/affiliates/orders',
-      jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
-    );
-
-    IF NEW.affiliate_id IS NOT NULL THEN
-      INSERT INTO newwash_notifications (recipient_scope, affiliate_id, type, title, message, href, metadata)
+    IF NEW.status = 'Hoàn tất' THEN
+      INSERT INTO newwash_notifications (recipient_scope, type, title, message, href, metadata)
       VALUES (
-        'affiliate',
-        NEW.affiliate_id,
-        'order_status',
-        'Đơn affiliate đã cập nhật',
-        display_code || ' chuyển sang “' || NEW.status || '”',
-        '/affiliate/portal',
+        'admin',
+        'order_completed',
+        'Đơn hàng đã hoàn tất',
+        display_code || ' · ' || display_customer || amount_label,
+        '/dashboard/affiliates/orders',
         jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
       );
+
+      IF NEW.affiliate_id IS NOT NULL THEN
+        SELECT CASE
+          WHEN NEW.order_amount IS NULL OR NEW.order_amount = 0 THEN 'Hoa hồng sẽ được cập nhật khi có doanh thu.'
+          ELSE trim(to_char(NEW.order_amount * commission_rate_bps / 10000.0, 'FM999G999G999G999')) || 'đ hoa hồng đã được ghi nhận.'
+        END
+        INTO commission_label
+        FROM newwash_affiliates
+        WHERE id = NEW.affiliate_id;
+
+        INSERT INTO newwash_notifications (recipient_scope, affiliate_id, type, title, message, href, metadata)
+        VALUES (
+          'affiliate',
+          NEW.affiliate_id,
+          'commission_earned',
+          'Hoa hồng vừa được ghi nhận',
+          display_code || ' · ' || coalesce(commission_label, 'Đơn hàng đã hoàn tất.'),
+          '/affiliate/portal',
+          jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
+        );
+      END IF;
+    ELSE
+      INSERT INTO newwash_notifications (recipient_scope, type, title, message, href, metadata)
+      VALUES (
+        'admin',
+        'order_status',
+        'Đơn hàng đổi trạng thái',
+        display_code || ' chuyển sang “' || NEW.status || '”',
+        '/dashboard/affiliates/orders',
+        jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
+      );
+
+      IF NEW.affiliate_id IS NOT NULL THEN
+        INSERT INTO newwash_notifications (recipient_scope, affiliate_id, type, title, message, href, metadata)
+        VALUES (
+          'affiliate',
+          NEW.affiliate_id,
+          'order_status',
+          'Đơn affiliate đã cập nhật',
+          display_code || ' chuyển sang “' || NEW.status || '”',
+          '/affiliate/portal',
+          jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
+        );
+      END IF;
     END IF;
   END IF;
 
@@ -110,6 +144,46 @@ DROP TRIGGER IF EXISTS newwash_orders_notifications ON newwash_orders;
 CREATE TRIGGER newwash_orders_notifications
   AFTER INSERT OR UPDATE OF status ON newwash_orders
   FOR EACH ROW EXECUTE FUNCTION newwash_create_order_notifications();
+
+CREATE OR REPLACE FUNCTION newwash_create_click_notifications() RETURNS trigger AS $$
+DECLARE
+  affiliate_name text;
+  affiliate_code text;
+BEGIN
+  SELECT name, code
+  INTO affiliate_name, affiliate_code
+  FROM newwash_affiliates
+  WHERE id = NEW.affiliate_id;
+
+  INSERT INTO newwash_notifications (recipient_scope, type, title, message, href, metadata)
+  VALUES (
+    'admin',
+    'affiliate_click',
+    'Có lượt nhấp affiliate mới',
+    coalesce(affiliate_name, 'Affiliate') || ' · ' || coalesce(affiliate_code, 'Chưa có mã'),
+    '/dashboard/affiliates',
+    jsonb_build_object('clickId', NEW.id, 'affiliateId', NEW.affiliate_id)
+  );
+
+  INSERT INTO newwash_notifications (recipient_scope, affiliate_id, type, title, message, href, metadata)
+  VALUES (
+    'affiliate',
+    NEW.affiliate_id,
+    'affiliate_click',
+    'Link của bạn có lượt nhấp mới',
+    left(coalesce(nullif(NEW.landing_url, ''), 'Khách vừa mở liên kết affiliate.'), 500),
+    '/affiliate/portal',
+    jsonb_build_object('clickId', NEW.id)
+  );
+
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS newwash_affiliate_clicks_notifications ON newwash_affiliate_clicks;
+CREATE TRIGGER newwash_affiliate_clicks_notifications
+  AFTER INSERT ON newwash_affiliate_clicks
+  FOR EACH ROW EXECUTE FUNCTION newwash_create_click_notifications();
 
 CREATE OR REPLACE FUNCTION newwash_create_withdrawal_notifications() RETURNS trigger AS $$
 DECLARE
