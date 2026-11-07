@@ -808,7 +808,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             <OrderSuccess orderId={submittedId} onClose={() => handleDrawerOpenChange(false)} />
           ) : (
             <>
-              <DrawerHeader className="relative mx-auto w-full max-w-2xl shrink-0 px-5 pt-3 pb-4 text-left sm:px-8 sm:pb-5">
+              <DrawerHeader className="relative w-full shrink-0 px-5 pt-3 pb-4 text-left sm:px-6 sm:pb-5">
                 <div className="flex items-center justify-between gap-2 pr-10">
                   <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                     <Image
@@ -838,7 +838,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="absolute top-0 right-3 size-11 rounded-full sm:right-8 sm:size-9"
+                    className="absolute top-0 right-3 size-11 rounded-full sm:right-6 sm:size-9"
                     aria-label="Đóng biểu mẫu"
                   >
                     <X />
@@ -847,7 +847,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
               </DrawerHeader>
               <ScrollArea className="min-h-0 flex-1 overflow-hidden">
                 <main className="w-dvw min-w-0 max-w-dvw overflow-x-hidden bg-white text-zinc-950 sm:w-full sm:max-w-full">
-                  <div className="mx-auto flex w-full min-w-0 max-w-2xl flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-8 sm:pt-5 sm:pb-8">
+                  <div className="flex w-full min-w-0 flex-col gap-4 px-4 pt-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:gap-5 sm:px-6 sm:pt-5 sm:pb-8">
                     <form
                       ref={formRef}
                       id="newwash-order-form"
