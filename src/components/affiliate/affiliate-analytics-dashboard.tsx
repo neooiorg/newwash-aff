@@ -13,7 +13,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { AffiliateAnalytics } from "@/lib/affiliates/types";
 
@@ -65,10 +65,6 @@ function AnalyticsSkeleton() {
       <div className="grid gap-4 xl:grid-cols-12">
         <AsciiPanelSkeleton className="h-88 xl:col-span-7" height={320} rows={18} seed={7} />
         <AsciiPanelSkeleton className="h-88 xl:col-span-5" height={320} rows={18} seed={8} />
-      </div>
-      <div className="grid gap-4 xl:grid-cols-12">
-        <AsciiPanelSkeleton className="h-80 xl:col-span-7" height={288} rows={16} seed={9} />
-        <AsciiPanelSkeleton className="h-80 xl:col-span-5" height={288} rows={16} seed={10} />
       </div>
     </div>
   );
@@ -183,19 +179,14 @@ export function AffiliateAnalyticsDashboard({
     <div className="flex flex-col gap-4 md:gap-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <ToggleGroup
-            type="single"
-            variant="outline"
-            size="sm"
-            value={preset}
-            onValueChange={(value) => value && setPreset(value as Preset)}
-            aria-label="Khoảng thời gian thống kê"
-          >
-            <ToggleGroupItem value="yesterday">Hôm qua</ToggleGroupItem>
-            <ToggleGroupItem value="7d">7 ngày</ToggleGroupItem>
-            <ToggleGroupItem value="30d">30 ngày</ToggleGroupItem>
-            <ToggleGroupItem value="custom">Tùy chỉnh</ToggleGroupItem>
-          </ToggleGroup>
+          <Tabs value={preset} onValueChange={(value) => setPreset(value as Preset)}>
+            <TabsList aria-label="Khoảng thời gian thống kê">
+              <TabsTrigger value="yesterday">Hôm qua</TabsTrigger>
+              <TabsTrigger value="7d">7 ngày</TabsTrigger>
+              <TabsTrigger value="30d">30 ngày</TabsTrigger>
+              <TabsTrigger value="custom">Tùy chỉnh</TabsTrigger>
+            </TabsList>
+          </Tabs>
           {preset === "custom" && (
             <Popover>
               <PopoverTrigger asChild>
@@ -254,7 +245,7 @@ export function AffiliateAnalyticsDashboard({
 
       <AsciiLoadingReveal loading={loading && !data} skeleton={<AnalyticsSkeleton />}>
         {data ? (
-          <>
+          <div className="flex flex-col gap-4 md:gap-6">
             <section
               aria-label="Các chỉ số chính"
               className="overflow-hidden rounded-xl bg-card shadow-xs ring-1 ring-foreground/10"
@@ -289,7 +280,7 @@ export function AffiliateAnalyticsDashboard({
               </div>
             </section>
             <AffiliateAnalyticsInsights data={data} />
-          </>
+          </div>
         ) : null}
       </AsciiLoadingReveal>
     </div>
