@@ -798,7 +798,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           </div>
         ) : null}
         <DrawerContent
-          className="light h-[88dvh] max-h-[88dvh] overflow-hidden rounded-t-3xl bg-white text-zinc-950 sm:mx-auto sm:max-w-3xl"
+          className="light h-[88dvh] max-h-[88dvh] overflow-hidden rounded-t-3xl bg-white text-zinc-950 sm:bottom-6 sm:mx-auto sm:max-w-3xl sm:rounded-3xl sm:border sm:shadow-2xl"
           onInteractOutside={(event) => {
             const target = event.detail.originalEvent.target;
             if (target instanceof Element && target.closest("[data-sileo-viewport]")) event.preventDefault();
