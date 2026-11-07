@@ -24,7 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import { useDeviceNotifications } from "@/hooks/use-device-notifications";
-import { playDeviceNotificationChime } from "@/lib/device-notification-audio";
+import { playDeviceNotificationChime, unlockDeviceNotificationAudio } from "@/lib/device-notification-audio";
 
 type NotificationScope = "admin" | "affiliate";
 
@@ -142,6 +142,19 @@ export function NotificationCenter({ scope }: { scope: NotificationScope }) {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  useEffect(() => {
+    if (!deviceNotificationsEnabled) return;
+
+    const unlockAudio = () => void unlockDeviceNotificationAudio();
+    window.addEventListener("pointerdown", unlockAudio, { once: true, passive: true });
+    window.addEventListener("keydown", unlockAudio, { once: true });
+    return () => {
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+    };
+  }, [deviceNotificationsEnabled]);
+
   useAffiliateRealtime(["newwash_notifications"], refresh, scope);
 
   async function markRead(id: string) {
