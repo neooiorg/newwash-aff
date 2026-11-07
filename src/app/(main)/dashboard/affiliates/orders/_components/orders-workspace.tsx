@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import Link from "next/link";
 
+import { SquarePen } from "lucide-react";
+
 import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
@@ -88,6 +90,27 @@ export function OrdersWorkspace() {
         cell: ({ row }) => row.original.externalOrderId || "—",
       },
       {
+        id: "actions",
+        header: "Thao tác",
+        enableSorting: false,
+        enableHiding: false,
+        cell: ({ row }) => (
+          <Button variant="outline" size="sm" onClick={() => setSelectedOrderId(row.original.databaseId)}>
+            <SquarePen data-icon="inline-start" />
+            Cập nhật trạng thái
+          </Button>
+        ),
+      },
+      {
+        id: "status",
+        accessorKey: "status",
+        header: "Trạng thái",
+        filterFn: "equalsString",
+        cell: ({ row }) => (
+          <Badge variant={row.original.status === "Mới" ? "secondary" : "outline"}>{row.original.status}</Badge>
+        ),
+      },
+      {
         id: "customer",
         accessorKey: "customer",
         header: "Khách hàng",
@@ -160,32 +183,12 @@ export function OrdersWorkspace() {
       },
       { id: "createdAt", accessorKey: "createdAt", header: "Ngày" },
       {
-        id: "status",
-        accessorKey: "status",
-        header: "Trạng thái",
-        filterFn: "equalsString",
-        cell: ({ row }) => (
-          <Badge variant={row.original.status === "Mới" ? "secondary" : "outline"}>{row.original.status}</Badge>
-        ),
-      },
-      {
         id: "search",
         accessorFn: (row) =>
           `${row.id} ${row.externalOrderId ?? ""} ${row.customer} ${row.phone} ${row.service} ${row.partnerCode}`,
         filterFn: "includesString",
         enableSorting: false,
         enableHiding: false,
-      },
-      {
-        id: "actions",
-        header: "",
-        enableSorting: false,
-        enableHiding: false,
-        cell: ({ row }) => (
-          <Button variant="ghost" size="sm" onClick={() => setSelectedOrderId(row.original.databaseId)}>
-            Chi tiết
-          </Button>
-        ),
       },
     ],
     [],
