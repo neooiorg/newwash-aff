@@ -1,4 +1,13 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
+
+const migration = spawnSync(process.execPath, ["scripts/migrate-db.mjs"], {
+  stdio: "inherit",
+  env: process.env,
+});
+
+if (migration.status !== 0) {
+  process.exit(migration.status ?? 1);
+}
 
 const commands = [
   spawn(process.execPath, ["server.js"], { stdio: "inherit", env: process.env }),

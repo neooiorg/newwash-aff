@@ -38,8 +38,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=dependencies --chown=nextjs:nodejs /realtime /realtime
+COPY --from=dependencies --chown=nextjs:nodejs /realtime/node_modules ./node_modules
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/realtime-server.mjs /realtime/realtime-server.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/run-standalone.mjs ./scripts/run-standalone.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/migrate-db.mjs ./scripts/migrate-db.mjs
+COPY --from=builder --chown=nextjs:nodejs /app/db ./db
 
 USER nextjs
 EXPOSE 3000 3002

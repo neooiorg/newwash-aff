@@ -238,9 +238,8 @@ export function AffiliateAnalyticsDashboard({
           <section aria-label="Các chỉ số chính" className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {metrics.map((metric) => {
               const Icon = metricIcons[metric.key];
-              const animated = metric.key === "clicks" || metric.key === "orders";
               const card = (
-                <Card key={metric.key} className="h-full" data-ascii={animated ? "surface" : undefined} size="sm">
+                <Card key={metric.key} className="h-full" data-ascii="surface" size="sm">
                   <CardHeader>
                     <CardDescription>{metric.label}</CardDescription>
                     <CardAction>
@@ -252,14 +251,10 @@ export function AffiliateAnalyticsDashboard({
                   </CardContent>
                 </Card>
               );
-              return animated ? (
+              return (
                 <AsciiStatCard key={metric.key} value={metric.value}>
                   {card}
                 </AsciiStatCard>
-              ) : (
-                <div key={metric.key} className="contents">
-                  {card}
-                </div>
               );
             })}
           </section>
