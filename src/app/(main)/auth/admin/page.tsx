@@ -10,9 +10,9 @@ import { AffiliateLoginForm } from "./_components/affiliate-login-form";
 export const metadata = { title: "Đăng nhập | NewWash Aff" };
 
 export default async function Page({ searchParams }: { searchParams: Promise<{ mode?: string }> }) {
-  if (await hasAdminSession()) redirect("/dashboard/affiliates");
   const { mode } = await searchParams;
   const defaultTab = mode === "affiliate" ? "affiliate" : "admin";
+  if (defaultTab === "admin" && (await hasAdminSession())) redirect("/dashboard/affiliates");
   const demoEmail = process.env.ADMIN_EMAIL ?? ADMIN_EMAIL;
   const demoPassword = process.env.ADMIN_DEMO_PASSWORD ?? "";
 
