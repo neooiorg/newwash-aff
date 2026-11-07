@@ -70,15 +70,15 @@ function verifyAccessKey(accessKey: string, stored: string | null) {
   return timingSafeEqual(scryptSync(accessKey, salt, 64), Buffer.from(expected, "hex"));
 }
 
-export async function verifyAffiliateLogin(code: string, accessKey: string) {
+export async function verifyAffiliateLogin(account: string, password: string) {
   const result = await getPool().query<{ id: string; access_secret_hash: string | null }>(
     `SELECT id, access_secret_hash FROM newwash_affiliates
-     WHERE status = 'approved' AND upper(code) = upper($1)
+     WHERE status = 'approved' AND lower(contact) = lower($1)
      LIMIT 1`,
-    [code.trim()],
+    [account.trim()],
   );
   const affiliate = result.rows[0];
-  return affiliate && verifyAccessKey(accessKey.trim(), affiliate.access_secret_hash) ? affiliate.id : null;
+  return affiliate && verifyAccessKey(password.trim(), affiliate.access_secret_hash) ? affiliate.id : null;
 }
 
 export async function affiliateLoginAllowed(identifierHash: string) {

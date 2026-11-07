@@ -55,7 +55,7 @@ export function PartnersWorkspace() {
   const [origin, setOrigin] = useState("");
   const [storefrontUrl, setStorefrontUrl] = useState("");
   const [qrOpen, setQrOpen] = useState(false);
-  const [credential, setCredential] = useState<{ name: string; code: string; accessKey: string } | null>(null);
+  const [credential, setCredential] = useState<{ name: string; account: string; password: string } | null>(null);
   const qrRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -172,7 +172,7 @@ export function PartnersWorkspace() {
               Xem QR
             </Button>
             <Button variant="ghost" size="sm" disabled={Boolean(reviewingId)} onClick={() => resetAccess(row.original)}>
-              <KeyRound data-icon="inline-start" /> Mã vào
+              <KeyRound data-icon="inline-start" /> Đổi mật khẩu
             </Button>
           </div>
         ) : null,
@@ -193,7 +193,7 @@ export function PartnersWorkspace() {
       const updated = data.partner as Partner;
       setPartners((current) => current.map((item) => (item.id === updated.id ? updated : item)));
       if (decision === "approved" && data.accessKey && updated.code) {
-        setCredential({ name: updated.name, code: updated.code, accessKey: data.accessKey });
+        setCredential({ name: updated.name, account: updated.contact, password: data.accessKey });
       }
       toast.success(decision === "approved" ? `Đã duyệt và cấp mã ${updated.code}` : `Đã từ chối ${updated.name}`);
     } catch (cause) {
@@ -213,11 +213,11 @@ export function PartnersWorkspace() {
         body: JSON.stringify({ id: partner.id, decision: "reset_access" }),
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Không cấp lại được mã truy cập.");
-      setCredential({ name: partner.name, code: partner.code ?? "", accessKey: data.accessKey });
-      toast.success(`Đã cấp mã truy cập mới cho ${partner.name}`);
+      if (!response.ok) throw new Error(data.error || "Không cấp lại được mật khẩu.");
+      setCredential({ name: partner.name, account: partner.contact, password: data.accessKey });
+      toast.success(`Đã cấp mật khẩu mới cho ${partner.name}`);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Không cấp lại được mã truy cập.");
+      setError(cause instanceof Error ? cause.message : "Không cấp lại được mật khẩu.");
     } finally {
       setReviewingId("");
     }
@@ -343,23 +343,23 @@ export function PartnersWorkspace() {
           <DialogHeader>
             <DialogTitle>Thông tin đăng nhập cộng tác viên</DialogTitle>
             <DialogDescription>
-              Gửi riêng thông tin này cho {credential?.name}. Mã truy cập chỉ hiển thị trong lần cấp này.
+              Gửi riêng thông tin này cho {credential?.name}. Mật khẩu chỉ hiển thị trong lần cấp này.
             </DialogDescription>
           </DialogHeader>
           {credential && (
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <span className="text-muted-foreground text-xs">Mã affiliate</span>
-                <Input readOnly value={credential.code} />
+                <span className="text-muted-foreground text-xs">Tài khoản</span>
+                <Input readOnly value={credential.account} />
               </div>
               <div className="flex flex-col gap-2">
-                <span className="text-muted-foreground text-xs">Mã truy cập</span>
-                <Input readOnly value={credential.accessKey} />
+                <span className="text-muted-foreground text-xs">Mật khẩu</span>
+                <Input readOnly value={credential.password} />
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
-                  onClick={() => copy(`${credential.code}\n${credential.accessKey}`, "thông tin đăng nhập")}
+                  onClick={() => copy(`${credential.account}\n${credential.password}`, "thông tin đăng nhập")}
                 >
                   <Copy data-icon="inline-start" /> Sao chép thông tin
                 </Button>

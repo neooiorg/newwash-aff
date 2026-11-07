@@ -16,18 +16,18 @@ import {
 import { createHash } from "node:crypto";
 
 export async function loginAffiliate(_previous: string, formData: FormData): Promise<string> {
-  const code = String(formData.get("code") ?? "").trim();
-  const accessKey = String(formData.get("accessKey") ?? "").trim();
+  const account = String(formData.get("account") ?? "").trim();
+  const password = String(formData.get("password") ?? "").trim();
   const requestHeaders = await headers();
   const ip = requestHeaders.get("x-forwarded-for")?.split(",")[0]?.trim() || requestHeaders.get("x-real-ip") || "local";
-  const identifierHash = createHash("sha256").update(`${ip}|${code.toUpperCase()}`).digest("hex");
+  const identifierHash = createHash("sha256").update(`${ip}|${account.toLowerCase()}`).digest("hex");
   if (!(await affiliateLoginAllowed(identifierHash))) {
     return "Đã thử đăng nhập quá nhiều lần. Vui lòng chờ 15 phút rồi thử lại.";
   }
-  const affiliateId = await verifyAffiliateLogin(code, accessKey);
+  const affiliateId = await verifyAffiliateLogin(account, password);
   if (!affiliateId) {
     await recordAffiliateLoginFailure(identifierHash);
-    return "Mã affiliate hoặc mã truy cập không đúng, hoặc hồ sơ chưa được duyệt.";
+    return "Tài khoản hoặc mật khẩu không đúng, hoặc hồ sơ chưa được duyệt.";
   }
   await clearAffiliateLoginFailures(identifierHash);
   (await cookies()).set(AFFILIATE_COOKIE, makeAffiliateSession(affiliateId), affiliateCookieOptions);

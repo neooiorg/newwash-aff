@@ -9,11 +9,11 @@ import { Input } from "@/components/ui/input";
 import { loginAffiliate } from "../actions";
 
 export function AffiliateLoginForm({
-  defaultCode = "",
-  defaultAccessKey = "",
+  defaultAccount = "",
+  defaultPassword = "",
 }: {
-  defaultCode?: string;
-  defaultAccessKey?: string;
+  defaultAccount?: string;
+  defaultPassword?: string;
 }) {
   const [error, action, pending] = useActionState(loginAffiliate, "");
 
@@ -21,29 +21,29 @@ export function AffiliateLoginForm({
     <form action={action} className="flex flex-col gap-5">
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="affiliate-code">Mã affiliate</FieldLabel>
+          <FieldLabel htmlFor="affiliate-account">Tài khoản</FieldLabel>
           <Input
-            id="affiliate-code"
-            name="code"
+            id="affiliate-account"
+            name="account"
             autoComplete="username"
             required
-            maxLength={20}
-            defaultValue={defaultCode}
-            placeholder="Ví dụ: NGUYENVANA"
+            maxLength={100}
+            defaultValue={defaultAccount}
+            placeholder="Email hoặc số điện thoại"
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="affiliate-access-key">Mã truy cập</FieldLabel>
+          <FieldLabel htmlFor="affiliate-password">Mật khẩu</FieldLabel>
           <Input
-            id="affiliate-access-key"
-            name="accessKey"
+            id="affiliate-password"
+            name="password"
             type="password"
             autoComplete="current-password"
             required
             minLength={8}
             maxLength={32}
-            defaultValue={defaultAccessKey}
-            placeholder="Mã do NewWash cấp"
+            defaultValue={defaultPassword}
+            placeholder="Nhập mật khẩu"
           />
         </Field>
       </FieldGroup>

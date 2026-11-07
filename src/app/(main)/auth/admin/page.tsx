@@ -33,7 +33,7 @@ export default async function Page() {
               <AdminLoginForm demoEmail={demoEmail} demoPassword={demoPassword} />
             </TabsContent>
             <TabsContent value="affiliate" className="pt-4">
-              <AffiliateLoginForm defaultCode="MINHANHDEMO" defaultAccessKey="NEWWASH2026" />
+              <AffiliateLoginForm defaultAccount="minhanh.demo@newwash.local" defaultPassword="NewWash@2026" />
             </TabsContent>
           </Tabs>
         </div>

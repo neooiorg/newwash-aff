@@ -26,11 +26,11 @@ export default async function Page() {
           />
           <CardTitle className="pt-3 text-2xl">Thống kê cộng tác viên</CardTitle>
           <CardDescription>
-            Dành cho hồ sơ đã được duyệt. Dùng mã affiliate và mã truy cập riêng do NewWash cấp.
+            Dành cho hồ sơ đã được duyệt. Đăng nhập bằng tài khoản và mật khẩu do NewWash cấp.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
-          <AffiliateLoginForm defaultCode="MINHANHDEMO" defaultAccessKey="NEWWASH2026" />
+          <AffiliateLoginForm defaultAccount="minhanh.demo@newwash.local" defaultPassword="NewWash@2026" />
           <p className="text-muted-foreground text-center text-sm">
             Chưa đăng ký?{" "}
             <Link href="/affiliate/apply" className="text-foreground font-medium underline underline-offset-4">
