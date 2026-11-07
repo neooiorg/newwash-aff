@@ -2,13 +2,11 @@
 
 import { type FormEvent, useEffect, useState } from "react";
 
-import { CircleAlert } from "lucide-react";
 import { toast } from "sonner";
 
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ReferralOrder } from "@/lib/affiliates/types";
@@ -28,8 +26,6 @@ export function OrderManagementDialog({
   const [status, setStatus] = useState<OrderStatus>("Mới");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const details = order?.bookingDetails;
-
   useEffect(() => {
     setActualAmount(order?.orderAmount ? String(order.orderAmount) : "");
     setStatus(order?.status ?? "Mới");
@@ -66,44 +62,18 @@ export function OrderManagementDialog({
 
   return (
     <Dialog open={Boolean(order)} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-h-[min(90dvh,48rem)] overflow-y-auto sm:max-w-xl">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Cập nhật đơn hàng</DialogTitle>
-          <DialogDescription>{order?.id}: cân đồ, kiểm tra tình trạng rồi nhập số tiền thực tế.</DialogDescription>
+          <DialogTitle>Cập nhật giá và trạng thái</DialogTitle>
+          <DialogDescription>
+            {order ? `Đơn ${order.id}` : "Đơn hàng"}. Nhập giá thực tế và chọn trạng thái mới.
+          </DialogDescription>
         </DialogHeader>
-        {order ? (
-          <dl className="grid grid-cols-[auto_1fr] gap-x-5 gap-y-2 text-sm">
-            <dt className="text-muted-foreground">Khách hàng</dt>
-            <dd className="text-right font-medium">
-              {order.customer} · {order.phone}
-            </dd>
-            <dt className="text-muted-foreground">Dịch vụ</dt>
-            <dd className="text-right font-medium">{order.service}</dd>
-            <dt className="text-muted-foreground">Địa chỉ nhận</dt>
-            <dd className="text-right font-medium">{order.address}</dd>
-            <dt className="text-muted-foreground">Địa chỉ giao</dt>
-            <dd className="text-right font-medium">{details?.deliveryAddress ?? order.address}</dd>
-            <dt className="text-muted-foreground">Khách tạm tính</dt>
-            <dd className="text-right font-medium">
-              {details?.estimatedTotal ? `${details.estimatedTotal.toLocaleString("vi-VN")}đ` : "Chờ cân và báo giá"}
-            </dd>
-          </dl>
-        ) : null}
-
-        {!order?.orderAmount ? (
-          <Alert>
-            <CircleAlert />
-            <AlertTitle>Chưa ghi nhận doanh thu</AlertTitle>
-            <AlertDescription>
-              Hoa hồng chỉ được tính khi có giá thực tế và trạng thái “Hoàn tất giao”.
-            </AlertDescription>
-          </Alert>
-        ) : null}
 
         <form onSubmit={updateOrder} className="flex flex-col gap-4">
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="actual-order-amount">Số tiền thực tế</FieldLabel>
+              <FieldLabel htmlFor="actual-order-amount">Giá tiền thực tế</FieldLabel>
               <Input
                 id="actual-order-amount"
                 type="number"
@@ -112,9 +82,8 @@ export function OrderManagementDialog({
                 max={1_000_000_000}
                 value={actualAmount}
                 onChange={(event) => setActualAmount(event.target.value)}
-                placeholder="Nhập sau khi cân và kiểm tra đồ"
+                placeholder="Nhập số tiền"
               />
-              <FieldDescription>Đây là số tiền dùng để tính doanh thu và hoa hồng affiliate.</FieldDescription>
             </Field>
             <Field>
               <FieldLabel htmlFor="order-status">Trạng thái</FieldLabel>
