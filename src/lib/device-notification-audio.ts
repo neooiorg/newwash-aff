@@ -2,46 +2,60 @@
 
 const NOTIFICATION_SOUND = "/sounds/web-whatsapp.mp3";
 
-let notificationAudio: HTMLAudioElement | null = null;
-let audioUnlocked = false;
+let audioContext: AudioContext | null = null;
+let notificationBuffer: Promise<AudioBuffer | null> | null = null;
 
-function getNotificationAudio() {
+function getAudioContext() {
   if (typeof window === "undefined") return null;
-  if (notificationAudio) return notificationAudio;
+  if (audioContext && audioContext.state !== "closed") return audioContext;
 
-  notificationAudio = new Audio(NOTIFICATION_SOUND);
-  notificationAudio.preload = "auto";
-  notificationAudio.volume = 0.8;
-  return notificationAudio;
+  const AudioContextClass =
+    window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextClass) return null;
+  audioContext = new AudioContextClass();
+  return audioContext;
+}
+
+function getNotificationBuffer(context: AudioContext) {
+  notificationBuffer ??= fetch(NOTIFICATION_SOUND)
+    .then((response) => {
+      if (!response.ok) throw new Error("Không tải được âm báo.");
+      return response.arrayBuffer();
+    })
+    .then((buffer) => context.decodeAudioData(buffer))
+    .catch(() => null);
+  return notificationBuffer;
 }
 
 export async function unlockDeviceNotificationAudio() {
-  if (audioUnlocked) return;
-  const audio = getNotificationAudio();
-  if (!audio) return;
+  const context = getAudioContext();
+  if (!context) return;
 
-  audio.muted = true;
-  try {
-    await audio.play();
-    audio.pause();
-    audio.currentTime = 0;
-    audioUnlocked = true;
-  } catch {
-    audioUnlocked = false;
-  } finally {
-    audio.muted = false;
-  }
+  if (context.state === "suspended") await context.resume().catch(() => undefined);
+  if (context.state !== "running") return;
+
+  const source = context.createBufferSource();
+  source.buffer = context.createBuffer(1, 1, context.sampleRate);
+  source.connect(context.destination);
+  source.start();
+  void getNotificationBuffer(context);
 }
 
 export async function playDeviceNotificationChime() {
-  const audio = getNotificationAudio();
-  if (!audio) return;
+  const context = getAudioContext();
+  if (!context) return;
 
-  if (!audioUnlocked) await unlockDeviceNotificationAudio();
-  if (!audioUnlocked) return;
+  await unlockDeviceNotificationAudio();
+  if (context.state !== "running") return;
 
-  audio.pause();
-  audio.currentTime = 0;
-  audio.volume = 0.8;
-  await audio.play().catch(() => undefined);
+  const buffer = await getNotificationBuffer(context);
+  if (!buffer) return;
+
+  const source = context.createBufferSource();
+  const gain = context.createGain();
+  source.buffer = buffer;
+  gain.gain.value = 0.8;
+  source.connect(gain);
+  gain.connect(context.destination);
+  source.start();
 }
