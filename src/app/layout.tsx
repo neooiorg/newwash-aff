@@ -53,10 +53,11 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
           <PreferencesStoreProvider initialValues={PREFERENCE_DEFAULTS}>
             {children}
             <Toaster
-              position="top-right"
+              position="bottom-right"
+              className="font-sans"
               toastOptions={{
                 classNames: {
-                  toast: "!border-border !bg-popover !text-popover-foreground shadow-lg",
+                  toast: "!border-border !bg-popover !font-sans !text-popover-foreground shadow-lg",
                   title: "!font-semibold !text-popover-foreground",
                   description: "!text-popover-foreground/80",
                   icon: "!text-popover-foreground",

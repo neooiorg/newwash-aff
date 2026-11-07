@@ -36,7 +36,7 @@ export function NavUser({
   const { enabled: deviceNotificationsEnabled, setEnabled: setDeviceNotificationsEnabled } = useDeviceNotifications();
 
   async function updateDeviceNotifications(checked: boolean) {
-    if (checked) void unlockDeviceNotificationAudio();
+    if (checked) await unlockDeviceNotificationAudio();
     const result = await setDeviceNotificationsEnabled(checked);
     if (checked && !result.enabled) {
       toast.error("Chưa thể bật thông báo", {

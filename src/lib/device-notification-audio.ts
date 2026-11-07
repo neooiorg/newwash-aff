@@ -3,7 +3,7 @@
 let audioContext: AudioContext | null = null;
 
 function getAudioContext() {
-  if (audioContext) return audioContext;
+  if (audioContext && audioContext.state !== "closed") return audioContext;
   const AudioContextClass =
     window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContextClass) return null;
@@ -11,10 +11,19 @@ function getAudioContext() {
   return audioContext;
 }
 
-export function unlockDeviceNotificationAudio() {
+export async function unlockDeviceNotificationAudio() {
   const context = getAudioContext();
-  if (!context || context.state !== "suspended") return Promise.resolve();
-  return context.resume().catch(() => undefined);
+  if (!context) return;
+  if (context.state === "suspended") await context.resume().catch(() => undefined);
+  if (context.state !== "running") return;
+
+  const source = context.createBufferSource();
+  const gain = context.createGain();
+  source.buffer = context.createBuffer(1, 1, context.sampleRate);
+  gain.gain.value = 0;
+  source.connect(gain);
+  gain.connect(context.destination);
+  source.start();
 }
 
 export async function playDeviceNotificationChime() {
@@ -24,16 +33,21 @@ export async function playDeviceNotificationChime() {
   await unlockDeviceNotificationAudio();
   if (context.state !== "running") return;
 
-  const oscillator = context.createOscillator();
-  const gain = context.createGain();
-  oscillator.type = "sine";
-  oscillator.frequency.setValueAtTime(660, context.currentTime);
-  oscillator.frequency.exponentialRampToValueAtTime(880, context.currentTime + 0.1);
-  gain.gain.setValueAtTime(0.0001, context.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.12, context.currentTime + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, context.currentTime + 0.32);
-  oscillator.connect(gain);
-  gain.connect(context.destination);
-  oscillator.start();
-  oscillator.stop(context.currentTime + 0.34);
+  const playTone = (frequency: number, startOffset: number, duration: number) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const start = context.currentTime + startOffset;
+    oscillator.type = "sine";
+    oscillator.frequency.setValueAtTime(frequency, start);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(0.2, start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(start);
+    oscillator.stop(start + duration + 0.02);
+  };
+
+  playTone(660, 0, 0.18);
+  playTone(880, 0.16, 0.28);
 }
