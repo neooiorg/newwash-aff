@@ -79,9 +79,6 @@ export function OrdersWorkspace() {
   }, [refresh]);
   useAffiliateRealtime(["newwash_orders"], refresh);
 
-  const websiteOrders = orders.filter((order) => order.source === "website");
-  const newOrders = websiteOrders.filter((order) => order.status === "Mới").length;
-  const completedOrders = websiteOrders.filter((order) => order.status === "Hoàn tất giao").length;
   const columns = useMemo<DataTableColumn<ReferralOrder>[]>(
     () => [
       {
@@ -223,31 +220,12 @@ export function OrdersWorkspace() {
       <AffiliatePageHeader
         title="Đơn hàng"
         description="Cân và kiểm tra đồ, nhập số tiền thực tế rồi hoàn tất giao để ghi nhận doanh thu và hoa hồng."
-        actions={
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/affiliates/partners">Xem cộng tác viên</Link>
-          </Button>
-        }
       />
       {error && (
         <Alert variant="destructive">
           <AlertTitle>Không tải được đơn đặt</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
         </Alert>
-      )}
-
-      {!loading && (
-        <div className="text-muted-foreground flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-          <span>
-            Đơn từ website <strong className="text-foreground ml-1 font-semibold">{websiteOrders.length}</strong>
-          </span>
-          <span>
-            Đơn mới <strong className="text-foreground ml-1 font-semibold">{newOrders}</strong>
-          </span>
-          <span>
-            Hoàn tất giao <strong className="text-foreground ml-1 font-semibold">{completedOrders}</strong>
-          </span>
-        </div>
       )}
 
       {loading ? (
