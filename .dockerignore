@@ -9,6 +9,7 @@ output
 npm-debug.log*
 .env
 .env.*
+!.env
 !.env.example
 Dockerfile*
 README.md
