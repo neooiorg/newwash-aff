@@ -32,15 +32,32 @@ export function useAffiliateRealtime(
     let retry: ReturnType<typeof setTimeout> | undefined;
     let debounce: ReturnType<typeof setTimeout> | undefined;
     let active = true;
-    let delay = 1000;
+    let connecting = false;
+    let delay = 250;
 
     function refresh() {
       clearTimeout(debounce);
-      debounce = setTimeout(() => callback.current(), 100);
+      debounce = setTimeout(() => callback.current(), 16);
     }
 
-    async function connect() {
-      if (!active) return;
+    function scheduleReconnect() {
+      if (!active || retry) return;
+      setStatus("offline");
+      retry = setTimeout(() => {
+        retry = undefined;
+        void connect();
+      }, delay);
+      delay = Math.min(delay * 2, 5_000);
+    }
+
+    async function connect(immediate = false) {
+      if (!active || connecting || socket?.readyState === WebSocket.OPEN) return;
+      if (immediate) {
+        clearTimeout(retry);
+        retry = undefined;
+        delay = 250;
+      }
+      connecting = true;
       setStatus("connecting");
       try {
         const response = await fetch(`/api/realtime-ticket?scope=${scope}`, { cache: "no-store" });
@@ -51,16 +68,14 @@ export function useAffiliateRealtime(
         socketUrl.searchParams.set("ticket", ticket);
         socket = new WebSocket(socketUrl);
       } catch {
-        if (!active) return;
-        setStatus("offline");
-        retry = setTimeout(() => void connect(), delay);
-        delay = Math.min(delay * 2, 30_000);
+        connecting = false;
+        scheduleReconnect();
         return;
       }
       socket.addEventListener("open", () => {
-        delay = 1000;
+        connecting = false;
+        delay = 250;
         setStatus("live");
-        refresh();
       });
       socket.addEventListener("message", (event) => {
         try {
@@ -71,22 +86,30 @@ export function useAffiliateRealtime(
         }
       });
       socket.addEventListener("close", () => {
-        if (!active) return;
-        setStatus("offline");
-        retry = setTimeout(() => void connect(), delay);
-        delay = Math.min(delay * 2, 30_000);
+        connecting = false;
+        socket = undefined;
+        scheduleReconnect();
       });
       socket.addEventListener("error", () => socket?.close());
     }
 
     function onVisible() {
-      if (document.visibilityState === "visible") refresh();
+      if (document.visibilityState !== "visible") return;
+      if (socket?.readyState === WebSocket.OPEN) refresh();
+      else void connect(true);
     }
+
+    function onOnline() {
+      void connect(true);
+    }
+
     document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("online", onOnline);
     void connect();
     return () => {
       active = false;
       document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("online", onOnline);
       clearTimeout(retry);
       clearTimeout(debounce);
       socket?.close();
