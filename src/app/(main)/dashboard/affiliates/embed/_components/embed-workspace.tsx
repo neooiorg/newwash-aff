@@ -140,66 +140,36 @@ export function EmbedWorkspace() {
       )}
 
       <div className="grid min-w-0 gap-4 xl:grid-cols-2">
-        <div className="contents xl:flex xl:min-w-0 xl:flex-col xl:gap-4">
-          <Card className="order-1 xl:order-none">
-            <CardHeader>
-              <CardTitle>Website cửa hàng</CardTitle>
-              <CardDescription>Mọi mã QR affiliate sẽ dẫn khách đến địa chỉ này.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="storefront-url">Địa chỉ website</FieldLabel>
-                  {loading ? (
-                    <AsciiPanelSkeleton className="h-9 w-full" height={28} rows={2} />
-                  ) : (
-                    <Input
-                      id="storefront-url"
-                      type="url"
-                      value={storefrontUrl}
-                      onChange={(event) => setStorefrontUrl(event.target.value)}
-                      placeholder="https://giatui.vn/"
-                    />
-                  )}
-                  <FieldDescription>Đổi địa chỉ sẽ cần tải lại những mã QR đã phát hành.</FieldDescription>
-                </Field>
-                <Button className="self-start" disabled={savingUrl || loading} onClick={saveUrl}>
-                  {savingUrl ? "Đang lưu..." : "Lưu website"}
-                </Button>
-              </FieldGroup>
-            </CardContent>
-          </Card>
+        <Card className="min-w-0 xl:col-start-1 xl:row-start-1">
+          <CardHeader>
+            <CardTitle>Website cửa hàng</CardTitle>
+            <CardDescription>Mọi mã QR affiliate sẽ dẫn khách đến địa chỉ này.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="storefront-url">Địa chỉ website</FieldLabel>
+                {loading ? (
+                  <AsciiPanelSkeleton className="h-9 w-full" height={28} rows={2} />
+                ) : (
+                  <Input
+                    id="storefront-url"
+                    type="url"
+                    value={storefrontUrl}
+                    onChange={(event) => setStorefrontUrl(event.target.value)}
+                    placeholder="https://giatui.vn/"
+                  />
+                )}
+                <FieldDescription>Đổi địa chỉ sẽ cần tải lại những mã QR đã phát hành.</FieldDescription>
+              </Field>
+              <Button className="self-start" disabled={savingUrl || loading} onClick={saveUrl}>
+                {savingUrl ? "Đang lưu..." : "Lưu website"}
+              </Button>
+            </FieldGroup>
+          </CardContent>
+        </Card>
 
-          <Card className="order-3 min-w-0 xl:order-none">
-            <CardHeader>
-              <CardTitle>Mã nhúng</CardTitle>
-              <CardDescription>Dán một lần vào website để hiển thị nút và popup đặt lịch.</CardDescription>
-              <CardAction>
-                <Button size="sm" variant="outline" onClick={copyScript} disabled={!origin}>
-                  {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
-                  {copied ? "Đã sao chép" : "Sao chép"}
-                </Button>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="flex min-w-0 flex-col gap-3">
-              {loading ? (
-                <AsciiPanelSkeleton className="h-24 w-full" height={72} rows={4} />
-              ) : origin ? (
-                <CodeBlock size="sm">
-                  <CodeBlockHeader>
-                    <CodeBlockTitle>HTML</CodeBlockTitle>
-                  </CodeBlockHeader>
-                  <CodeBlockContent wrap>{script}</CodeBlockContent>
-                </CodeBlock>
-              ) : null}
-              <p className="text-muted-foreground text-xs leading-relaxed">
-                Khách đặt qua popup sẽ xuất hiện trong Đơn hàng. Admin cập nhật giá thực tế sau khi nhận đồ.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="order-2 min-w-0 self-start xl:order-none">
+        <Card className="min-w-0 self-start xl:col-start-2 xl:row-span-2 xl:row-start-1">
           <CardHeader>
             <CardTitle>Vị trí nút đặt lịch</CardTitle>
             <CardDescription>Khoảng cách từ mép phải và mép dưới của website, tính bằng pixel.</CardDescription>
@@ -280,6 +250,34 @@ export function EmbedWorkspace() {
                 {savingPosition ? "Đang lưu..." : "Lưu vị trí"}
               </Button>
             </FieldGroup>
+          </CardContent>
+        </Card>
+
+        <Card className="min-w-0 xl:col-start-1 xl:row-start-2">
+          <CardHeader>
+            <CardTitle>Mã nhúng</CardTitle>
+            <CardDescription>Dán một lần vào website để hiển thị nút và popup đặt lịch.</CardDescription>
+            <CardAction>
+              <Button size="sm" variant="outline" onClick={copyScript} disabled={!origin}>
+                {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+                {copied ? "Đã sao chép" : "Sao chép"}
+              </Button>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="flex min-w-0 flex-col gap-3">
+            {loading ? (
+              <AsciiPanelSkeleton className="h-24 w-full" height={72} rows={4} />
+            ) : origin ? (
+              <CodeBlock size="sm">
+                <CodeBlockHeader>
+                  <CodeBlockTitle>HTML</CodeBlockTitle>
+                </CodeBlockHeader>
+                <CodeBlockContent wrap>{script}</CodeBlockContent>
+              </CodeBlock>
+            ) : null}
+            <p className="text-muted-foreground text-xs leading-relaxed">
+              Khách đặt qua popup sẽ xuất hiện trong Đơn hàng. Admin cập nhật giá thực tế sau khi nhận đồ.
+            </p>
           </CardContent>
         </Card>
       </div>
