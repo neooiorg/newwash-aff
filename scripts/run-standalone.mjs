@@ -1,5 +1,7 @@
 import { spawn, spawnSync } from "node:child_process";
 
+console.log(`Resend email delivery: ${process.env.RESEND_API_KEY?.trim() ? "configured" : "missing"}.`);
+
 const migration = spawnSync(process.execPath, ["scripts/migrate-db.mjs"], {
   stdio: "inherit",
   env: process.env,
