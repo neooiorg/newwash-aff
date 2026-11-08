@@ -42,6 +42,7 @@ interface DataTableProps<TData extends RowData> {
   getRowId: (row: TData) => string;
   searchColumn: string;
   searchPlaceholder: string;
+  hideSearchColumn?: boolean;
   emptyMessage: string;
   selectedRowId?: string;
   initialSorting?: SortingState;
@@ -58,6 +59,7 @@ export function DataTable<TData extends RowData>({
   getRowId,
   searchColumn,
   searchPlaceholder,
+  hideSearchColumn = true,
   emptyMessage,
   selectedRowId,
   initialSorting = [],
@@ -72,7 +74,7 @@ export function DataTable<TData extends RowData>({
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibilityState>({
     ...initialColumnVisibility,
-    [searchColumn]: false,
+    ...(hideSearchColumn ? { [searchColumn]: false } : {}),
   });
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
 
@@ -168,7 +170,7 @@ export function DataTable<TData extends RowData>({
             <DropdownMenuGroup>
               {table
                 .getAllLeafColumns()
-                .filter((column) => column.getCanHide() && column.id !== searchColumn)
+                .filter((column) => column.getCanHide() && (!hideSearchColumn || column.id !== searchColumn))
                 .map((column) => (
                   <DropdownMenuCheckboxItem
                     key={column.id}

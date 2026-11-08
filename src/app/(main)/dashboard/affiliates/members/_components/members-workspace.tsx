@@ -182,6 +182,7 @@ export function MembersWorkspace() {
           getRowId={(member) => member.id}
           searchColumn="member"
           searchPlaceholder="Tìm tên hoặc email thành viên"
+          hideSearchColumn={false}
           emptyMessage="Chưa có thành viên quản trị."
         />
       )}
