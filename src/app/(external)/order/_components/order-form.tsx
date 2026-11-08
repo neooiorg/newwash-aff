@@ -31,7 +31,6 @@ import type { BookingService, ServiceCategory } from "@/lib/booking-services";
 import { getLaundryServiceIcon } from "@/lib/laundry-service-icons";
 
 import { dateChoices, formatVnd, localDateKey, timeSlots } from "./booking-options";
-import { VietMapAddressInput } from "./vietmap-address-input";
 import WizardExpandable, { type WizardNavigateContext, type WizardStep } from "./wizard-expandable";
 
 type OrderFormProps = { affiliateCode: string; embedded: boolean; preview?: boolean; hostOrigin: string };
@@ -49,6 +48,17 @@ function OrderSuccess({ orderId, onClose }: { orderId: string; onClose: () => vo
   return (
     <ScrollArea className="min-h-0 flex-1 overflow-hidden">
       <section className="relative mx-auto flex min-h-[calc(88dvh-1.5rem)] w-full max-w-lg flex-col items-center justify-center overflow-hidden px-6 py-10 text-center sm:px-10 sm:py-14">
+        <DrawerClose asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 rounded-full sm:top-4 sm:right-4"
+            aria-label="Đóng thông báo đặt đơn"
+          >
+            <X />
+          </Button>
+        </DrawerClose>
         <div className="relative mb-7 flex size-48 items-center justify-center sm:size-56">
           <span className="absolute inset-x-5 top-7 bottom-3 -rotate-6 rounded-[40%_60%_52%_48%] bg-yellow-100" />
           <Sparkles aria-hidden="true" className="absolute top-8 right-2 size-7 text-yellow-400 sm:right-0 sm:size-8" />
@@ -305,7 +315,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
     let active = true;
     let socket: WebSocket | undefined;
     let retry: ReturnType<typeof setTimeout> | undefined;
-    let retryDelay = 1000;
+    let retryDelay = 50;
     async function loadServices() {
       try {
         const response = await fetch("/api/booking-services", { cache: "no-store" });
@@ -339,7 +349,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       url.search = "";
       socket = new WebSocket(url);
       socket.addEventListener("open", () => {
-        retryDelay = 1000;
+        retryDelay = 50;
       });
       socket.addEventListener("message", (event) => {
         try {
@@ -354,7 +364,7 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
       socket.addEventListener("close", () => {
         if (!active) return;
         retry = setTimeout(connect, retryDelay);
-        retryDelay = Math.min(retryDelay * 2, 30_000);
+        retryDelay = Math.min(retryDelay * 2, 1_000);
       });
       socket.addEventListener("error", () => socket?.close());
     }
@@ -666,11 +676,12 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
           <FieldGroup>
             <Field>
               <FieldLabel htmlFor="pickup-address">Địa chỉ nhận đồ</FieldLabel>
-              <VietMapAddressInput
+              <Input
                 id="pickup-address"
                 value={pickupAddress}
-                onValueChange={setPickupAddress}
+                onChange={(event) => setPickupAddress(event.target.value)}
                 placeholder="Số nhà, đường, phường, quận"
+                autoComplete="street-address"
               />
             </Field>
             <Field orientation="horizontal">
@@ -686,11 +697,12 @@ export function OrderForm({ affiliateCode, embedded, preview = false, hostOrigin
             {!sameDeliveryAddress && (
               <Field>
                 <FieldLabel htmlFor="delivery-address">Địa chỉ giao đồ *</FieldLabel>
-                <VietMapAddressInput
+                <Input
                   id="delivery-address"
                   value={deliveryAddress}
-                  onValueChange={setDeliveryAddress}
+                  onChange={(event) => setDeliveryAddress(event.target.value)}
                   placeholder="Số nhà, đường, phường, quận"
+                  autoComplete="street-address"
                 />
               </Field>
             )}

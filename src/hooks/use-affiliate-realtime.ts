@@ -30,14 +30,12 @@ export function useAffiliateRealtime(
       : `${location.protocol === "https:" ? "wss" : "ws"}://${location.hostname}:3002${defaultPath}`;
     let socket: WebSocket | undefined;
     let retry: ReturnType<typeof setTimeout> | undefined;
-    let debounce: ReturnType<typeof setTimeout> | undefined;
     let active = true;
     let connecting = false;
-    let delay = 250;
+    let delay = 50;
 
     function refresh() {
-      clearTimeout(debounce);
-      debounce = setTimeout(() => callback.current(), 16);
+      callback.current();
     }
 
     function scheduleReconnect() {
@@ -47,7 +45,7 @@ export function useAffiliateRealtime(
         retry = undefined;
         void connect();
       }, delay);
-      delay = Math.min(delay * 2, 5_000);
+      delay = Math.min(delay * 2, 1_000);
     }
 
     async function connect(immediate = false) {
@@ -55,7 +53,7 @@ export function useAffiliateRealtime(
       if (immediate) {
         clearTimeout(retry);
         retry = undefined;
-        delay = 250;
+        delay = 50;
       }
       connecting = true;
       setStatus("connecting");
@@ -74,7 +72,7 @@ export function useAffiliateRealtime(
       }
       socket.addEventListener("open", () => {
         connecting = false;
-        delay = 250;
+        delay = 50;
         setStatus("live");
       });
       socket.addEventListener("message", (event) => {
@@ -111,7 +109,6 @@ export function useAffiliateRealtime(
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("online", onOnline);
       clearTimeout(retry);
-      clearTimeout(debounce);
       socket?.close();
     };
   }, [scope, tableKey]);

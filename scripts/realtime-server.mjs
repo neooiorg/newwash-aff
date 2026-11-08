@@ -115,7 +115,6 @@ server.on("upgrade", (request, socket, head) => {
   }
   sockets.handleUpgrade(request, socket, head, (client) => {
     client.scope = scope;
-    if (scope === "admin" || scope === "affiliate") client.ticketExpiresAt = Date.now() + 5 * 60 * 1000;
     if (scope === "affiliate") client.affiliateId = affiliateId;
     sockets.emit("connection", client);
   });
@@ -139,15 +138,13 @@ const heartbeat = setInterval(() => {
       continue;
     }
     client.isAlive = false;
-    if ((client.scope === "admin" || client.scope === "affiliate") && Date.now() > client.ticketExpiresAt)
-      client.close(1008, "Ticket expired");
-    else if (client.readyState === WebSocket.OPEN) client.ping();
+    if (client.readyState === WebSocket.OPEN) client.ping();
   }
 }, 30_000);
 
 let listener;
 let retryTimer;
-let retryMs = 1000;
+let retryMs = 100;
 let stopping = false;
 
 async function connectDatabase() {
@@ -165,7 +162,7 @@ async function connectDatabase() {
       // Reconnect continues even if the stale connection cannot close cleanly.
     });
     retryTimer = setTimeout(connectDatabase, retryMs);
-    retryMs = Math.min(retryMs * 2, 30_000);
+    retryMs = Math.min(retryMs * 2, 5_000);
   };
   client.on("error", (error) => {
     console.error("Realtime database connection:", error.message);
@@ -202,7 +199,7 @@ async function connectDatabase() {
   try {
     await client.connect();
     await client.query("LISTEN newwash_changes");
-    retryMs = 1000;
+    retryMs = 100;
     console.log("Realtime database listener connected.");
     for (const socket of sockets.clients)
       if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "ready" }));
