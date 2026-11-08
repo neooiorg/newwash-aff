@@ -5,12 +5,12 @@ import { useCallback, useEffect, useState } from "react";
 import { Check, CircleDollarSign, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TableWorkspaceSkeleton } from "@/components/workspace-skeletons";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 
 import { AffiliatePageHeader } from "../../_components/affiliate-page-header";
@@ -189,7 +189,7 @@ export function PayoutsWorkspace() {
         </Alert>
       )}
       {loading ? (
-        <AsciiPanelSkeleton className="h-80 w-full" />
+        <TableWorkspaceSkeleton label="Đang tải yêu cầu rút tiền" seed={17} />
       ) : (
         <DataTable
           data={items}

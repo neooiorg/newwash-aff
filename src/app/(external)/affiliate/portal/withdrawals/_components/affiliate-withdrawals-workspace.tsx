@@ -6,7 +6,6 @@ import { ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
 
 import { AffiliatePageHeader } from "@/app/(main)/dashboard/affiliates/_components/affiliate-page-header";
-import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +13,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { WalletWorkspaceSkeleton } from "@/components/workspace-skeletons";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 
 type Withdrawal = {
@@ -132,122 +132,114 @@ export function AffiliateWithdrawalsWorkspace() {
         </Alert>
       )}
       {loading ? (
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Đang tải số dư ví">
-          {Array.from({ length: 4 }, (_, index) => (
-            <AsciiPanelSkeleton
-              key={`wallet-balance-${index + 1}`}
-              className="h-36 w-full"
-              height={112}
-              rows={7}
-              seed={index + 31}
-            />
-          ))}
-        </section>
+        <WalletWorkspaceSkeleton />
       ) : (
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Số dư hoa hồng">
-          {metrics.map((metric) => (
-            <Card key={metric.label}>
+        <>
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Số dư hoa hồng">
+            {metrics.map((metric) => (
+              <Card key={metric.label}>
+                <CardHeader>
+                  <CardDescription>{metric.label}</CardDescription>
+                  <CardAction>
+                    <ArrowUpRight className="size-4 text-muted-foreground" />
+                  </CardAction>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-2">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="text-3xl leading-none tracking-tight tabular-nums">{vnd(metric.value)}</span>
+                    <Badge variant="outline">{metric.badge}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{metric.detail}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </section>
+          <div className="grid items-start gap-4 xl:grid-cols-12">
+            <Card className="xl:col-span-4">
               <CardHeader>
-                <CardDescription>{metric.label}</CardDescription>
-                <CardAction>
-                  <ArrowUpRight className="text-muted-foreground size-4" />
-                </CardAction>
+                <CardTitle>Yêu cầu rút tiền</CardTitle>
+                <CardDescription>Tối thiểu 10.000đ. Yêu cầu mới sẽ tạm giữ số dư tương ứng.</CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-3xl leading-none tracking-tight tabular-nums">{vnd(metric.value)}</span>
-                  <Badge variant="outline">{metric.badge}</Badge>
-                </div>
-                <p className="text-muted-foreground text-sm">{metric.detail}</p>
+              <CardContent>
+                <form onSubmit={submit} className="flex flex-col gap-5">
+                  <FieldGroup>
+                    <Field>
+                      <FieldLabel htmlFor="withdrawal-amount">Số tiền</FieldLabel>
+                      <Input
+                        id="withdrawal-amount"
+                        name="amount"
+                        type="number"
+                        min="10000"
+                        max={balance?.available}
+                        step="1000"
+                        required
+                      />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="withdrawal-bank">Ngân hàng</FieldLabel>
+                      <Input id="withdrawal-bank" name="bankName" placeholder="Ví dụ: Vietcombank" required />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="withdrawal-account">Số tài khoản</FieldLabel>
+                      <Input id="withdrawal-account" name="accountNumber" inputMode="numeric" required />
+                    </Field>
+                    <Field>
+                      <FieldLabel htmlFor="withdrawal-holder">Chủ tài khoản</FieldLabel>
+                      <Input id="withdrawal-holder" name="accountHolder" placeholder="NGUYEN VAN A" required />
+                    </Field>
+                  </FieldGroup>
+                  <Button type="submit" disabled={saving || !balance || balance.available < 10_000}>
+                    {saving ? "Đang gửi..." : "Gửi yêu cầu"}
+                  </Button>
+                </form>
               </CardContent>
             </Card>
-          ))}
-        </section>
-      )}
-      <div className="grid items-start gap-4 xl:grid-cols-12">
-        <Card className="xl:col-span-4">
-          <CardHeader>
-            <CardTitle>Yêu cầu rút tiền</CardTitle>
-            <CardDescription>Tối thiểu 10.000đ. Yêu cầu mới sẽ tạm giữ số dư tương ứng.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={submit} className="flex flex-col gap-5">
-              <FieldGroup>
-                <Field>
-                  <FieldLabel htmlFor="withdrawal-amount">Số tiền</FieldLabel>
-                  <Input
-                    id="withdrawal-amount"
-                    name="amount"
-                    type="number"
-                    min="10000"
-                    max={balance?.available}
-                    step="1000"
-                    required
-                  />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="withdrawal-bank">Ngân hàng</FieldLabel>
-                  <Input id="withdrawal-bank" name="bankName" placeholder="Ví dụ: Vietcombank" required />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="withdrawal-account">Số tài khoản</FieldLabel>
-                  <Input id="withdrawal-account" name="accountNumber" inputMode="numeric" required />
-                </Field>
-                <Field>
-                  <FieldLabel htmlFor="withdrawal-holder">Chủ tài khoản</FieldLabel>
-                  <Input id="withdrawal-holder" name="accountHolder" placeholder="NGUYEN VAN A" required />
-                </Field>
-              </FieldGroup>
-              <Button type="submit" disabled={saving || !balance || balance.available < 10_000}>
-                {saving ? "Đang gửi..." : "Gửi yêu cầu"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-        <Card className="xl:col-span-8">
-          <CardHeader>
-            <CardTitle>Lịch sử rút tiền</CardTitle>
-            <CardDescription>Trạng thái được cập nhật ngay khi quản trị viên xử lý.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Ngày</TableHead>
-                  <TableHead>Số tiền</TableHead>
-                  <TableHead>Ngân hàng</TableHead>
-                  <TableHead>Trạng thái</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {withdrawals.length ? (
-                  withdrawals.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell>{new Intl.DateTimeFormat("vi-VN").format(new Date(item.requestedAt))}</TableCell>
-                      <TableCell className="font-medium tabular-nums">{vnd(item.amount)}</TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
-                          <span>{item.bankName}</span>
-                          <span className="text-muted-foreground text-xs">{item.accountNumber}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={statusVariant(item.status)}>{statusLabel[item.status]}</Badge>
-                      </TableCell>
+            <Card className="xl:col-span-8">
+              <CardHeader>
+                <CardTitle>Lịch sử rút tiền</CardTitle>
+                <CardDescription>Trạng thái được cập nhật ngay khi quản trị viên xử lý.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Ngày</TableHead>
+                      <TableHead>Số tiền</TableHead>
+                      <TableHead>Ngân hàng</TableHead>
+                      <TableHead>Trạng thái</TableHead>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-muted-foreground h-24 text-center">
-                      Chưa có yêu cầu rút tiền.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+                  </TableHeader>
+                  <TableBody>
+                    {withdrawals.length ? (
+                      withdrawals.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{new Intl.DateTimeFormat("vi-VN").format(new Date(item.requestedAt))}</TableCell>
+                          <TableCell className="font-medium tabular-nums">{vnd(item.amount)}</TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span>{item.bankName}</span>
+                              <span className="text-muted-foreground text-xs">{item.accountNumber}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={statusVariant(item.status)}>{statusLabel[item.status]}</Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-muted-foreground h-24 text-center">
+                          Chưa có yêu cầu rút tiền.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        </>
+      )}
     </div>
   );
 }

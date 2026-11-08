@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Mail, MoreHorizontal, RefreshCw, UserCheck, UserRoundPlus, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 
-import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import {
   AlertDialog,
@@ -32,6 +31,7 @@ import {
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { TableWorkspaceSkeleton } from "@/components/workspace-skeletons";
 
 import { AffiliatePageHeader } from "../../_components/affiliate-page-header";
 
@@ -237,7 +237,7 @@ export function MembersWorkspace() {
 
       {error ? <FieldError>{error}</FieldError> : null}
       {loading ? (
-        <AsciiPanelSkeleton className="h-72 w-full" />
+        <TableWorkspaceSkeleton label="Đang tải danh sách thành viên" seed={26} />
       ) : (
         <DataTable
           data={members}

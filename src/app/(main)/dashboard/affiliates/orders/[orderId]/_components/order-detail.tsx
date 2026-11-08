@@ -6,11 +6,11 @@ import Link from "next/link";
 
 import { ArrowLeft, SquarePen } from "lucide-react";
 
-import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { OrderDetailSkeleton } from "@/components/workspace-skeletons";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { ReferralOrder } from "@/lib/affiliates/types";
 
@@ -63,7 +63,7 @@ export function OrderDetail({ orderId }: { orderId: string }) {
   }, [refresh]);
   useAffiliateRealtime(["newwash_orders"], refresh);
 
-  if (loading) return <AsciiPanelSkeleton className="h-96 w-full" />;
+  if (loading) return <OrderDetailSkeleton />;
 
   if (!order) {
     return (

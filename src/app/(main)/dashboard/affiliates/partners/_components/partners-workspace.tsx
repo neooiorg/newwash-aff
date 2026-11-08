@@ -8,7 +8,6 @@ import { BarChart3, Check, Copy, Download, Eye, LockKeyhole, MoreHorizontal, X }
 import { QRCodeSVG } from "qrcode.react";
 import { toast } from "sonner";
 
-import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -34,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { TableWorkspaceSkeleton } from "@/components/workspace-skeletons";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import { referralUrl as buildReferralUrl } from "@/lib/affiliates/links";
 import type { Partner } from "@/lib/affiliates/types";
@@ -335,7 +335,7 @@ export function PartnersWorkspace() {
       )}
 
       {loading ? (
-        <AsciiPanelSkeleton className="h-80 w-full" />
+        <TableWorkspaceSkeleton label="Đang tải danh sách cộng tác viên" seed={20} />
       ) : (
         <DataTable
           data={sortedPartners}

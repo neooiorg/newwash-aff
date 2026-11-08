@@ -6,7 +6,6 @@ import Link from "next/link";
 
 import { Eye, MoreHorizontal, SquarePen } from "lucide-react";
 
-import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -19,6 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { TableWorkspaceSkeleton } from "@/components/workspace-skeletons";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { ReferralOrder } from "@/lib/affiliates/types";
 
@@ -246,7 +246,7 @@ export function OrdersWorkspace() {
       )}
 
       {loading ? (
-        <AsciiPanelSkeleton className="h-80 w-full" />
+        <TableWorkspaceSkeleton label="Đang tải đơn hàng" seed={23} />
       ) : (
         <DataTable
           data={orders}

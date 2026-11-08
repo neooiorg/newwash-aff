@@ -7,7 +7,6 @@ import Image from "next/image";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
-import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -27,6 +26,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { TableWorkspaceSkeleton } from "@/components/workspace-skeletons";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { BookingService } from "@/lib/booking-services";
 import { getLaundryServiceIcon, laundryServiceIcons } from "@/lib/laundry-service-icons";
@@ -234,7 +234,7 @@ export function ServicesWorkspace() {
         </Alert>
       )}
       {loading ? (
-        <AsciiPanelSkeleton className="h-80 w-full" />
+        <TableWorkspaceSkeleton label="Đang tải danh sách dịch vụ" seed={14} />
       ) : (
         <DataTable
           data={services}

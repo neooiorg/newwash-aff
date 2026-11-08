@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { AffiliatePageHeader } from "@/app/(main)/dashboard/affiliates/_components/affiliate-page-header";
-import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
 import type { DataTableFilterDefinition } from "@/components/data-table/data-table-filter";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { TableWorkspaceSkeleton } from "@/components/workspace-skeletons";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import type { ReferralOrder } from "@/lib/affiliates/types";
 
@@ -134,7 +134,7 @@ export function AffiliateOrdersWorkspace() {
         </Alert>
       ) : null}
       {loading ? (
-        <AsciiPanelSkeleton className="h-80 w-full" />
+        <TableWorkspaceSkeleton label="Đang tải đơn hàng của bạn" seed={11} />
       ) : (
         <DataTable
           data={orders}
