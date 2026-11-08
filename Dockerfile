@@ -21,7 +21,7 @@ ENV NEXT_PUBLIC_REALTIME_URL=$NEXT_PUBLIC_REALTIME_URL
 ENV HUSKY=0
 COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN touch .env && npm run build
 
 FROM node:22-alpine AS runner
 
@@ -43,6 +43,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/scripts/realtime-server.mjs /real
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/run-standalone.mjs ./scripts/run-standalone.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/migrate-db.mjs ./scripts/migrate-db.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/db ./db
+COPY --from=builder --chown=nextjs:nodejs /app/.env ./.env
+
+RUN chmod 400 .env
 
 USER nextjs
 EXPOSE 3000 3002

@@ -1,4 +1,28 @@
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+
+function loadRuntimeEnvironment(path = ".env") {
+  if (!existsSync(path)) return;
+
+  for (const rawLine of readFileSync(path, "utf8").split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("#")) continue;
+
+    const separator = line.indexOf("=");
+    if (separator < 1) continue;
+
+    const key = line.slice(0, separator).replace(/^export\s+/, "").trim();
+    let value = line.slice(separator + 1).trim();
+
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+
+    if (process.env[key] === undefined) process.env[key] = value;
+  }
+}
+
+loadRuntimeEnvironment();
 
 console.log(`Resend email delivery: ${process.env.RESEND_API_KEY?.trim() ? "configured" : "missing"}.`);
 
