@@ -249,6 +249,9 @@ export function PartnersWorkspace() {
         setCredential({ name: updated.name, account: updated.contact, password: data.accessKey });
       }
       toast.success(decision === "approved" ? `Đã duyệt và cấp mã ${updated.code}` : `Đã từ chối ${updated.name}`);
+      if (decision === "approved" && !data.emailSent) {
+        toast.warning(data.emailWarning || "Đã duyệt hồ sơ nhưng chưa gửi được email thông báo.");
+      }
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Không cập nhật được hồ sơ.");
     } finally {

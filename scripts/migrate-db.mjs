@@ -28,6 +28,7 @@ const migrations = [
   "020_order_affiliate_commission.sql",
   "021_seed_nttantts_affiliate.sql",
   "022_affiliate_lock.sql",
+  "023_admin_members.sql",
 ];
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL, connectionTimeoutMillis: 10000 });
 

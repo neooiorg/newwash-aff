@@ -4,6 +4,7 @@ import { createAffiliateAccessKey, hashAffiliateAccessKey } from "@/lib/affiliat
 import { adminUnavailable, isAdminRequest, isSameOriginRequest } from "@/lib/affiliates/access";
 import { getPool } from "@/lib/affiliates/db";
 import type { Partner } from "@/lib/affiliates/types";
+import { sendAffiliateApprovedEmail } from "@/lib/email/resend";
 
 export const runtime = "nodejs";
 
@@ -129,8 +130,8 @@ export async function PATCH(request: Request) {
       return Response.json({ partner: toPartner(result.rows[0]) });
     }
 
-    const application = await pool.query<{ name: string; access_secret_hash: string | null }>(
-      "SELECT name, access_secret_hash FROM newwash_affiliates WHERE id = $1 AND status = 'pending'",
+    const application = await pool.query<{ name: string; contact: string; access_secret_hash: string | null }>(
+      "SELECT name, contact, access_secret_hash FROM newwash_affiliates WHERE id = $1 AND status = 'pending'",
       [input.data.id],
     );
     if (!application.rows[0]) return Response.json({ error: "Hồ sơ không còn chờ duyệt." }, { status: 409 });
@@ -147,7 +148,21 @@ export async function PATCH(request: Request) {
           [input.data.id, code, accessSecretHash],
         );
         if (!result.rows[0]) return Response.json({ error: "Hồ sơ không còn chờ duyệt." }, { status: 409 });
-        return Response.json({ partner: toPartner(result.rows[0]), ...(accessKey ? { accessKey } : {}) });
+        const partner = toPartner(result.rows[0]);
+        const emailResult = z.email().safeParse(application.rows[0].contact).success
+          ? await sendAffiliateApprovedEmail({
+              email: application.rows[0].contact,
+              name: application.rows[0].name,
+              code,
+              affiliateId: partner.id,
+            })
+          : { sent: false as const, error: "Hồ sơ không dùng địa chỉ email." };
+        return Response.json({
+          partner,
+          ...(accessKey ? { accessKey } : {}),
+          emailSent: emailResult.sent,
+          ...(!emailResult.sent ? { emailWarning: emailResult.error } : {}),
+        });
       } catch (error) {
         if ((error as { code?: string }).code === "23505") continue;
         throw error;

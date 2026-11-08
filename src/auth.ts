@@ -13,6 +13,15 @@ async function resolveGoogleIdentity(email: string) {
 
   if (normalizedEmail === adminEmail) return { role: "admin" as const, affiliateId: null };
 
+  const adminMember = await getPool().query<{ id: string }>(
+    `SELECT id
+     FROM newwash_admin_members
+     WHERE status = 'active' AND lower(email) = $1
+     LIMIT 1`,
+    [normalizedEmail],
+  );
+  if (adminMember.rows[0]) return { role: "admin" as const, affiliateId: null };
+
   const result = await getPool().query<{ id: string }>(
     `SELECT id
      FROM newwash_affiliates
