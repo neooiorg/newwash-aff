@@ -15,6 +15,15 @@ if (!sessionSecret || !databaseUrl) {
   process.exit(1);
 }
 
+function directListenerUrl(connectionString) {
+  if (process.env.REALTIME_DATABASE_URL) return process.env.REALTIME_DATABASE_URL;
+  const url = new URL(connectionString);
+  if (url.hostname.endsWith(".neon.tech")) url.hostname = url.hostname.replace("-pooler.", ".");
+  return url.toString();
+}
+
+const listenerDatabaseUrl = directListenerUrl(databaseUrl);
+
 function validSession(cookieHeader) {
   try {
     const value = cookieHeader
@@ -151,7 +160,7 @@ let stopping = false;
 async function connectDatabase() {
   if (stopping) return;
   const client = new pg.Client({
-    connectionString: databaseUrl,
+    connectionString: listenerDatabaseUrl,
     connectionTimeoutMillis: 10000,
     keepAlive: true,
     keepAliveInitialDelayMillis: 10_000,
