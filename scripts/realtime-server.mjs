@@ -16,7 +16,6 @@ if (!sessionSecret || !databaseUrl) {
 }
 
 function directListenerUrl(connectionString) {
-  if (process.env.REALTIME_DATABASE_URL) return process.env.REALTIME_DATABASE_URL;
   const url = new URL(connectionString);
   if (url.hostname.endsWith(".neon.tech")) url.hostname = url.hostname.replace("-pooler.", ".");
   return url.toString();
