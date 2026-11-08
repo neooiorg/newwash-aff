@@ -144,6 +144,7 @@ const heartbeat = setInterval(() => {
 
 let listener;
 let retryTimer;
+let listenerHeartbeat;
 let retryMs = 100;
 let stopping = false;
 
@@ -153,10 +154,13 @@ async function connectDatabase() {
     connectionString: databaseUrl,
     connectionTimeoutMillis: 10000,
     keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
   });
   listener = client;
   const reconnect = () => {
     if (listener !== client || stopping) return;
+    clearInterval(listenerHeartbeat);
+    listenerHeartbeat = undefined;
     listener = undefined;
     client.end().catch(() => {
       // Reconnect continues even if the stale connection cannot close cleanly.
@@ -199,6 +203,11 @@ async function connectDatabase() {
   try {
     await client.connect();
     await client.query("LISTEN newwash_changes");
+    clearInterval(listenerHeartbeat);
+    listenerHeartbeat = setInterval(() => {
+      if (listener !== client || stopping) return;
+      client.query("SELECT 1").catch(reconnect);
+    }, 30_000);
     retryMs = 100;
     console.log("Realtime database listener connected.");
     for (const socket of sockets.clients)
@@ -217,6 +226,7 @@ server.listen(port, process.env.REALTIME_HOST || "0.0.0.0", () => {
 function stop() {
   stopping = true;
   clearInterval(heartbeat);
+  clearInterval(listenerHeartbeat);
   clearTimeout(retryTimer);
   for (const socket of sockets.clients) socket.close(1001, "Server stopping");
   listener?.end().catch(() => {
