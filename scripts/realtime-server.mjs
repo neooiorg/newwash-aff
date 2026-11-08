@@ -17,6 +17,7 @@ if (!sessionSecret || !pooledUrl) {
 
 function directConnectionString(connectionString) {
   const url = new URL(connectionString);
+  if (!url.hostname.includes("-pooler.")) return connectionString;
   url.hostname = url.hostname.replace(/-pooler(?=\.)/, "");
   return url.toString();
 }
@@ -128,6 +129,10 @@ server.on("upgrade", (request, socket, head) => {
 });
 
 sockets.on("connection", (client) => {
+  client.isAlive = true;
+  client.on("pong", () => {
+    client.isAlive = true;
+  });
   client.on("error", () => {
     // Socket errors are isolated to the affected browser connection.
   });
@@ -136,6 +141,11 @@ sockets.on("connection", (client) => {
 
 const heartbeat = setInterval(() => {
   for (const client of sockets.clients) {
+    if (!client.isAlive) {
+      client.terminate();
+      continue;
+    }
+    client.isAlive = false;
     if ((client.scope === "admin" || client.scope === "affiliate") && Date.now() > client.ticketExpiresAt)
       client.close(1008, "Ticket expired");
     else if (client.readyState === WebSocket.OPEN) client.ping();
