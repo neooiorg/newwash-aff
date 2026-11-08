@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from "react";
 
 import Image from "next/image";
-import Link from "next/link";
 
 import { Check, Copy, ExternalLink, Eye } from "lucide-react";
 import { toast } from "sonner";
@@ -11,12 +10,11 @@ import { toast } from "sonner";
 import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CodeBlock, CodeBlockContent, CodeBlockHeader, CodeBlockTitle } from "@/components/ui/code-block";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldGroup, FieldLabel, FieldLegend, FieldSet } from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { useAffiliateRealtime } from "@/hooks/use-affiliate-realtime";
 import { referralUrl } from "@/lib/affiliates/links";
@@ -126,10 +124,11 @@ export function EmbedWorkspace() {
     <div className="@container/main flex flex-col gap-4 md:gap-6">
       <AffiliatePageHeader
         title="Nhúng đặt đơn"
-        description="Mọi QR mở website cửa hàng; popup chuyển yêu cầu đặt đơn cho chính website xử lý."
+        description="Cấu hình website đích, mã nhúng và vị trí nút đặt lịch."
         actions={
-          <Button asChild variant="outline" size="sm">
-            <Link href="/dashboard/affiliates/partners">Quản lý mã affiliate</Link>
+          <Button variant="outline" size="sm" disabled={loading || !origin} onClick={() => setPreviewOpen(true)}>
+            <Eye data-icon="inline-start" />
+            Xem trước popup
           </Button>
         }
       />
@@ -140,68 +139,92 @@ export function EmbedWorkspace() {
         </Alert>
       )}
 
-      <div className="max-w-3xl">
-        <Card className="min-w-0">
+      <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+        <div className="contents xl:flex xl:min-w-0 xl:flex-col xl:gap-4">
+          <Card className="order-1 xl:order-none">
+            <CardHeader>
+              <CardTitle>Website cửa hàng</CardTitle>
+              <CardDescription>Mọi mã QR affiliate sẽ dẫn khách đến địa chỉ này.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="storefront-url">Địa chỉ website</FieldLabel>
+                  {loading ? (
+                    <AsciiPanelSkeleton className="h-9 w-full" height={28} rows={2} />
+                  ) : (
+                    <Input
+                      id="storefront-url"
+                      type="url"
+                      value={storefrontUrl}
+                      onChange={(event) => setStorefrontUrl(event.target.value)}
+                      placeholder="https://giatui.vn/"
+                    />
+                  )}
+                  <FieldDescription>Đổi địa chỉ sẽ cần tải lại những mã QR đã phát hành.</FieldDescription>
+                </Field>
+                <Button className="self-start" disabled={savingUrl || loading} onClick={saveUrl}>
+                  {savingUrl ? "Đang lưu..." : "Lưu website"}
+                </Button>
+              </FieldGroup>
+            </CardContent>
+          </Card>
+
+          <Card className="order-3 min-w-0 xl:order-none">
+            <CardHeader>
+              <CardTitle>Mã nhúng</CardTitle>
+              <CardDescription>Dán một lần vào website để hiển thị nút và popup đặt lịch.</CardDescription>
+              <CardAction>
+                <Button size="sm" variant="outline" onClick={copyScript} disabled={!origin}>
+                  {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
+                  {copied ? "Đã sao chép" : "Sao chép"}
+                </Button>
+              </CardAction>
+            </CardHeader>
+            <CardContent className="flex min-w-0 flex-col gap-3">
+              {loading ? (
+                <AsciiPanelSkeleton className="h-24 w-full" height={72} rows={4} />
+              ) : origin ? (
+                <CodeBlock size="sm">
+                  <CodeBlockHeader>
+                    <CodeBlockTitle>HTML</CodeBlockTitle>
+                  </CodeBlockHeader>
+                  <CodeBlockContent wrap>{script}</CodeBlockContent>
+                </CodeBlock>
+              ) : null}
+              <p className="text-muted-foreground text-xs leading-relaxed">
+                Khách đặt qua popup sẽ xuất hiện trong Đơn hàng. Admin cập nhật giá thực tế sau khi nhận đồ.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="order-2 min-w-0 self-start xl:order-none">
           <CardHeader>
-            <CardTitle>Website và popup đặt đơn</CardTitle>
-            <CardDescription>
-              Nhúng script một lần trên website. Mỗi QR mang mã aff riêng tới cùng URL này và tự mở popup.
-            </CardDescription>
+            <CardTitle>Vị trí nút đặt lịch</CardTitle>
+            <CardDescription>Khoảng cách từ mép phải và mép dưới của website, tính bằng pixel.</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-5">
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="storefront-url">URL website cửa hàng</FieldLabel>
-                <div className="flex flex-wrap gap-2">
-                  <Input
-                    id="storefront-url"
-                    type="url"
-                    className="min-w-56 flex-1"
-                    value={storefrontUrl}
-                    onChange={(event) => setStorefrontUrl(event.target.value)}
-                    placeholder="https://giatui.example/"
-                  />
-                  <Button variant="outline" disabled={savingUrl || loading} onClick={saveUrl}>
-                    {savingUrl ? "Đang lưu..." : "Lưu URL"}
-                  </Button>
+            <div className="relative h-48 overflow-hidden rounded-lg border bg-muted/40">
+              <span className="text-muted-foreground absolute top-3 left-4 text-xs">Xem trước vị trí</span>
+              <div
+                className="absolute transition-[right,bottom] duration-200"
+                style={{ right: `${embedOffsetX / 4}px`, bottom: `${embedOffsetY / 4}px` }}
+              >
+                <div className="flex items-center gap-2 rounded-full bg-yellow-400 py-1 pr-3 pl-1 text-xs font-semibold text-zinc-950 shadow-sm">
+                  <Image alt="" aria-hidden="true" height={30} src="/laundry-icons/washer-lightning.png" width={30} />
+                  Đặt lịch giặt ủi
                 </div>
-                <p className="text-muted-foreground text-xs">
-                  Chưa cấu hình sẽ chưa phát QR; nút Xem trước dùng website mẫu. Sau khi đổi URL, hãy tải lại các mã QR
-                  đã phát hành.
-                </p>
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="embed-code">Mã affiliate để xem thử QR</FieldLabel>
-                <Input
-                  id="embed-code"
-                  list="affiliate-codes"
-                  value={code}
-                  onChange={(event) => setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
-                  maxLength={20}
-                  placeholder="Chọn hoặc nhập mã affiliate"
-                />
-                <datalist id="affiliate-codes">
-                  {partners.map((partner) => (
-                    <option key={partner.id} value={partner.code ?? ""}>
-                      {partner.name}
-                    </option>
-                  ))}
-                </datalist>
-              </Field>
-              <Separator />
-              <FieldSet>
-                <FieldLegend>Vị trí nút đặt lịch</FieldLegend>
-                <FieldDescription>
-                  Điều chỉnh khoảng cách theo pixel tính từ mép phải và mép dưới của website.
-                </FieldDescription>
-                <FieldGroup className="grid gap-5 sm:grid-cols-2">
-                  <Field>
-                    <div className="flex items-center justify-between gap-3">
-                      <FieldLabel htmlFor="embed-offset-x">Cách mép phải</FieldLabel>
-                      <span className="text-sm font-medium tabular-nums">{embedOffsetX}px</span>
-                    </div>
+              </div>
+            </div>
+            <FieldGroup>
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="embed-offset-x">Cách mép phải</FieldLabel>
+                  <div className="flex items-center gap-3">
                     <Slider
                       aria-label="Khoảng cách từ mép phải"
+                      className="min-w-0 flex-1"
                       max={200}
                       min={0}
                       onValueChange={(value) => setEmbedOffsetX(value[0] ?? 0)}
@@ -210,6 +233,8 @@ export function EmbedWorkspace() {
                     />
                     <Input
                       id="embed-offset-x"
+                      aria-label="Cách mép phải, pixel"
+                      className="w-20 shrink-0 tabular-nums"
                       inputMode="numeric"
                       max={400}
                       min={0}
@@ -217,14 +242,14 @@ export function EmbedWorkspace() {
                       type="number"
                       value={embedOffsetX}
                     />
-                  </Field>
-                  <Field>
-                    <div className="flex items-center justify-between gap-3">
-                      <FieldLabel htmlFor="embed-offset-y">Cách mép dưới</FieldLabel>
-                      <span className="text-sm font-medium tabular-nums">{embedOffsetY}px</span>
-                    </div>
+                  </div>
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="embed-offset-y">Cách mép dưới</FieldLabel>
+                  <div className="flex items-center gap-3">
                     <Slider
                       aria-label="Khoảng cách từ mép dưới"
+                      className="min-w-0 flex-1"
                       max={200}
                       min={0}
                       onValueChange={(value) => setEmbedOffsetY(value[0] ?? 0)}
@@ -233,6 +258,8 @@ export function EmbedWorkspace() {
                     />
                     <Input
                       id="embed-offset-y"
+                      aria-label="Cách mép dưới, pixel"
+                      className="w-20 shrink-0 tabular-nums"
                       inputMode="numeric"
                       max={400}
                       min={0}
@@ -240,89 +267,47 @@ export function EmbedWorkspace() {
                       type="number"
                       value={embedOffsetY}
                     />
-                  </Field>
-                </FieldGroup>
-                <div className="relative h-72 overflow-hidden rounded-xl border bg-gradient-to-br from-background to-muted/60">
-                  <div className="absolute inset-x-5 top-5 flex items-center gap-2 text-xs text-muted-foreground">
-                    <span className="size-2 rounded-full bg-border" />
-                    Xem trước vị trí trên website
                   </div>
-                  <div
-                    className="absolute origin-bottom-right scale-75 transition-[right,bottom] duration-300 ease-out sm:scale-100"
-                    style={{
-                      right: `${Math.min(embedOffsetX, 96)}px`,
-                      bottom: `${Math.min(embedOffsetY, 160)}px`,
-                    }}
-                  >
-                    <Button
-                      className="h-14 gap-2 rounded-full border border-yellow-500 bg-yellow-400 py-1.5 pr-4 pl-1.5 font-bold tracking-tight text-zinc-950 shadow-lg transition-transform duration-200 hover:-translate-y-0.5 hover:bg-yellow-300 hover:shadow-xl active:translate-y-0 active:scale-[0.98]"
-                      type="button"
-                    >
-                      <span className="grid size-10 place-items-center rounded-full bg-yellow-50 shadow-sm">
-                        <Image
-                          alt=""
-                          aria-hidden="true"
-                          height={36}
-                          src="/laundry-icons/washer-lightning.png"
-                          width={36}
-                        />
-                      </span>
-                      Đặt lịch giặt ủi
-                    </Button>
-                  </div>
-                </div>
-                <Button
-                  className="self-start"
-                  disabled={savingPosition || loading}
-                  onClick={saveButtonPosition}
-                  type="button"
-                  variant="outline"
-                >
-                  {savingPosition ? "Đang lưu..." : "Lưu vị trí nút"}
-                </Button>
-              </FieldSet>
-            </FieldGroup>
-            {loading ? (
-              <AsciiPanelSkeleton className="h-28 w-full" height={80} rows={5} />
-            ) : origin ? (
-              <CodeBlock size="sm">
-                <CodeBlockHeader>
-                  <CodeBlockTitle>HTML</CodeBlockTitle>
-                </CodeBlockHeader>
-                <CodeBlockContent wrap>{script}</CodeBlockContent>
-              </CodeBlock>
-            ) : null}
-            <p className="text-muted-foreground text-sm">
-              Đơn từ popup được lưu trực tiếp vào NewWash Aff và xuất hiện realtime trong trang Đơn hàng. Website chỉ
-              admin sẽ nhập giá thực tế và cập nhật trạng thái giao hàng trực tiếp trong hệ thống.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={copyScript} disabled={!origin}>
-                {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
-                {copied ? "Đã sao chép" : "Sao chép script"}
+                </Field>
+              </div>
+              <Button
+                className="self-start"
+                disabled={savingPosition || loading}
+                onClick={saveButtonPosition}
+                type="button"
+                variant="outline"
+              >
+                {savingPosition ? "Đang lưu..." : "Lưu vị trí"}
               </Button>
-            </div>
+            </FieldGroup>
           </CardContent>
         </Card>
       </div>
-
-      <Button
-        className="fixed right-6 bottom-6 rounded-full shadow-lg"
-        size="lg"
-        disabled={loading || !origin}
-        onClick={() => setPreviewOpen(true)}
-      >
-        <Eye data-icon="inline-start" /> Xem trước
-      </Button>
 
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>
         <DialogContent className="w-[calc(100%-2rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Xem trước popup trên website</DialogTitle>
-            <DialogDescription>
-              {code ? `Mô phỏng khách quét QR có mã ${code}.` : "Mô phỏng khách truy cập website và bấm nút đặt lịch."}
-            </DialogDescription>
+            <DialogDescription>Kiểm tra trải nghiệm đặt lịch trước khi đưa mã nhúng lên website.</DialogDescription>
           </DialogHeader>
+          <Field>
+            <FieldLabel htmlFor="embed-code">Mã affiliate dùng để xem thử</FieldLabel>
+            <Input
+              id="embed-code"
+              list="affiliate-codes"
+              value={code}
+              onChange={(event) => setCode(event.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ""))}
+              maxLength={20}
+              placeholder="Chọn hoặc nhập mã affiliate"
+            />
+            <datalist id="affiliate-codes">
+              {partners.map((partner) => (
+                <option key={partner.id} value={partner.code ?? ""}>
+                  {partner.name}
+                </option>
+              ))}
+            </datalist>
+          </Field>
           {previewOpen && origin && (
             <iframe
               title="Xem trước biểu mẫu đặt đơn"
