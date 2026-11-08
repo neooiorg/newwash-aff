@@ -16,7 +16,7 @@ const applicationInput = z.object({
 
 const decisionInput = z.object({
   id: z.uuid(),
-  decision: z.enum(["approved", "rejected", "reset_access"]),
+  decision: z.enum(["approved", "rejected", "locked"]),
 });
 
 type PartnerRow = {
@@ -106,16 +106,16 @@ export async function PATCH(request: Request) {
 
   const pool = getPool();
   try {
-    if (input.data.decision === "reset_access") {
-      const accessKey = createAffiliateAccessKey();
+    if (input.data.decision === "locked") {
       const result = await pool.query<PartnerRow>(
-        `UPDATE newwash_affiliates SET access_secret_hash = $2
+        `UPDATE newwash_affiliates SET status = 'locked'
          WHERE id = $1 AND status = 'approved'
          RETURNING id, name, contact, channel, code, status, created_at`,
-        [input.data.id, hashAffiliateAccessKey(accessKey)],
+        [input.data.id],
       );
-      if (!result.rows[0]) return Response.json({ error: "Cộng tác viên chưa được duyệt." }, { status: 409 });
-      return Response.json({ partner: toPartner(result.rows[0]), accessKey });
+      if (!result.rows[0])
+        return Response.json({ error: "Chỉ có thể khóa tài khoản đang hoạt động." }, { status: 409 });
+      return Response.json({ partner: toPartner(result.rows[0]) });
     }
 
     if (input.data.decision === "rejected") {

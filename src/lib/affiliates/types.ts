@@ -5,7 +5,7 @@ export interface Partner {
   code: string | null;
   channel: string;
   createdAt: string;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "locked";
 }
 
 export interface ReferralOrder {
