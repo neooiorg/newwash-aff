@@ -42,7 +42,7 @@ BEGIN
       'order_created',
       'Có đơn giặt ủi mới',
       display_code || ' · ' || display_customer || ' · ' || NEW.service || amount_label,
-      '/dashboard/affiliates/orders',
+      '/dashboard/affiliates/orders/' || NEW.id::text,
       jsonb_build_object('orderId', NEW.id)
     );
 
@@ -66,7 +66,7 @@ BEGIN
         'order_completed',
         'Đơn hàng đã giao thành công',
         display_code || ' · ' || display_customer || amount_label,
-        '/dashboard/affiliates/orders',
+        '/dashboard/affiliates/orders/' || NEW.id::text,
         jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
       );
 
@@ -94,7 +94,7 @@ BEGIN
         'order_status',
         'Đơn hàng đổi trạng thái',
         display_code || ' chuyển sang “' || NEW.status || '”',
-        '/dashboard/affiliates/orders',
+        '/dashboard/affiliates/orders/' || NEW.id::text,
         jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
       );
 

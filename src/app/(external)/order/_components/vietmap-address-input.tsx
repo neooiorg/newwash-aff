@@ -63,7 +63,11 @@ export function VietMapAddressInput({
       items={suggestions}
       value={selected}
       inputValue={value}
-      onInputValueChange={(nextValue) => {
+      onInputValueChange={(nextValue, eventDetails) => {
+        // Base UI also emits an input-value change while committing an item.
+        // Let onValueChange own that transition so the selected address is not
+        // immediately cleared again inside the drawer.
+        if (eventDetails.isItemPress) return;
         setSelected(null);
         onValueChange(nextValue);
       }}

@@ -62,7 +62,7 @@ BEGIN
       'order_created',
       'Có đơn giặt ủi mới',
       display_code || ' · ' || display_customer || ' · ' || NEW.service || amount_label,
-      '/dashboard/affiliates/orders',
+      '/dashboard/affiliates/orders/' || NEW.id::text,
       jsonb_build_object('orderId', NEW.id)
     );
 
@@ -74,7 +74,7 @@ BEGIN
         'order_created',
         'Bạn vừa ghi nhận một đơn mới',
         display_code || ' · ' || NEW.service || amount_label,
-        '/affiliate/portal',
+        '/affiliate/portal/orders',
         jsonb_build_object('orderId', NEW.id)
       );
     END IF;
@@ -86,7 +86,7 @@ BEGIN
         'order_completed',
         'Đơn hàng đã giao thành công',
         display_code || ' · ' || display_customer || amount_label,
-        '/dashboard/affiliates/orders',
+        '/dashboard/affiliates/orders/' || NEW.id::text,
         jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
       );
 
@@ -106,7 +106,7 @@ BEGIN
           'commission_earned',
           'Hoa hồng vừa được ghi nhận',
           display_code || ' · ' || coalesce(commission_label, 'Đơn hàng đã hoàn tất.'),
-          '/affiliate/portal',
+          '/affiliate/portal/orders',
           jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
         );
       END IF;
@@ -117,7 +117,7 @@ BEGIN
         'order_status',
         'Đơn hàng đổi trạng thái',
         display_code || ' chuyển sang “' || NEW.status || '”',
-        '/dashboard/affiliates/orders',
+        '/dashboard/affiliates/orders/' || NEW.id::text,
         jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
       );
 
@@ -129,7 +129,7 @@ BEGIN
           'order_status',
           'Đơn affiliate đã cập nhật',
           display_code || ' chuyển sang “' || NEW.status || '”',
-          '/affiliate/portal',
+          '/affiliate/portal/orders',
           jsonb_build_object('orderId', NEW.id, 'status', NEW.status)
         );
       END IF;
