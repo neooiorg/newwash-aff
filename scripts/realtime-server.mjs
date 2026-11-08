@@ -7,19 +7,12 @@ import { createServer } from "node:http";
 const port = Number(process.env.REALTIME_PORT || 3002);
 const appPort = Number(process.env.PORT || 3001);
 const sessionSecret = process.env.ADMIN_SESSION_SECRET;
-const pooledUrl = process.env.REALTIME_DATABASE_URL || process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL;
 const allowedOrigin = process.env.APP_ORIGIN;
 
-if (!sessionSecret || !pooledUrl) {
+if (!sessionSecret || !databaseUrl) {
   console.error("Realtime needs ADMIN_SESSION_SECRET and DATABASE_URL.");
   process.exit(1);
-}
-
-function directConnectionString(connectionString) {
-  const url = new URL(connectionString);
-  if (!url.hostname.includes("-pooler.")) return connectionString;
-  url.hostname = url.hostname.replace(/-pooler(?=\.)/, "");
-  return url.toString();
 }
 
 function validSession(cookieHeader) {
@@ -160,7 +153,7 @@ let stopping = false;
 async function connectDatabase() {
   if (stopping) return;
   const client = new pg.Client({
-    connectionString: directConnectionString(pooledUrl),
+    connectionString: databaseUrl,
     connectionTimeoutMillis: 10000,
     keepAlive: true,
   });
