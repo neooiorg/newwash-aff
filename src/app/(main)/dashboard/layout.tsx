@@ -6,11 +6,12 @@ import { redirect } from "next/navigation";
 import { cn } from "cn";
 
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
+import { auth } from "@/auth";
 import { AsciiPageReveal } from "@/components/ascii-feedback";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { Separator } from "@/components/ui/separator";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { users } from "@/data/users";
+import { rootUser } from "@/data/users";
 import { hasAdminSession } from "@/lib/admin-auth";
 import { getPreference } from "@/server/server-actions";
 
@@ -20,6 +21,15 @@ import { ThemeSwitcher } from "./_components/header/theme-switcher";
 
 export default async function Layout({ children }: Readonly<{ children: ReactNode }>) {
   if (!(await hasAdminSession())) redirect("/auth/admin");
+  const session = await auth();
+  const user =
+    session?.user.role === "admin"
+      ? {
+          name: session.user.name ?? rootUser.name,
+          email: session.user.email ?? rootUser.email,
+          image: session.user.image,
+        }
+      : rootUser;
   const cookieStore = await cookies();
   const defaultOpen = cookieStore.get("sidebar_state")?.value !== "false";
   const [variant, collapsible] = await Promise.all([
@@ -36,7 +46,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
         } as React.CSSProperties
       }
     >
-      <AppSidebar variant={variant} collapsible={collapsible} />
+      <AppSidebar user={user} variant={variant} collapsible={collapsible} />
       <SidebarInset
         className={cn(
           "[html[data-content-layout=centered]_&>*]:mx-auto",
@@ -66,7 +76,7 @@ export default async function Layout({ children }: Readonly<{ children: ReactNod
             <div className="flex items-center gap-2">
               <NotificationCenter scope="admin" />
               <ThemeSwitcher />
-              <AccountSwitcher users={users} />
+              <AccountSwitcher user={user} />
             </div>
           </div>
         </header>

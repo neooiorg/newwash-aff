@@ -7,6 +7,7 @@ import { cn } from "cn";
 
 import { ThemeSwitcher } from "@/app/(main)/dashboard/_components/header/theme-switcher";
 import { AppSidebar } from "@/app/(main)/dashboard/_components/sidebar/app-sidebar";
+import { auth } from "@/auth";
 import { AsciiPageReveal } from "@/components/ascii-feedback";
 import { NotificationCenter } from "@/components/notifications/notification-center";
 import { Separator } from "@/components/ui/separator";
@@ -18,10 +19,13 @@ import { getPreference } from "@/server/server-actions";
 export default async function AffiliatePortalLayout({ children }: Readonly<{ children: ReactNode }>) {
   const affiliateId = await getApprovedAffiliateSessionId();
   if (!affiliateId) redirect("/auth/admin?mode=affiliate");
-  const result = await getPool().query<{ name: string; code: string }>(
-    "SELECT name, coalesce(code, '') AS code FROM newwash_affiliates WHERE id = $1 AND status = 'approved'",
-    [affiliateId],
-  );
+  const [result, session] = await Promise.all([
+    getPool().query<{ name: string; code: string; contact: string }>(
+      "SELECT name, coalesce(code, '') AS code, contact FROM newwash_affiliates WHERE id = $1 AND status = 'approved'",
+      [affiliateId],
+    ),
+    auth(),
+  ]);
   const affiliate = result.rows[0];
   if (!affiliate) redirect("/auth/admin?mode=affiliate");
 
@@ -39,7 +43,11 @@ export default async function AffiliatePortalLayout({ children }: Readonly<{ chi
     >
       <AppSidebar
         mode="affiliate"
-        user={{ name: affiliate.name, email: affiliate.code }}
+        user={{
+          name: session?.user.name || affiliate.name,
+          email: session?.user.email || affiliate.contact || affiliate.code,
+          image: session?.user.role === "affiliate" ? session.user.image : null,
+        }}
         variant={variant}
         collapsible={collapsible}
       />

@@ -3,6 +3,7 @@ import "server-only";
 import { cookies } from "next/headers";
 
 import { auth } from "@/auth";
+import { getPool } from "@/lib/affiliates/db";
 
 import { createHmac, scryptSync, timingSafeEqual } from "node:crypto";
 
@@ -43,7 +44,18 @@ export function isValidAdminSession(value: string | undefined): boolean {
 
 export async function hasAdminSession(): Promise<boolean> {
   if (isValidAdminSession((await cookies()).get(ADMIN_COOKIE)?.value)) return true;
-  return (await auth())?.user.role === "admin";
+  const session = await auth();
+  if (session?.user.role !== "admin" || !session.user.email) return false;
+
+  const email = session.user.email.trim().toLowerCase();
+  const primaryEmail = (process.env.GOOGLE_ADMIN_EMAIL || process.env.ADMIN_EMAIL || ADMIN_EMAIL).trim().toLowerCase();
+  if (email === primaryEmail) return true;
+
+  const member = await getPool().query<{ id: string }>(
+    "SELECT id FROM newwash_admin_members WHERE status = 'active' AND lower(email) = $1 LIMIT 1",
+    [email],
+  );
+  return Boolean(member.rows[0]);
 }
 
 export const adminCookieOptions = {

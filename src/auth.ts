@@ -42,17 +42,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (!user.email || profile?.email_verified === false) return false;
       return Boolean(await resolveGoogleIdentity(user.email));
     },
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, profile }) {
       if (account && user.email) {
         const identity = await resolveGoogleIdentity(user.email);
         token.role = identity?.role;
         token.affiliateId = identity?.affiliateId;
+        const profileImage = typeof profile?.picture === "string" ? profile.picture : user.image;
+        if (profileImage) token.picture = profileImage;
       }
       return token;
     },
     async session({ session, token }) {
       session.user.role = token.role as NewWashRole | undefined;
       session.user.affiliateId = typeof token.affiliateId === "string" ? token.affiliateId : null;
+      session.user.image = typeof token.picture === "string" ? token.picture : session.user.image;
       return session;
     },
   },

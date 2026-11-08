@@ -13,6 +13,11 @@ const inviteInput = z.object({
   name: z.string().trim().max(80).optional(),
 });
 
+const memberActionInput = z.object({
+  id: z.uuid(),
+  action: z.enum(["revoke", "restore"]),
+});
+
 type AdminMemberRow = {
   id: string;
   email: string;
@@ -51,7 +56,7 @@ export async function GET(request: Request) {
       id: "primary-admin",
       email: primaryEmail,
       name:
-        session?.user.email?.toLowerCase() === primaryEmail ? session.user.name || "NewWash Admin" : "NewWash Admin",
+        session?.user.email?.toLowerCase() === primaryEmail ? (session.user.name ?? "NewWash Admin") : "NewWash Admin",
       status: "active" as const,
       invitedAt: null,
       acceptedAt: null,
@@ -117,5 +122,45 @@ export async function POST(request: Request) {
     );
   } catch {
     return Response.json({ error: "Không tạo được lời mời quản trị." }, { status: 503 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  if (!(await isAdminRequest(request))) return adminUnavailable();
+  if (!isSameOriginRequest(request)) return Response.json({ error: "Origin không hợp lệ." }, { status: 403 });
+
+  const input = memberActionInput.safeParse(await request.json().catch(() => null));
+  if (!input.success) return Response.json({ error: "Thao tác thành viên không hợp lệ." }, { status: 400 });
+
+  try {
+    const result = await getPool().query<AdminMemberRow>(
+      input.data.action === "revoke"
+        ? `UPDATE newwash_admin_members
+           SET status = 'revoked', invite_token_hash = NULL, invite_expires_at = NULL, updated_at = now()
+           WHERE id = $1 AND status <> 'revoked'
+           RETURNING id, email, name, status, invited_at, accepted_at`
+        : `UPDATE newwash_admin_members
+           SET status = 'active', updated_at = now()
+           WHERE id = $1 AND status = 'revoked' AND accepted_at IS NOT NULL
+           RETURNING id, email, name, status, invited_at, accepted_at`,
+      [input.data.id],
+    );
+
+    const member = result.rows[0];
+    if (!member) {
+      return Response.json(
+        {
+          error:
+            input.data.action === "restore"
+              ? "Tài khoản chưa từng xác nhận lời mời. Hãy gửi lại lời mời thay vì kích hoạt trực tiếp."
+              : "Không tìm thấy thành viên có thể vô hiệu hóa.",
+        },
+        { status: 409 },
+      );
+    }
+
+    return Response.json({ member: toMember(member) });
+  } catch {
+    return Response.json({ error: "Không cập nhật được trạng thái thành viên." }, { status: 503 });
   }
 }

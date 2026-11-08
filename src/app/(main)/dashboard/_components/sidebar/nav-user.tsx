@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 import { logoutAdmin } from "@/app/(main)/auth/admin/actions";
 import { logoutAffiliate } from "@/app/(main)/auth/admin/affiliate-actions";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,7 +26,7 @@ export function NavUser({
   user,
   mode = "admin",
 }: {
-  readonly user: { readonly name: string; readonly email: string };
+  readonly user: { readonly name: string; readonly email: string; readonly image?: string | null };
   readonly mode?: "admin" | "affiliate";
 }) {
   const { isMobile } = useSidebar();
@@ -34,6 +34,12 @@ export function NavUser({
   const accountLabel = mode === "affiliate" ? "Tổng quan của tôi" : "Tài khoản admin";
   const logoutAction = mode === "affiliate" ? logoutAffiliate : logoutAdmin;
   const { enabled: deviceNotificationsEnabled, setEnabled: setDeviceNotificationsEnabled } = useDeviceNotifications();
+  const initials = user.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(-2)
+    .map((part) => part[0]?.toUpperCase())
+    .join("");
 
   async function updateDeviceNotifications(checked: boolean) {
     if (checked) await unlockDeviceNotificationAudio();
@@ -55,7 +61,8 @@ export function NavUser({
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton size="lg" className="data-[state=open]:bg-sidebar-accent">
               <Avatar className="size-8 rounded-lg">
-                <AvatarFallback className="rounded-lg">NW</AvatarFallback>
+                {user.image ? <AvatarImage src={user.image} alt={user.name} referrerPolicy="no-referrer" /> : null}
+                <AvatarFallback className="rounded-lg">{initials || "NW"}</AvatarFallback>
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>

@@ -14,6 +14,10 @@ function sender() {
   return process.env.RESEND_FROM_EMAIL || "NewWash Aff <notifications@neooi.com>";
 }
 
+function logoUrl() {
+  return `${appOrigin()}/newwash-logo.png`;
+}
+
 async function sendEmail(
   payload: Parameters<Resend["emails"]["send"]>[0],
   idempotencyKey: string,
@@ -49,7 +53,7 @@ export async function sendAdminInviteEmail({
       from: sender(),
       to: email,
       subject: "Bạn được mời tham gia quản trị NewWash Aff",
-      react: <AdminInviteEmail name={name} acceptUrl={acceptUrl} />,
+      react: <AdminInviteEmail name={name} acceptUrl={acceptUrl} logoUrl={logoUrl()} />,
     },
     `admin-invite/${token.slice(0, 24)}`,
   );
@@ -71,7 +75,14 @@ export async function sendAffiliateApprovedEmail({
       from: sender(),
       to: email,
       subject: `Hồ sơ affiliate ${code} đã được duyệt`,
-      react: <AffiliateApprovedEmail name={name} code={code} portalUrl={`${appOrigin()}/auth/admin?mode=affiliate`} />,
+      react: (
+        <AffiliateApprovedEmail
+          name={name}
+          code={code}
+          portalUrl={`${appOrigin()}/auth/admin?mode=affiliate`}
+          logoUrl={logoUrl()}
+        />
+      ),
     },
     `affiliate-approved/${affiliateId}`,
   );

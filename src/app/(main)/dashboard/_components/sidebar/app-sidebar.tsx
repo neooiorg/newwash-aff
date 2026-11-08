@@ -41,7 +41,7 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   mode?: "admin" | "affiliate";
-  user?: { name: string; email: string };
+  user?: { name: string; email: string; image?: string | null };
 }) {
   const { sidebarVariant, sidebarCollapsible, isSynced } = usePreferencesStore(
     useShallow((s) => ({

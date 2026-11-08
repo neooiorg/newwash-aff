@@ -2,11 +2,22 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Mail, MoreHorizontal, RefreshCw, UserRoundPlus } from "lucide-react";
+import { Mail, MoreHorizontal, RefreshCw, UserCheck, UserRoundPlus, UserRoundX } from "lucide-react";
 import { toast } from "sonner";
 
 import { AsciiPanelSkeleton } from "@/components/ascii-feedback";
 import { DataTable, type DataTableColumn } from "@/components/data-table/data-table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogMedia,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +26,7 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
@@ -36,7 +48,7 @@ type AdminMember = {
 const statusLabel: Record<AdminMember["status"], string> = {
   invited: "Đã gửi lời mời",
   active: "Đang hoạt động",
-  revoked: "Đã thu hồi",
+  revoked: "Đã vô hiệu hóa",
 };
 
 export function MembersWorkspace() {
@@ -44,6 +56,8 @@ export function MembersWorkspace() {
   const [loading, setLoading] = useState(true);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [processingId, setProcessingId] = useState<string | null>(null);
+  const [memberToRevoke, setMemberToRevoke] = useState<AdminMember | null>(null);
   const [error, setError] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -65,6 +79,37 @@ export function MembersWorkspace() {
   useEffect(() => {
     void refresh();
   }, [refresh]);
+
+  const openInvite = useCallback((member?: AdminMember) => {
+    setName(member?.name ?? "");
+    setEmail(member?.email ?? "");
+    setError("");
+    setInviteOpen(true);
+  }, []);
+
+  const updateMemberStatus = useCallback(async (member: AdminMember, action: "revoke" | "restore") => {
+    setProcessingId(member.id);
+    try {
+      const response = await fetch("/api/admin-members", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: member.id, action }),
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || "Không cập nhật được thành viên.");
+      setMembers((current) => current.map((item) => (item.id === data.member.id ? data.member : item)));
+      toast.success(action === "revoke" ? "Đã vô hiệu hóa tài khoản" : "Đã kích hoạt lại tài khoản", {
+        description: data.member.email,
+      });
+    } catch (cause) {
+      toast.error("Không thể cập nhật thành viên", {
+        description: cause instanceof Error ? cause.message : "Vui lòng thử lại.",
+      });
+    } finally {
+      setProcessingId(null);
+      setMemberToRevoke(null);
+    }
+  }, []);
 
   async function inviteMember(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -130,34 +175,52 @@ export function MembersWorkspace() {
         enableSorting: false,
         enableHiding: false,
         cell: ({ row }) =>
-          row.original.status === "invited" ? (
+          !row.original.isPrimary ? (
             <div className="flex justify-end">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon-sm" aria-label={`Thao tác với ${row.original.email}`}>
-                    <MoreHorizontal />
+                  <Button
+                    variant="ghost"
+                    size="icon-sm"
+                    aria-label={`Thao tác với ${row.original.email}`}
+                    disabled={processingId === row.original.id}
+                  >
+                    {processingId === row.original.id ? <Spinner /> : <MoreHorizontal />}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuGroup>
-                    <DropdownMenuItem
-                      onSelect={() => {
-                        setName(row.original.name || "");
-                        setEmail(row.original.email);
-                        setInviteOpen(true);
-                      }}
-                    >
-                      <RefreshCw />
-                      Gửi lại lời mời
-                    </DropdownMenuItem>
+                    {row.original.status !== "active" && !row.original.acceptedAt ? (
+                      <DropdownMenuItem onSelect={() => openInvite(row.original)}>
+                        <RefreshCw />
+                        Gửi lại lời mời
+                      </DropdownMenuItem>
+                    ) : null}
+                    {row.original.status === "revoked" && row.original.acceptedAt ? (
+                      <DropdownMenuItem onSelect={() => void updateMemberStatus(row.original, "restore")}>
+                        <UserCheck />
+                        Kích hoạt lại
+                      </DropdownMenuItem>
+                    ) : null}
                   </DropdownMenuGroup>
+                  {row.original.status !== "revoked" ? (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuGroup>
+                        <DropdownMenuItem variant="destructive" onSelect={() => setMemberToRevoke(row.original)}>
+                          <UserRoundX />
+                          Vô hiệu hóa
+                        </DropdownMenuItem>
+                      </DropdownMenuGroup>
+                    </>
+                  ) : null}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           ) : null,
       },
     ],
-    [],
+    [openInvite, processingId, updateMemberStatus],
   );
 
   return (
@@ -166,7 +229,7 @@ export function MembersWorkspace() {
         title="Thành viên"
         description="Mời và theo dõi những người có quyền truy cập trang quản trị NewWash Aff."
         actions={
-          <Button size="sm" onClick={() => setInviteOpen(true)}>
+          <Button size="sm" onClick={() => openInvite()}>
             <UserRoundPlus data-icon="inline-start" /> Mời thành viên
           </Button>
         }
@@ -187,7 +250,16 @@ export function MembersWorkspace() {
         />
       )}
 
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+      <Dialog
+        open={inviteOpen}
+        onOpenChange={(open) => {
+          setInviteOpen(open);
+          if (!open) {
+            setName("");
+            setEmail("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Mời thành viên quản trị</DialogTitle>
@@ -229,6 +301,33 @@ export function MembersWorkspace() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={Boolean(memberToRevoke)} onOpenChange={(open) => !open && setMemberToRevoke(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogMedia>
+              <UserRoundX />
+            </AlertDialogMedia>
+            <AlertDialogTitle>Vô hiệu hóa tài khoản?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {memberToRevoke?.status === "invited"
+                ? "Lời mời hiện tại sẽ hết hiệu lực. Thành viên vẫn được lưu trong danh sách để bạn có thể gửi lại lời mời sau."
+                : "Thành viên sẽ mất quyền truy cập trang quản trị cho đến khi được kích hoạt lại."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={!memberToRevoke || Boolean(processingId)}
+              onClick={() => memberToRevoke && void updateMemberStatus(memberToRevoke, "revoke")}
+            >
+              {processingId ? <Spinner data-icon="inline-start" /> : null}
+              Vô hiệu hóa
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
